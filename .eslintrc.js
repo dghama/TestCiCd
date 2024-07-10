@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   extends: [
     '@react-native',
-    'plugin:sonarjs/recommended',
+    'plugin:sonar/recommended',
     'standard-with-typescript'
   ],
   plugins: ['@typescript-eslint', 'sonarjs'],

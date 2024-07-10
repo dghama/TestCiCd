@@ -3,11 +3,6 @@ import * as RNLocalize from 'react-native-localize';
 
 import i18n from 'i18next';
 
-import { setLanguage } from '_stores/localeLanguage/LocaleLanguageSlice';
-import { store } from '_stores/store';
-
-import { LocaleLanguage } from '_utils/enums';
-
 import { en } from './languages/en';
 import { gu } from './languages/gu';
 import { hi } from './languages/hi';
@@ -18,9 +13,7 @@ import { te } from './languages/te';
 
 const locale = RNLocalize.getLocales()[0].languageCode;
 i18n.language = locale;
-if (locale?.includes(LocaleLanguage.En)) {
-  store.dispatch(setLanguage(LocaleLanguage.En));
-}
+
 // Initialize i18n instance with different languages resources
 export default i18n
   .use(initReactI18next)
