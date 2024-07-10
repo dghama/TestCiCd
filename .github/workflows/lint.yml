@@ -1,4 +1,4 @@
-name: Lint and Test
+name: Lints
 
 on:
   pull_request:
@@ -6,55 +6,41 @@ on:
     branches:
       - main
 
-concurrency:
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
-  cancel-in-progress: true
-
 jobs:
   linting:
     name: Run linters
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4  # Checkout code from GitHub
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4  # Consistent version with test.yml
 
-      - name: Yarn install
+      - name: Yarn install with retries
         uses: Wandalen/wretry.action@master
         with:
           command: yarn --frozen-lockfile
           attempt_limit: 3
           attempt_delay: 2000
 
-      - name: Lint check
-        run: yarn lint
+      - name: Cache Node.js modules for linting
+        uses: actions/cache@v3  # Separate cache for linting
+        with:
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-lint-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-lint-
+
+      - name: Check for linting errors
+        run: |
+          if [[ $(yarn lint 2>&1) ]]; then
+            echo "Linting failed!"
+            core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
+          fi
 
       - name: Prettier check
-        run: yarn prettify
+        run: yarn prettify  
 
-      - name: Type check
-        run: yarn typecheck
-
-  testing:
-    name: Run tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-
-      - name: Yarn install
-        uses: Wandalen/wretry.action@master
-        with:
-          command: yarn --frozen-lockfile
-          attempt_limit: 3
-          attempt_delay: 2000
-
-      - name: Run tests
-        run: yarn test --forceExit
+      - name: Type check (if applicable)
+        run: yarn typecheck  
