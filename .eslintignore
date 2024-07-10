@@ -1,0 +1,9 @@
+
+node_modules/
+ios/
+android/
+.eslintrc.js
+babel.config.js
+metro.config.js
+tsconfig.json
+jest.config.js

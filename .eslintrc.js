@@ -1,13 +1,32 @@
 module.exports = {
   root: true,
   extends: [
-    '@react-native',
-    'plugin:sonar/recommended',
-    'standard-with-typescript'
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:react-native-a11y/all',
+    'plugin:sonarjs/recommended-legacy',
+    'prettier'
   ],
-  plugins: ['@typescript-eslint', 'sonarjs'],
   parser: '@typescript-eslint/parser',
-  parserOptions: { project: './tsconfig.json' },
+  parserOptions: {
+    project: 'tsconfig.json',
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true
+    }
+  },
+  plugins: [
+    '@typescript-eslint',
+    'react',
+    'react-native',
+    'react-hooks',
+    'import',
+    'functional',
+    'sonarjs'
+  ],
   rules: {
     '@typescript-eslint/semi': 'off',
     semi: 'off',
@@ -22,5 +41,20 @@ module.exports = {
     'no-console': 'warn',
     'sonarjs/cognitive-complexity': ['error', 20]
   },
-  env: { 'jest/globals': true, node: true }
+  env: {
+    'react-native/react-native': true
+  },
+  overrides: [
+    {
+      files: ['**/*.test.*'],
+      rules: {
+        '@typescript-eslint/no-non-null-assertion': 'off'
+      }
+    }
+  ],
+  settings: {
+    react: {
+      version: 'detect'
+    }
+  }
 };
