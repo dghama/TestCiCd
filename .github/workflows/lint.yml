@@ -34,10 +34,11 @@ jobs:
 
       - name: Check for linting errors
         run: |
-          if [[ $(yarn lint 2>&1) ]]; then
-            echo "Linting failed!"
+          if [[ $(yarn lint 2>&1) ]]; then  # Conditional statement
+            echo "Linting failed!"          # Action within the if block
           fi
-          core.setFailed('Linting errors detected!')
+          core.setFailed('Linting errors detected!')  # Separate line for core.setFailed
+
 
       - name: Prettier check
         run: yarn prettify  
