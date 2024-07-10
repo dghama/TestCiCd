@@ -32,12 +32,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-lint-
 
-      - name: Check for linting errors
+      - name: Lint check
+        run: ./lint.sh  # Run your modified script
+
+      - name: Check for linting errors (optional)
         run: |
-          if [[ $(yarn lint 2>&1) ]]; then  # Conditional statement
-            echo "Linting failed!"          # Action within the if block
+          if [[ $? -ne 0 ]]; then
+            echo "Linting failed!"
           fi
-          core.setFailed('Linting errors detected!')  # Separate line for core.setFailed
 
 
       - name: Prettier check
