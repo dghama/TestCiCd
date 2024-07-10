@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-lint-
 
       - name: Lint check
-        run: ../scripts/lint.sh  # Run linting script with relative path (adjust if needed)
+        run: ../../scripts/lint.sh  # Run linting script with relative path (adjust if needed)
 
       - name: Check for linting errors
         run: |
