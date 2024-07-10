@@ -36,8 +36,8 @@ jobs:
         run: |
           if [[ $(yarn lint 2>&1) ]]; then
             echo "Linting failed!"
-            core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
           fi
+          core.setFailed('Linting errors detected!')
 
       - name: Prettier check
         run: yarn prettify  
