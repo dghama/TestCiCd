@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4  # Checkout code from GitHub
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4  # Consistent version with test.yml
+        uses: actions/setup-node@v4
 
       - name: Yarn install with retries
         uses: Wandalen/wretry.action@master
@@ -33,12 +33,13 @@ jobs:
             ${{ runner.os }}-lint-
 
       - name: Lint check
-        run: ./lint.sh  # Run your modified script
+        run: ../scripts/lint.sh  # Run linting script with relative path (adjust if needed)
 
-      - name: Check for linting errors (optional)
+      - name: Check for linting errors
         run: |
           if [[ $? -ne 0 ]]; then
             echo "Linting failed!"
+            core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
           fi
 
 
