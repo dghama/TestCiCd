@@ -57,33 +57,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Archive workspace
-        run: tar -czf workspace.tar.gz --exclude='node_modules' --exclude='.git' --exclude='logs' --ignore-failed-read .
-
-      - name: Persist workspace
-        uses: actions/upload-artifact@v3
-        with:
-          name: workspace
-          path: workspace.tar.gz
-
-  restore_workspace:
-    name: Restore Workspace
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Download workspace archive
-        uses: actions/download-artifact@v3
-        with:
-          name: workspace
-          path: .
-
-      - name: Extract workspace
-        run: tar -xzf workspace.tar.gz
-
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    needs: restore_workspace
+    needs: build
     env:
       NODE_ENV: test
       CI: true
@@ -102,7 +79,7 @@ jobs:
   lint:
     name: Run Lint Check
     runs-on: ubuntu-latest
-    needs: restore_workspace
+    needs: build
     steps:
       - name: Lint check
         run: ././scripts/lint.sh
@@ -110,7 +87,7 @@ jobs:
   format:
     name: Run Format Check
     runs-on: ubuntu-latest
-    needs: restore_workspace
+    needs: build
     steps:
       - name: Prettier check
         run: yarn prettify
@@ -118,7 +95,7 @@ jobs:
   typecheck:
     name: Run Type Check
     runs-on: ubuntu-latest
-    needs: restore_workspace
+    needs: build
     steps:
       - name: Type check
         run: yarn typecheck
@@ -126,7 +103,7 @@ jobs:
   security:
     name: Run Snyk Security Scan
     runs-on: ubuntu-latest
-    needs: restore_workspace
+    needs: build
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
