@@ -1,87 +1,50 @@
-name: CI/CD Pipeline
-
+name: Lint, Test, and Type Check
 on:
-  # Trigger on pushes to develop, main, and beta version branches
-  # and opened or synchronized pull requests on those branches
-  pull_request:
-    branches:
-      - develop
-      - main
-      - 'v[0-9]+.[0-9]+.[0-9]+*beta*'
-    types: [opened, synchronize]
   push:
     branches:
-      - develop
       - main
-      - 'v[0-9]+.[0-9]+.[0-9]+*beta*'
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
-  # Build trigger job (optional, can be removed)
-  build_trigger:
-    name: Build Trigger (Optional)
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    outputs: # Outputs a build job ID (optional)
-      build_job_id: ${{ steps.trigger_build.outputs.build_job_id }}
-    steps:
-      - name: Trigger Build (Optional)
-        id: trigger_build # Assign an ID for referencing output
-        run: echo "::set-output name=build_job_id::$(date +%s)" # Set output
+  lint-test:
+    name: Lint, Test, and Type Check
+    runs-on: ubuntu-latest
 
-  build: # Build job
-    name: Build
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build_trigger # Wait for build_trigger (optional)
-    if: github.event_name == 'push' || github.event_name == 'pull_request' && github.event.action == 'opened'
-    # Run only on pushes or opened pull requests
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Checkout code from repository
-      # ... (rest of build job steps)
+        uses: actions/checkout@v2
 
-  test: # Test job
-    name: Run Unit Tests
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build # Wait for the build job
-    env: # Set environment variables
-      NODE_ENV: test # Set NODE_ENV to test
-      CI: true # Set CI to true for test runner
-    steps:
-      - name: Run unit tests
-        run: yarn test --forceExit # Run tests with force exit
-      # ... (rest of test job steps)
-
-  lint: # Lint job
-    name: Run Lint Check
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build # Wait for the build job
-    steps:
-      - name: Lint check
-        run: ././scripts/lint.sh # Run your lint script
-
-  format: # Format job
-    name: Run Format Check
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build # Wait for the build job
-    steps:
-      - name: Prettier check
-        run: yarn prettify # Run prettier for code formatting
-
-  typecheck: # Type check job
-    name: Run Type Check
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build # Wait for the build job
-    steps:
-      - name: Type check
-        run: yarn typecheck # Assuming you use TypeScript, run type check
-
-  security: # Security scan job
-    name: Run Snyk Security Scan
-    runs-on: ubuntu-latest # Run on ubuntu runner
-    needs: build # Wait for the build job
-    env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Use secret for Snyk token
-    steps:
-      - name: Snyk Security Scan
-        uses: snyk/actions/node@master # Use Snyk action for Node.js
+      - name: Setup Node.js, Yarn, and Dependencies
+        uses: ./actions/node-setup.yml
         with:
-          command: test # Run Snyk scan during test phase
+          node-version: 19
+
+      - name: Install dotenv package
+        run: npm install dotenv
+        shell: bash
+
+      - name: Set up environment variables from .env
+        run: |
+          export $(cat .env | grep -v '#' | xargs)
+        shell: bash
+
+      - name: Build APK and Setup JDK
+        uses: ./actions/build.yml
+        with:
+          APP_ENV: ${{ env.APP_ENV }}
+
+      - name: 🧹 Lint code
+        run: yarn lint
+        shell: bash
+
+      - name: ✅ Run unit tests
+        run: yarn test
+        shell: bash
+
+      - name: 🚀 Type check
+        run: yarn typecheck
+        shell: bash
