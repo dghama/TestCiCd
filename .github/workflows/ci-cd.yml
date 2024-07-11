@@ -49,10 +49,6 @@ jobs:
             core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
           fi
 
-      - name: 🧹 Lint code
-        run: yarn lint
-        shell: bash
-
       - name: ✅ Run unit tests
         run: yarn test
         shell: bash
@@ -74,3 +70,8 @@ jobs:
         uses: ./.github/actions/build
         with:
           APP_ENV: ${{ env.APP_ENV }}
+
+      - name: 🧹 Lint code
+      run: yarn lint
+      shell: bash
+
