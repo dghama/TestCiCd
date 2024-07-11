@@ -2,23 +2,18 @@ name: Common Steps
 
 on:
   workflow_call:
-    inputs:
-      node-version:
-        required: true
-        type: string
-    secrets:
-      CODECOV_TOKEN:
-        required: true
-      SNYK_TOKEN:
-        required: true
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12, 14, 16, 19]
 
     env:
       CI: true
+      NODE_ENV: development
 
     steps:
       - name: Checkout code
@@ -35,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ matrix.node-version }}
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -48,8 +43,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Archive workspace
+        run: tar -czf workspace.tar.gz --exclude='node_modules' --exclude='.git' --exclude='logs' .
+
       - name: Persist workspace
         uses: actions/upload-artifact@v3
         with:
           name: workspace
-          path: .
+          path: workspace.tar.gz

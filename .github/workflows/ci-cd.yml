@@ -16,20 +16,20 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    with:
-      node-version: 16
-    secrets: inherit
 
   restore_workspace:
     name: Restore Workspace
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Restore workspace
+      - name: Download workspace archive
         uses: actions/download-artifact@v3
         with:
           name: workspace
           path: .
+
+      - name: Extract workspace
+        run: tar -xzf workspace.tar.gz
 
   test:
     name: Run Unit Tests
@@ -55,9 +55,6 @@ jobs:
     name: Run Lint Check
     runs-on: ubuntu-latest
     needs: restore_workspace
-    env:
-      NODE_ENV: development
-      CI: true
 
     steps:
       - name: Lint check
@@ -67,9 +64,6 @@ jobs:
     name: Run Format Check
     runs-on: ubuntu-latest
     needs: restore_workspace
-    env:
-      NODE_ENV: development
-      CI: true
 
     steps:
       - name: Prettier check
@@ -79,9 +73,6 @@ jobs:
     name: Run Type Check
     runs-on: ubuntu-latest
     needs: restore_workspace
-    env:
-      NODE_ENV: development
-      CI: true
 
     steps:
       - name: Type check
@@ -93,8 +84,6 @@ jobs:
     needs: restore_workspace
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      NODE_ENV: development
-      CI: true
 
     steps:
       - name: Snyk Security Scan
