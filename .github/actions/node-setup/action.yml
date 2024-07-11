@@ -1,23 +1,8 @@
-name: Setup Node + Yarn + Install Dependencies
-description: Setup Node + Yarn + Install Dependencies
-
-on:
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-
-jobs:
-  install_dependencies:
-    name: Install Dependencies
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [12, 14, 16, 19]
+name: 'Setup  Node + PNPM + Install Dependencies'
+description: 'Setup  Node + PNPM + Install Dependencies'
+runs:
+  using: 'composite'
+  steps:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
