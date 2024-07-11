@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js, Yarn, and Dependencies
-        uses: ./actions/node-setup
+        uses: ../.github/actions/node-setup
         with:
           node-version: 19
 
@@ -33,7 +33,7 @@ jobs:
         shell: bash
 
       - name: Build APK and Setup JDK
-        uses: ./actions/build
+        uses: ./.github/actions/build
         with:
           APP_ENV: ${{ env.APP_ENV }}
 
