@@ -57,6 +57,6 @@ jobs:
         shell: bash
 
       - name: Build APK and Setup JDK
-        uses: ./.github/actions/build/
+        uses: ./.github/actions/build
         with:
           APP_ENV: ${{ env.APP_ENV }}
