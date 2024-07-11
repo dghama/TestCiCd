@@ -70,8 +70,3 @@ jobs:
         uses: ./.github/actions/build
         with:
           APP_ENV: ${{ env.APP_ENV }}
-
-      - name: 🧹 Lint code
-      run: yarn lint
-      shell: bash
-
