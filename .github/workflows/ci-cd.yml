@@ -46,5 +46,5 @@ jobs:
         shell: bash
 
       - name: 🚀 Type check
-        run: yarn typecheck
+        run: yarn type-check
         shell: bash
