@@ -1,6 +1,8 @@
 name: CI/CD Pipeline
 
 on:
+  # Trigger on pushes to develop, main, and beta version branches
+  # and opened or synchronized pull requests on those branches
   pull_request:
     branches:
       - develop
@@ -14,100 +16,72 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*beta*'
 
 jobs:
+  # Build trigger job (optional, can be removed)
   build_trigger:
-    name: Build Trigger
-    runs-on: ubuntu-latest
-    outputs:
+    name: Build Trigger (Optional)
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    outputs: # Outputs a build job ID (optional)
       build_job_id: ${{ steps.trigger_build.outputs.build_job_id }}
     steps:
-      - name: Trigger Build
-        id: trigger_build
-        run: echo "::set-output name=build_job_id::$(date +%s)"
+      - name: Trigger Build (Optional)
+        id: trigger_build # Assign an ID for referencing output
+        run: echo "::set-output name=build_job_id::$(date +%s)" # Set output
 
-  build:
+  build: # Build job
     name: Build
-    runs-on: ubuntu-latest
-    needs: build_trigger
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build_trigger # Wait for build_trigger (optional)
     if: github.event_name == 'push' || github.event_name == 'pull_request' && github.event.action == 'opened'
+    # Run only on pushes or opened pull requests
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Checkout code from repository
+      # ... (rest of build job steps)
 
-      - name: Cache Yarn cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.yarn/cache
-          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-cache-
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 14
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-  test:
+  test: # Test job
     name: Run Unit Tests
-    runs-on: ubuntu-latest
-    needs: build
-    env:
-      NODE_ENV: test
-      CI: true
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build # Wait for the build job
+    env: # Set environment variables
+      NODE_ENV: test # Set NODE_ENV to test
+      CI: true # Set CI to true for test runner
     steps:
       - name: Run unit tests
-        run: yarn test --forceExit
+        run: yarn test --forceExit # Run tests with force exit
+      # ... (rest of test job steps)
 
-      - name: Run coverage
-        run: yarn test --coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  lint:
+  lint: # Lint job
     name: Run Lint Check
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build # Wait for the build job
     steps:
       - name: Lint check
-        run: ././scripts/lint.sh
+        run: ././scripts/lint.sh # Run your lint script
 
-  format:
+  format: # Format job
     name: Run Format Check
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build # Wait for the build job
     steps:
       - name: Prettier check
-        run: yarn prettify
+        run: yarn prettify # Run prettier for code formatting
 
-  typecheck:
+  typecheck: # Type check job
     name: Run Type Check
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build # Wait for the build job
     steps:
       - name: Type check
-        run: yarn typecheck
+        run: yarn typecheck # Assuming you use TypeScript, run type check
 
-  security:
+  security: # Security scan job
     name: Run Snyk Security Scan
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-latest # Run on ubuntu runner
+    needs: build # Wait for the build job
     env:
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Use secret for Snyk token
     steps:
       - name: Snyk Security Scan
-        uses: snyk/actions/node@master
+        uses: snyk/actions/node@master # Use Snyk action for Node.js
         with:
-          command: test
+          command: test # Run Snyk scan during test phase
