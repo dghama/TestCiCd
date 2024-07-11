@@ -1,0 +1,46 @@
+# Label definitions for automatic assignment
+
+api: 
+  - title:  ^API.*  
+  - path:  **/api/** 
+
+
+bug: 
+  - title:  (bug|fix|defect).*  
+  - body:  (bug|fix|defect).* 
+  - head-branch: ['^bug', 'bug']
+
+
+config: 
+  - path: **/config/**  
+  - path: **/misc/**  
+
+enhancement: 
+  - title: (enhance|improve|better).*  
+  - body: (enhance|improve|better).*  
+  - head-branch: ['^enhance', 'enhance']
+
+
+feature: 
+  - title: (feature|feat|new).*  
+  - body: (feature|feat|new).*  
+  - head-branch:  ['^feature', 'feature']
+
+
+nfr: 
+  - title: nfr.* 
+  - body: nfr.* 
+
+refactor: 
+  - title: (refactor|cleanup).*  
+  - body: (refactor|cleanup).*
+  - head-branch:  ['^refactor', 'refactor']
+  
+
+release: 
+  - title: release.*  
+  - body: release.*  
+
+ui-component: 
+  - path: **/ui/** 
+

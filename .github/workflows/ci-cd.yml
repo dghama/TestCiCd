@@ -1,0 +1,133 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - 'v[0-9]+.[0-9]+.[0-9]+*beta*'
+    types: [opened, synchronize]
+  push:
+    branches:
+      - develop
+      - main
+      - 'v[0-9]+.[0-9]+.[0-9]+*beta*'
+
+jobs:
+  build:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12, 14, 16, 19]
+    env:
+          # Common environment variable
+      CI: true
+      defaults:
+      run: |
+            # Use .env file for environment variables (replace with your approach)
+            if [[ -f .env ]]; then source .env; fi
+    
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/cache
+          key: <span class="math-inline">\{\{ runner\.os \}\}\-yarn\-cache\-</span>{{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-cache-
+              
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: <span class="math-inline">\{\{ runner\.os \}\}\-node\-modules\-</span>{{ hashFiles('yarn.lock') }}
+          restore-keys: |
+              ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+
+      - name: Run unit tests
+        run: yarn test --forceExit
+
+      - name: Run coverage
+        run: yarn test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    name: Run Lint Check
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      NODE_ENV: development
+      CI: true
+
+    steps:
+      - name: Lint check
+        run: ./scripts/lint.sh
+
+  format:
+    name: Run Format Check
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      NODE_ENV: development
+      CI: true
+
+    steps:
+
+      - name: Prettier check
+        run: yarn prettify
+
+  typecheck:
+    name: Run Type Check
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      NODE_ENV: development
+      CI: true
+
+    steps:
+
+      - name: Type check
+        run: yarn typecheck
+
+  security:
+    name: Run Snyk Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      NODE_ENV: development
+      CI: true
+
+    steps:
+
+      - name: Snyk Security Scan
+        uses: snyk/actions/node@master
+        with:
+          command: test

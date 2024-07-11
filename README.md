@@ -3,6 +3,10 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 # Getting Started
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Step 0: Display the status of your CI/CD pipeline :
+
+![CI/CD Pipeline](https://github.com/dghama/TestCiCd/actions/workflows/your-workflow-file.yml/badge.svg)
+
 
 ## Step 1: Start the Metro Server
 
