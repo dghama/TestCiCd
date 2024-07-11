@@ -1,16 +1,15 @@
-name: 'Setup Node + Yarn + Install Dependencies'
-description: 'Setup Node + Yarn + Install Dependencies'
-runs:
-  using: 'composite'
-  steps:
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 19 # Default Node.js version for the matrix
-        cache: 'yarn' # Use yarn for caching dependencies
+name: Setup Node + Yarn + Install Dependencies
+description: Setup Node + Yarn + Install Dependencies
 
-    - name: 📦 Install Project Dependencies
-      run: yarn install --frozen-lockfile
-      shell: bash
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
   install_dependencies:
@@ -18,7 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12, 14, 16, 19] # Specify the Node.js versions to test with
+        node-version:
+          - 12
+          - 14
+          - 16
+          - 19 # Specify the Node.js versions to test with
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
