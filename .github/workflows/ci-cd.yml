@@ -9,19 +9,57 @@ on:
       - main
       - develop
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
   lint-test:
     name: Lint, Test, and Type Check
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # Checkout code from GitHub
 
-      - name: Setup Node.js, Yarn, and Dependencies
-        uses: ./.github/actions/node-setup
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Yarn install with retries
+        uses: Wandalen/wretry.action@master
         with:
-          node-version: 19
+          command: yarn --frozen-lockfile
+          attempt_limit: 3
+          attempt_delay: 2000
+
+      - name: Cache Node.js modules for linting
+        uses: actions/cache@v3 # Separate cache for linting
+        with:
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-lint-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-lint-
+
+      - name: Lint check
+        run: ././scripts/lint.sh # Run linting script with relative path (adjust if needed)
+
+      - name: Check for linting errors
+        run: |
+          if [[ $? -ne 0 ]]; then
+            echo "Linting failed!"
+            core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
+          fi
+
+      - name: 🧹 Lint code
+        run: yarn lint
+        shell: bash
+
+      - name: ✅ Run unit tests
+        run: yarn test
+        shell: bash
+
+      - name: 🚀 Type check
+        run: yarn type-check
+        shell: bash
 
       - name: Install dotenv package
         run: npm install dotenv
@@ -36,15 +74,3 @@ jobs:
         uses: ./.github/actions/build
         with:
           APP_ENV: ${{ env.APP_ENV }}
-
-      - name: 🧹 Lint code
-        run: yarn lint
-        shell: bash
-
-      - name: ✅ Run unit tests
-        run: yarn test
-        shell: bash
-
-      - name: 🚀 Type check
-        run: yarn type-check
-        shell: bash
