@@ -44,7 +44,7 @@ jobs:
         shell: bash
 
       - name: 🚀 Type check
-        run: yarn type-check
+        run: yarn typecheck
         shell: bash
 
       - name: Install dotenv package
