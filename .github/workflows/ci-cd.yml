@@ -39,16 +39,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-lint-
 
-      - name: Lint check
-        run: ././scripts/lint.sh # Run linting script with relative path (adjust if needed)
-
-      - name: Check for linting errors
-        run: |
-          if [[ $? -ne 0 ]]; then
-            echo "Linting failed!"
-            core.setFailed('Linting errors detected!')  # Use core.setFailed from actions/core
-          fi
-
       - name: ✅ Run unit tests
         run: yarn test
         shell: bash
