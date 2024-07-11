@@ -1,0 +1,52 @@
+name: 'Setup React Native Build + Trigger Build'
+description: 'Setup React Native Build + Trigger Build'
+inputs:
+  APP_ENV:
+    description: 'APP_ENV (one of): development, staging, production'
+    required: true
+    default: 'staging'
+  # AUTO_SUBMIT not currently implemented
+  # AUTO_SUBMIT:
+  #   description: 'AUTO_SUBMIT (one of): true, false'
+  #   required: true
+  #   default: 'false'
+  ANDROID:
+    description: 'Run for ANDROID (one of): true, false'
+    required: true
+    default: 'true'
+  VERSION:
+    description: 'VERSION'
+    required: true
+    default: '0.0.1'
+  IOS:
+    description: 'Run for IOS (one of): true, false'
+    required: true
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        yarn install  # Assuming you use yarn for package management
+      shell: bash
+
+    - name: Run Prebuild
+      run: |
+        yarn run prebuild:${{ inputs.APP_ENV }}
+      shell: bash
+
+    - name: Run Android Build
+      if: ${{ inputs.ANDROID == 'true' }}
+      run: |
+        yarn android:${{ inputs.APP_ENV }} --message "Build ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
+      shell: bash
+
+    - name: Run IOS Build
+      if: ${{ inputs.IOS == 'true' }}
+      run: |
+        yarn ios:${{ inputs.APP_ENV }} --message "Build ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
+      shell: bash
