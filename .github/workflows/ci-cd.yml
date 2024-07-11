@@ -58,7 +58,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Archive workspace
-        run: tar -czf workspace.tar.gz --exclude='node_modules' --exclude='.git' --exclude='logs' .
+        run: tar -czf workspace.tar.gz --exclude='node_modules' --exclude='.git' --exclude='logs' --ignore-failed-read .
 
       - name: Persist workspace
         uses: actions/upload-artifact@v3
