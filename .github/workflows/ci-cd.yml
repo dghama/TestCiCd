@@ -48,7 +48,7 @@ jobs:
         shell: bash
 
       - name: Install dotenv package
-        run: yarn install dotenv
+        run: yarn add dotenv
         shell: bash
 
       - name: Set up environment variables from .env
