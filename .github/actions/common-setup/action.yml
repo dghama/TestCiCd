@@ -1,12 +1,37 @@
 name: 'Common Setup'
-description: 'Checkout repository and restore node_modules cache'
+description: 'Restore node_modules cache and set up Node.js environment'
+
 runs:
   using: 'composite'
   steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Specify the Node.js version you're using
+
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Restore node_modules from cache
       uses: actions/cache@v4
+      id: yarn-cache
       with:
-        path: node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.os }}-node-modules-
+          ${{ runner.os }}-yarn-
+
+    - name: Install dependencies
+      if: steps.yarn-cache.outputs.cache-hit != 'true'
+      run: yarn install --frozen-lockfile
+      shell: bash
+
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: ios/Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
