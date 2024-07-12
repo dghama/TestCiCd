@@ -4,12 +4,9 @@ runs:
   using: 'composite'
   steps:
 
-  - name: Yarn install with retries
-      uses: Wandalen/wretry.action@master
-      with:
-        command: yarn --frozen-lockfile
-        attempt_limit: 3
-        attempt_delay: 2000
+    - name: Install Root repo dependencies
+      run: yarn --frozen-lockfile
+      shell: bash
 
   - name: Cache Node.js modules for linting (optional, separate cache)
       uses: actions/cache@v4
@@ -18,3 +15,4 @@ runs:
         key: ${{ runner.os }}-lint-${{ hashFiles('yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-lint-
+      shell: bash
