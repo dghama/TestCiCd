@@ -1,37 +1,45 @@
 name: 'Build iOS'
 description: 'Build iOS app'
 
-runs:
-  using: 'composite'
-  steps:
-    - name: Install CocoaPods dependencies
-      run: |
-        cd ios
-        pod install
-      shell: bash
+runs-on: macos-latest # Run on macOS runners for native Xcode support
 
-    - name: Install and Build SDK for iOS
-      run: |
-        yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
-      shell: bash
+env:
+  APP_NAME: ${{ github.event.repository.name }}_${{ env.ENV }}
 
-    - name: Set up Xcode
-      run: sudo xcode-select --switch /Applications/Xcode_15.3.app # Replace with your Xcode version
-      shell: bash
+steps:
+  - uses: actions/checkout@v4 # Checkout repository
+    with:
+      fetch-depth: 0 # Retrieve entire branch history for CocoaPods
 
-    - name: Build iOS Release
-      run: |
-        cd ios
-        xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -sdk iphoneos -configuration Release -archivePath $PWD/build/YourApp.xcarchive archive
-      shell: bash
+  - name: Install CocoaPods dependencies
+    run: |
+      cd ios
+      pod install --repo-update  # Ensure latest pods
+    shell: bash
 
-    - name: Export iOS Archive
-      run: |
-        xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist $PWD/ios/exportOptions.plist -exportPath $PWD/build
-      shell: bash
+  - name: Install and Build SDK for iOS
+    run: |
+      yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
+    shell: bash
 
-    - name: Upload iOS Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ios-release
-        path: ios/build/*.ipa
+  - name: Set up Xcode (replace with your version)
+    run: |
+      sudo xcode-select --switch /Applications/Xcode_15.3.app  # Adjust Xcode path
+    shell: bash
+
+  - name: Build iOS Release
+    run: |
+      cd ios
+      xcodebuild -workspace "${{ env.APP_NAME }}.xcworkspace" -scheme "${{ env.APP_NAME }}" -sdk iphoneos -configuration Release -archivePath $PWD/build/"${{ env.APP_NAME }}.xcarchive" archive
+    shell: bash
+
+  - name: Export iOS Archive
+    run: |
+      xcodebuild -exportArchive -archivePath $PWD/build/"${{ env.APP_NAME }}.xcarchive" -exportOptionsPlist ios/exportOptions.plist -exportPath $PWD/build
+    shell: bash
+
+  - name: Upload iOS Artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: ios-release
+      path: ios/build/*.ipa
