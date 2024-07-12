@@ -3,25 +3,31 @@ name: 'Build Android'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Java 17
+    - name: Set up Java 17 (optional, consider using the latest version)
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Verify Java installation
+    - name: Set JAVA_HOME for Java 17 (if needed)
+      run: |
+        echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Verify Java 17 installation (optional)
       run: java -version
       shell: bash
 
     - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
+      run: |
+        cd android
+        chmod +x gradlew
       shell: bash
 
     - name: Clean the project
-      run: cd android && ./gradlew clean
+      run: |
+        cd android
+        ./gradlew clean
       shell: bash
 
     - name: Install and Build SDK for Android
