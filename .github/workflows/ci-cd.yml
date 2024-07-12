@@ -39,6 +39,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore node modules from cache
+        uses: ./.github/actions/common-setup
+
       - name: Check PR codeBase
         uses: ./.github/actions/pr-check
 
@@ -51,6 +54,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore node modules from cache
+        uses: ./.github/actions/common-setup
+
       - name: Build iOS
         uses: ./.github/actions/build-ios
 
@@ -62,6 +68,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Restore node modules from cache
+        uses: ./.github/actions/common-setup
 
       - name: Build Android
         uses: ./.github/actions/build-android

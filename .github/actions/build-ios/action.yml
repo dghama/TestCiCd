@@ -4,10 +4,6 @@ description: 'Build iOS app'
 runs:
   using: 'composite'
   steps:
-  
-    - name : restore node modules from cache
-    uses: ./.github/actions/common-setup/action.yml
-
     - name: Install CocoaPods dependencies
       run: |
         cd ios
