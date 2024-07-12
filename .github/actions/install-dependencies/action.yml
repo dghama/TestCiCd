@@ -3,13 +3,6 @@ name: 'Install dependencies'
 runs:
   using: 'composite'
   steps:
-  - name: Cache Node.js modules for build
-      uses: actions/cache@v4
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-build-${{ hashFiles('package.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-
 
   - name: Yarn install with retries
       uses: Wandalen/wretry.action@master
