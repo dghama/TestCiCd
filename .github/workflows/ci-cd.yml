@@ -40,7 +40,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check PR codeBase
-        uses: ./.github/actions/check-pr
+        uses: ./.github/actions/pr-check
 
   build-ios:
     runs-on: macos-latest
