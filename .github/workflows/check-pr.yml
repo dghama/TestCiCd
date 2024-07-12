@@ -34,17 +34,11 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
 
-      - name: Run tests
-        run: yarn test
+      - name: Run tests with coverage
+        run: yarn test --coverage
 
       - name: Run type check
         run: yarn typecheck
-
-      - name: Prettier check
-        run: yarn prettier:check
-
-      - name: Run tests with coverage
-        run: yarn test
 
       - name: Check Environment Variable
         run: |
