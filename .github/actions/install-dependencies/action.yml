@@ -1,4 +1,4 @@
-name: 'Install dependencies'
+name: Install dependencies
 
 runs:
   using: 'composite'
@@ -18,8 +18,8 @@ runs:
       run: yarn --frozen-lockfile
       shell: bash
 
-    - name: Setupe enviroment 
-        run: |
-          chmod +x ././scripts/load_env.sh
-          ././scripts/load_env.sh
-        shell: bash
+    - name: Setup environment
+      run: |
+        chmod +x ./scripts/load_env.sh
+        ./scripts/load_env.sh
+      shell: bash
