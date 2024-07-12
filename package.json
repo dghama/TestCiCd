@@ -9,6 +9,7 @@
     "lint-fix": "eslint . --fix",
     "start": "react-native start",
     "test": "jest",
+    "test:coverage": "yarn test --coverage",
     "typecheck": "tsc --project ./tsconfig.check.json",
     "android:staging": "ENVFILE=configuration/.env.staging react-native run-android",
     "android:development": "ENVFILE=configuration/.env.development react-native run-android",
@@ -16,7 +17,8 @@
     "android:cert": "ENVFILE=configuration/.env.cert react-native run-android",
     "lint-autofix": "eslint . -c .eslintrc.js --ext .ts,.tsx --fix",
     "prettify": "prettier --write \"ts/**/*.(ts|tsx)\"",
-    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\""
+    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\"",
+    "build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res"
   },
   "dependencies": {
     "@testing-library/jest-native": "^5.4.3",
