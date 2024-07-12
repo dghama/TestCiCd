@@ -26,6 +26,7 @@
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^12.5.1",
     "@types/jest": "^29.5.12",
+    "dotenv": "^16.4.5",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-n": "^17.9.0",
     "i18next": "^23.11.5",
