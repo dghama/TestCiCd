@@ -3,11 +3,6 @@ description: 'Checkout repository and restore node_modules cache'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
     - name: Restore node_modules from cache
       uses: actions/cache@v2
       with:

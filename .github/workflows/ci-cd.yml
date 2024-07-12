@@ -22,6 +22,11 @@ jobs:
   download-dependencies:
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
 
@@ -29,8 +34,11 @@ jobs:
     runs-on: macos-latest
     needs: download-dependencies
     steps:
-      - name: Common Setup
-        uses: ./.github/actions/common-setup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check PR codeBase
         uses: ./.github/actions/check-pr
 
@@ -38,16 +46,22 @@ jobs:
     runs-on: macos-latest
     needs: check-pr
     steps:
-      - name: Common Setup
-        uses: ./.github/actions/common-setup
-      - name: build ios
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build iOS
         uses: ./.github/actions/build-ios
 
   build-android:
     runs-on: macos-latest
     needs: check-pr
     steps:
-      - name: Common Setup
-        uses: ./.github/actions/common-setup
-      - name: build android
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Android
         uses: ./.github/actions/build-android

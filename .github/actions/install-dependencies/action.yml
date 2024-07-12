@@ -3,10 +3,6 @@ name: 'Install dependencies'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Disabling shallow clone is recommended for improving relevancy of reporting
     - name: Set up Node.js
         uses: actions/setup-node@v4
 
