@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ENV: DEVELOPMENT
+  APP_NAME: ${{ github.repository }}
 
 jobs:
   download-dependencies:
