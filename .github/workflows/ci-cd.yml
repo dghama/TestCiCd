@@ -17,6 +17,7 @@ concurrency:
 
 env:
   APP_NAME: ${{ github.repository }}
+  ENV: # Define an empty ENV variable to be populated later
 
 jobs:
   download-dependencies:
@@ -26,9 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # Load .env variables once for the workflow
-      - name: Load .env variables
+      - name: Load .env variables for Download Dependencies
         run: |
           bash .github/actions/load-env-vars.sh
           echo "ENV=${ENV}" >> $GITHUB_ENV  # Export ENV variable to GitHub Actions environment
@@ -44,11 +43,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # Load .env variables from GitHub Actions environment
-      - name: Use .env variables for Check PR
-        run: |
-          echo "Using ENV=${ENV}"
 
       - name: Restore node modules from cache
         uses: ./.github/actions/common-setup
