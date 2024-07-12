@@ -1,0 +1,10 @@
+name: SonarQube scan
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Perform SonarQube scan
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

@@ -1,4 +1,4 @@
-name: Lint, Unit Tests, and Code Analysis
+name: Lint, Unit Tests,Code Analysis , build and deploy
 
 on:
   push:
@@ -44,6 +44,17 @@ jobs:
 
       - name: Check PR codeBase
         uses: ./.github/actions/pr-check
+
+  # sonarqube-scan:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: Perform SonarQube scan
+  #       uses: ./.github/actions/sonar-report
 
   build-ios:
     runs-on: macos-latest
