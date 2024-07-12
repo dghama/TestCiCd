@@ -22,13 +22,13 @@ runs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: '17'
 
     - name: Build Android Release
       run: cd android && ./gradlew assembleRelease
       shell: bash
     - name: Upload Android Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-release
         path: android/app/build/outputs/apk/release/app-release.apk
