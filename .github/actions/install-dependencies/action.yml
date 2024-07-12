@@ -1,0 +1,27 @@
+name: 'Install dependencies'
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Cache Node.js modules for build
+      uses: actions/cache@v3
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-build-${{ hashFiles('package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-
+
+  - name: Yarn install with retries
+      uses: Wandalen/wretry.action@master
+      with:
+        command: yarn --frozen-lockfile
+        attempt_limit: 3
+        attempt_delay: 2000
+
+  - name: Cache Node.js modules for linting (optional, separate cache)
+      uses: actions/cache@v3
+      with:
+        path: ~/.yarn/cache
+        key: ${{ runner.os }}-lint-${{ hashFiles('yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-lint-
