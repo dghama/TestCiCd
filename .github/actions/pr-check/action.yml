@@ -11,13 +11,10 @@ runs:
       run: yarn typecheck
       shell: bash
 
-    - name: Check Environment Variable
+    - name: Setup environment
       run: |
-        echo "Current ENV value: ${ENV}"
-        if [[ "${ENV}" != "DEVELOPMENT" ]]; then
-          echo "Environment ${ENV} variable ENV is not set to DEVELOPMENT. Exiting..."
-          exit 1
-        fi
+        chmod +x .github/scripts/load-env-vars.sh
+        .github/scripts/load-env-vars.sh
       shell: bash
 
     - name: Set APP_NAME without username
