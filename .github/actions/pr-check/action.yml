@@ -17,6 +17,7 @@ runs:
 
     - name: Run type check
       run: yarn typecheck
+      shell: bash
 
     - name: Check Environment Variable
       run: |
