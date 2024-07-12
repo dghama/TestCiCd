@@ -4,12 +4,18 @@ description: 'Build iOS app'
 runs-on: macos-latest # Run on macOS runners for native Xcode support
 
 env:
-  APP_NAME: ${{ github.event.repository.name }}_${{ env.ENV }}
+  ENV_FILE_PATH: .env # Path to your .env file, adjust if necessary
 
 steps:
   - uses: actions/checkout@v4 # Checkout repository
     with:
       fetch-depth: 0 # Retrieve entire branch history for CocoaPods
+
+  - name: Load Environment Variables from .env
+    run: |
+      export $(grep -v '^#' ${{ env.ENV_FILE_PATH }} | xargs)
+      echo "Loaded ENV=${ENV} from .env file"
+    shell: bash
 
   - name: Install CocoaPods dependencies
     run: |
@@ -27,15 +33,21 @@ steps:
       sudo xcode-select --switch /Applications/Xcode_15.3.app  # Adjust Xcode path
     shell: bash
 
+  - name: Set APP_NAME
+    run: |
+      export APP_NAME="${GITHUB_REPOSITORY##*/}_${ENV}"
+      echo "APP_NAME set to: $APP_NAME"
+    shell: bash
+
   - name: Build iOS Release
     run: |
       cd ios
-      xcodebuild -workspace "${{ env.APP_NAME }}.xcworkspace" -scheme "${{ env.APP_NAME }}" -sdk iphoneos -configuration Release -archivePath $PWD/build/"${{ env.APP_NAME }}.xcarchive" archive
+      xcodebuild -workspace "${APP_NAME}.xcworkspace" -scheme "${APP_NAME}" -sdk iphoneos -configuration Release -archivePath $PWD/build/"${APP_NAME}.xcarchive" archive
     shell: bash
 
   - name: Export iOS Archive
     run: |
-      xcodebuild -exportArchive -archivePath $PWD/build/"${{ env.APP_NAME }}.xcarchive" -exportOptionsPlist ios/exportOptions.plist -exportPath $PWD/build
+      xcodebuild -exportArchive -archivePath $PWD/build/"${APP_NAME}.xcarchive" -exportOptionsPlist ios/exportOptions.plist -exportPath $PWD/build
     shell: bash
 
   - name: Upload iOS Artifact
