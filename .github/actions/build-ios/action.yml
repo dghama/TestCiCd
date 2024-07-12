@@ -11,13 +11,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pods-
 
-    - name: Install dependencies
-      run: yarn install
-
     - name: Install CocoaPods dependencies
       run: |
         cd ios
         pod install
+      shell: bash
 
     - name: Install and Build SDK for iOS
       run: |
