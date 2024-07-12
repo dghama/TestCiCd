@@ -13,7 +13,7 @@ runs:
 
     - name: Check Environment Variable
       run: |
-        echo "Current ENV value: ${LOAD_ENV}"
+        echo "Current ENV value: ${ENV}"
         if [[ "${ENV}" != "DEVELOPMENT" ]]; then
           echo "Environment ${ENV} variable ENV is not set to DEVELOPMENT. Exiting..."
           exit 1
