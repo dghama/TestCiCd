@@ -3,6 +3,19 @@ name: 'Build Android'
 runs:
   using: 'composite'
   steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Restore node_modules from cache
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+
     - name: Set up Java 17 (optional, consider using the latest version)
       uses: actions/setup-java@v4
       with:
