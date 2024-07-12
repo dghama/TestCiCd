@@ -22,6 +22,6 @@ runs:
 
     - name: Set APP_NAME without username
       run: |
-        chmod +x ./scripts/set_app_name.sh
-        ./scripts/set_app_name.sh
+        chmod +x ././scripts/set_app_name.sh
+        ././scripts/set_app_name.sh
       shell: bash
