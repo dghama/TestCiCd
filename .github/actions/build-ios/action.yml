@@ -1,50 +1,45 @@
 name: 'Build iOS'
-using: 'composite'
-steps:
-  - name: Restore node_modules from cache
-    uses: actions/cache@v2
-    with:
-      path: node_modules
-      key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-      restore-keys: |
-        ${{ runner.os }}-node-modules-
+description: 'Build iOS app'
 
-  - name: Cache CocoaPods
-    uses: actions/cache@v2
-    with:
-      path: ios/Pods
-      key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-      restore-keys: |
-        ${{ runner.os }}-pods-
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: ios/Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
 
-  - name: Install CocoaPods dependencies
-    run: |
-      cd ios
-      pod install
-    shell: bash
+    - name: Install CocoaPods dependencies
+      run: |
+        cd ios
+        pod install
+      shell: bash
 
-  - name: Install and Build SDK for iOS
-    run: |
-      yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
-    shell: bash
+    - name: Install and Build SDK for iOS
+      run: |
+        yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
+      shell: bash
 
-  - name: Set up Xcode
-    run: sudo xcode-select --switch /Applications/Xcode_15.3.app # Replace with your Xcode version
-    shell: bash
+    - name: Set up Xcode
+      run: sudo xcode-select --switch /Applications/Xcode_15.3.app # Replace with your Xcode version
+      shell: bash
 
-  - name: Build iOS Release
-    run: |
-      cd ios
-      xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -sdk iphoneos -configuration Release -archivePath $PWD/build/YourApp.xcarchive archive
-    shell: bash
+    - name: Build iOS Release
+      run: |
+        cd ios
+        xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -sdk iphoneos -configuration Release -archivePath $PWD/build/YourApp.xcarchive archive
+      shell: bash
 
-  - name: Export iOS Archive
-    run: |
-      xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist $PWD/ios/exportOptions.plist -exportPath $PWD/build
-    shell: bash
+    - name: Export iOS Archive
+      run: |
+        xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist $PWD/ios/exportOptions.plist -exportPath $PWD/build
+      shell: bash
 
-  - name: Upload iOS Artifact
-    uses: actions/upload-artifact@v3
-    with:
-      name: ios-release
-      path: ios/build/*.ipa
+    - name: Upload iOS Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ios-release
+        path: ios/build/*.ipa
