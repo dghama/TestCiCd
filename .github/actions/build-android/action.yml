@@ -48,3 +48,6 @@ runs:
 
     - name: Upload App
       uses: ./.github/actions/app-upload
+      with:
+        AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
+        APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}

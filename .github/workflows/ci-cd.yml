@@ -95,3 +95,6 @@ jobs:
 
       - name: Build Android
         uses: ./.github/actions/build-android
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}

@@ -6,8 +6,8 @@ runs:
     - name: Upload the application on Mstore
       run: |
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
-        -H "Authorization: ${{ secrets.AUTHORIZATION }}" \
-        -F "applicationToken=${{ secrets.APP_DEV_TOKEN }}" \
+        -H "Authorization: $AUTHORIZATION" \
+        -F "applicationToken=$APP_DEV_TOKEN" \
         -F "fileInfo=@${{ env.info-file }}" \
         -F "file=@${{ env.build-file }}"
       shell: bash
