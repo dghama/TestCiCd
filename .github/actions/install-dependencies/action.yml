@@ -17,3 +17,9 @@ runs:
     - name: Install dependencies
       run: yarn --frozen-lockfile
       shell: bash
+
+    - name: Setupe enviroment 
+        run: |
+          chmod +x ././scripts/load_env.sh
+          ././scripts/load_env.sh
+        shell: bash

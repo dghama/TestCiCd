@@ -30,3 +30,9 @@ runs:
         key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
+
+    - name: Set APP_NAME without username
+      run: |
+        export APP_NAME=$(basename "${GITHUB_REPOSITORY}")
+        echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
+      shell: bash

@@ -6,6 +6,7 @@ set -e
 ENV_FILE=".env"
 
 if [ -f "$ENV_FILE" ]; then
+  LOAD_ENV="${ENV_FILE}"
   source "$ENV_FILE"
   export $(cut -d= -f1 "$ENV_FILE")
 else

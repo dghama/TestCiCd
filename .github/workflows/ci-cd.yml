@@ -16,8 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  APP_NAME: ${{ github.repository }}
-  ENV: # Define an empty ENV variable to be populated later
+  APP_NAME: $(basename ${{ github.repository }})
 
 jobs:
   download-dependencies:
