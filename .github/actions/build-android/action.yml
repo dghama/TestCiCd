@@ -3,6 +3,9 @@ name: 'Build Android'
 runs:
   using: 'composite'
   steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Set up Java 17
       uses: actions/setup-java@v4
       with:
@@ -18,7 +21,7 @@ runs:
       shell: bash
 
     - name: Clean the project
-      run: ./android/gradlew clean
+      run: cd android && ./gradlew clean
       shell: bash
 
     - name: Install and Build SDK for Android
@@ -28,7 +31,7 @@ runs:
       shell: bash
 
     - name: Build Android Release
-      run: ./android/gradlew assembleRelease
+      run: cd android && ./gradlew assembleRelease
       shell: bash
 
     - name: Upload Android Artifact
