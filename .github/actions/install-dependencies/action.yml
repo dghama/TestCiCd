@@ -20,6 +20,6 @@ runs:
 
     - name: Setup environment
       run: |
-        chmod +x ././scripts/load_env.sh
-        ././scripts/load_env.sh
+        chmod +x ././scripts/load_env-vars.sh
+        ././scripts/load_env-vars.sh
       shell: bash
