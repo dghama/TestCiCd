@@ -6,8 +6,8 @@ set -e
 ENV_FILE=".env"
 
 if [ -f "$ENV_FILE" ]; then
-  echo "found: $(cat $ENV_FILE | grep -v '^#' | xargs) found."
-  export $(cat $ENV_FILE | grep -v '^#' | xargs)
+  source "$ENV_FILE"
+  export $(cut -d= -f1 "$ENV_FILE")
 else
   echo "Error: $ENV_FILE not found."
   exit 1
