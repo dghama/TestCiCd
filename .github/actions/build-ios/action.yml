@@ -1,57 +1,52 @@
 name: 'Build iOS'
 description: 'Build iOS app'
 
-runs-on: macos-latest # Run on macOS runners for native Xcode support
+on:
+  push:
+    branches:
+      - main # Adjust as needed
 
 env:
-  ENV_FILE_PATH: .env # Path to your .env file, adjust if necessary
+  APP_NAME: ${{ github.repository }}
 
-steps:
-  - uses: actions/checkout@v4 # Checkout repository
-    with:
-      fetch-depth: 0 # Retrieve entire branch history for CocoaPods
+jobs:
+  build:
+    runs-on: macos-latest
 
-  - name: Load Environment Variables from .env
-    run: |
-      export $(grep -v '^#' ${{ env.ENV_FILE_PATH }} | xargs)
-      echo "Loaded ENV=${ENV} from .env file"
-    shell: bash
+    steps:
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+        shell: bash
 
-  - name: Install CocoaPods dependencies
-    run: |
-      cd ios
-      pod install --repo-update  # Ensure latest pods
-    shell: bash
+      - name: Install and Build SDK for iOS
+        run: |
+          yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
+        shell: bash
 
-  - name: Install and Build SDK for iOS
-    run: |
-      yarn react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios
-    shell: bash
+      - name: Set up Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_15.3.app # Replace with your Xcode version
+        shell: bash
 
-  - name: Set up Xcode (replace with your version)
-    run: |
-      sudo xcode-select --switch /Applications/Xcode_15.3.app  # Adjust Xcode path
-    shell: bash
+      - name: Build iOS Release
+        run: |
+          cd ios
+          xcodebuild -workspace YourApp.xcworkspace -scheme YourApp -sdk iphoneos -configuration Release -archivePath $PWD/build/YourApp.xcarchive archive
+        shell: bash
 
-  - name: Set APP_NAME
-    run: |
-      export APP_NAME="${GITHUB_REPOSITORY##*/}_${ENV}"
-      echo "APP_NAME set to: $APP_NAME"
-    shell: bash
+      - name: Export iOS Archive
+        run: |
+          xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportOptionsPlist $PWD/ios/exportOptions.plist -exportPath $PWD/build
+        shell: bash
 
-  - name: Build iOS Release
-    run: |
-      cd ios
-      xcodebuild -workspace "${APP_NAME}.xcworkspace" -scheme "${APP_NAME}" -sdk iphoneos -configuration Release -archivePath $PWD/build/"${APP_NAME}.xcarchive" archive
-    shell: bash
+      - name: Rename IPA with Repository Name
+        run: |
+          mv ios/build/*.ipa ios/build/${APP_NAME}.ipa
+        shell: bash
 
-  - name: Export iOS Archive
-    run: |
-      xcodebuild -exportArchive -archivePath $PWD/build/"${APP_NAME}.xcarchive" -exportOptionsPlist ios/exportOptions.plist -exportPath $PWD/build
-    shell: bash
-
-  - name: Upload iOS Artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: ios-release
-      path: ios/build/*.ipa
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: ios/build/*.ipa
