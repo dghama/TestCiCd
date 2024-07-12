@@ -2,14 +2,17 @@
 
 set -e
 
-# Adjust the path to your .env file
+# Adjust the path to your .env file if necessary
 ENV_FILE=".env"
 
 if [ -f "$ENV_FILE" ]; then
-  LOAD_ENV="${ENV_FILE}"
-  echo "ENV=${LOAD_ENV}" >> $GITHUB_ENV
-  source "$ENV_FILE"
-  export $(cut -d= -f1 "$ENV_FILE")
+  while IFS='=' read -r key value; do
+    # Remove any leading/trailing whitespace from key or value
+    key=$(echo $key | tr -d '[:space:]')
+    value=$(echo $value | tr -d '[:space:]')
+    echo "Setting environment variable: $key"
+    echo "::set-env name=$key::$value"
+  done < "$ENV_FILE"
 else
   echo "Error: $ENV_FILE not found."
   exit 1

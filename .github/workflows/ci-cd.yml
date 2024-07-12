@@ -17,6 +17,7 @@ concurrency:
 
 env:
   APP_NAME: $(basename ${{ github.repository }})
+  ENV: STAGING
 
 jobs:
   download-dependencies:
