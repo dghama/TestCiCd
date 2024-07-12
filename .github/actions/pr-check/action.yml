@@ -13,8 +13,9 @@ runs:
 
     - name: Check Environment Variable
       run: |
+        echo "Current ENV value: ${ENV}"
         if [[ "${ENV}" != "DEVELOPMENT" ]]; then
-          echo "Environment ${ENV} variable ENV is not set to DEVELOPMENT. Exiting..."
+          echo "Environment variable ENV is not set to DEVELOPMENT. Exiting..."
           exit 1
         fi
       shell: bash
