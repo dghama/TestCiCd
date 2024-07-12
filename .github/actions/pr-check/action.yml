@@ -1,4 +1,4 @@
-name: 'Install dependencies'
+name: Install dependencies and setup environment
 
 runs:
   using: 'composite'
@@ -11,11 +11,15 @@ runs:
       run: yarn typecheck
       shell: bash
 
-    - name: Check Environment Variable
+    - name: Set up environment variables from .env file
+      id: env
       run: |
-        echo "Current ENV value: ${ENV}"
-        if [[ "${ENV}" != "DEVELOPMENT" ]]; then
-          echo "Environment variable ENV is not set to DEVELOPMENT. Exiting..."
+        echo "Setting up environment variables..."
+        if [ -f .env ]; then
+          export $(grep -v '^#' .env | xargs)
+          echo "::set-output name=ENV::$ENV"
+        else
+          echo ".env file not found."
           exit 1
         fi
       shell: bash
