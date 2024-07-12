@@ -47,8 +47,8 @@ jobs:
             exit 1
           fi
 
-      - name: build android
-        uses: ./.github/actions/build-android
-
       - name: build ios
         uses: ./.github/actions/build-ios
+
+      - name: build android
+        uses: ./.github/actions/build-android
