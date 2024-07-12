@@ -12,6 +12,8 @@ if [ -f "$ENV_FILE" ]; then
     value=$(echo $value | tr -d '[:space:]')
     echo "Setting environment variable: $key"
     echo "::set-env name=$key::$value"
+    echo "ENV=${value}" >> $GITHUB_ENV
+
   done < "$ENV_FILE"
 else
   echo "Error: $ENV_FILE not found."
