@@ -13,8 +13,8 @@ runs:
 
     - name: Check Environment Variable
       run: |
-        if [[ "${{ env.ENV }}" != "DEVELOPMENT" ]]; then
-          echo "Environment variable ENV is not set to DEVELOPMENT. Exiting..."
+        if [[ "${ENV}" != "DEVELOPMENT" ]]; then
+          echo "Environment ${ENV} variable ENV is not set to DEVELOPMENT. Exiting..."
           exit 1
         fi
       shell: bash
