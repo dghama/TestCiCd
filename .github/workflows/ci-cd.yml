@@ -79,8 +79,7 @@ jobs:
     runs-on: macos-latest
     needs: check-pr
     env:
-      CI: false
-      build-environment: developDebug
+      CI: true
       build-file: android/app/build/outputs/apk/release/app-release.apk
       info-file: android/app/build/outputs/apk/release/output.json
 

@@ -3,11 +3,29 @@ name: Upload APK version
 runs:
   using: 'composite'
   steps:
+    - name: Log file paths
+      run: |
+        echo "Info file path: ${info-file}"
+        echo "Build file path: ${build-file}"
+      shell: bash
+
+    - name: Check if files exist
+      run: |
+        if [ ! -f "${info-file}" ]; then
+          echo "Info file not found at path: ${info-file}"
+          exit 1
+        fi
+        if [ ! -f "${build-file}" ]; then
+          echo "Build file not found at path: ${build-file}"
+          exit 1
+        fi
+      shell: bash
+
     - name: Upload the application on Mstore
       run: |
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
-        -H "Authorization: $AUTHORIZATION" \
-        -F "applicationToken=$APP_DEV_TOKEN" \
-        -F "fileInfo=@${{ env.info-file }}" \
-        -F "file=@${{ env.build-file }}"
+        -H "Authorization: ${AUTHORIZATION}" \
+        -F "applicationToken=${APP_DEV_TOKEN}" \
+        -F "fileInfo=@${info-file}" \
+        -F "file=@${build-file}"
       shell: bash
