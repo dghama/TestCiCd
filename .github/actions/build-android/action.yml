@@ -21,7 +21,7 @@ runs:
 
     - name: Set JAVA_HOME for Java 17
       run: |
-        echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
+        echo "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
       shell: bash
 
     - name: Verify Java 17 installation
@@ -31,7 +31,7 @@ runs:
     - name: Decode Keystore
       run: |
         mkdir -p android/app
-        echo "${{ inputs.KEYSTORE_FILE }}" | base64 -d > android/app/release.keystore
+        echo "${{ inputs.KEYSTORE_FILE }}" | base64 --decode > android/app/release.keystore
         ls -l android/app/release.keystore
         file android/app/release.keystore
       shell: bash
@@ -68,10 +68,10 @@ runs:
       run: |
         cd android
         ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=release.keystore \
-          -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
-          -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-          -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+          -Pandroid.injected.signing.store.file=android/app/release.keystore \
+          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
           --stacktrace
       shell: bash
 
