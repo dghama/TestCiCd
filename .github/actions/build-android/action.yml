@@ -3,19 +3,26 @@ name: Build Android
 runs:
   using: 'composite'
   steps:
-    - name: Set up Java 17 (optional, consider using the latest version)
+    - name: Set up Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set JAVA_HOME for Java 17 (if needed)
+    - name: Set JAVA_HOME for Java 17
       run: |
         echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
       shell: bash
 
-    - name: Verify Java 17 installation (optional)
+    - name: Verify Java 17 installation
       run: java -version
+      shell: bash
+
+    - name: Decode Keystore
+      env:
+        ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_FILE }}
+      run: |
+        echo $ENCODED_KEYSTORE | base64 -d > android/app/release.keystore
       shell: bash
 
     - name: Grant execute permission for gradlew
@@ -37,7 +44,17 @@ runs:
       shell: bash
 
     - name: Build Android Release
-      run: cd android && ./gradlew assembleRelease
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        cd android
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=./app/release.keystore \
+          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
       shell: bash
 
     - name: Upload Android Artifact
