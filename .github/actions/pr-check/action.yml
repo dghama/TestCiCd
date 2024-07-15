@@ -11,6 +11,10 @@ runs:
       run: yarn typecheck
       shell: bash
 
+    #    - name: Run lint
+    #      run: yarn lint
+    #      shell: bash
+
     - name: Setup environment
       run: |
         chmod +x .github/scripts/load-env-vars.sh
