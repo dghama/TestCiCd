@@ -21,7 +21,7 @@ runs:
 
     - name: Set JAVA_HOME for Java 17
       run: |
-        echo "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
+        echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
       shell: bash
 
     - name: Verify Java 17 installation
