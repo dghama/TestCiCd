@@ -21,8 +21,7 @@ runs:
 
     - name: Set JAVA_HOME for Java 17
       run: |
-        echo "JAVA_HOME_17_X64=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
-        echo "JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
+        echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" >> $GITHUB_ENV
       shell: bash
 
     - name: Verify Java 17 installation
@@ -31,11 +30,18 @@ runs:
 
     - name: Decode Keystore
       run: |
-        echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 -d > android/app/release.keystore
+        mkdir -p android/app
+        echo "${{ inputs.KEYSTORE_FILE }}" | base64 -d > android/app/release.keystore
         ls -l android/app/release.keystore
         file android/app/release.keystore
       shell: bash
 
+    - name: Debug Keystore Location
+      run: |
+        ls -R android/app
+        pwd
+      shell: bash
+      
     - name: Grant execute permission for gradlew
       run: |
         cd android
@@ -55,18 +61,19 @@ runs:
       shell: bash
 
     - name: Build Android Release
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: |
-        cd android
-        ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=./app/release.keystore \
-          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-      shell: bash
+    env:
+      KEYSTORE_PASSWORD: ${{ inputs.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
+    run: |
+      cd android
+      ./gradlew assembleRelease \
+        -Pandroid.injected.signing.store.file=../app/release.keystore \
+        -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+        -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+        -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+        --stacktrace
+    shell: bash
 
     - name: Upload Android Artifact
       uses: actions/upload-artifact@v4
