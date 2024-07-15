@@ -14,8 +14,9 @@ runs:
     - name: Debug file existence
       shell: bash
       run: |
-        ls -l android/app/build/outputs/apk/release/output.json
-        ls -l android/app/build/outputs/apk/release/app-release.apk
+      echo "Checking for output.json file:"
+      ls -l android/app/build/outputs/apk/release/
+      cat android/app/build/outputs/apk/release/output.json
 
     - name: Set permissions
       shell: bash
