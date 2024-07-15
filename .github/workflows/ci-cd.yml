@@ -82,18 +82,27 @@ jobs:
       CI: true
       build-file: android/app/build/outputs/apk/release/app-release.apk
       info-file: android/app/build/outputs/apk/release/output.json
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Restore node modules from cache
         uses: ./.github/actions/common-setup
-
       - name: Build Android
         uses: ./.github/actions/build-android
         with:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
+      - name: Upload App
+        uses: ./.github/actions/app-upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+          info-file: ${{ env.info-file }}
+          build-file: ${{ env.build-file }}

@@ -1,5 +1,15 @@
 name: Build Android
 
+inputs:
+  KEYSTORE_FILE:
+    required: true
+  KEYSTORE_PASSWORD:
+    required: true
+  KEY_ALIAS:
+    required: true
+  KEY_PASSWORD:
+    required: true
+
 runs:
   using: 'composite'
   steps:
@@ -19,10 +29,8 @@ runs:
       shell: bash
 
     - name: Decode Keystore
-      env:
-        ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_FILE }}
       run: |
-        echo $ENCODED_KEYSTORE | base64 -d > android/app/release.keystore
+        echo "${{ inputs.KEYSTORE_FILE }}" | base64 -d > android/app/release.keystore
       shell: bash
 
     - name: Grant execute permission for gradlew
@@ -45,9 +53,9 @@ runs:
 
     - name: Build Android Release
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEYSTORE_PASSWORD: ${{ inputs.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
       run: |
         cd android
         ./gradlew assembleRelease \
@@ -62,11 +70,3 @@ runs:
       with:
         name: android-release
         path: android/app/build/outputs/apk/release/app-release.apk
-
-    - name: Upload App
-      uses: ./.github/actions/app-upload
-      with:
-        AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
-        APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}
-        info-file: android/app/build/outputs/apk/release/output.json
-        build-file: android/app/build/outputs/apk/release/app-release.apk
