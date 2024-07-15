@@ -1,24 +1,33 @@
 name: Upload APK version
 
+inputs:
+  AUTHORIZATION:
+    description: 'Authorization token'
+    required: true
+  APP_DEV_TOKEN:
+    description: 'Application dev token'
+    required: true
+
 runs:
   using: 'composite'
   steps:
-  - name: Debug file existence
-  run: |
-    ls -l android/app/build/outputs/apk/release/output.json
-    ls -l android/app/build/outputs/apk/release/app-release.apk
-  shell: bash
-- name: Set permissions
-  run: |
-    chmod 644 android/app/build/outputs/apk/release/output.json
-    chmod 644 android/app/build/outputs/apk/release/app-release.apk
-  shell: bash
-  
-- name: Upload the application on Mstore
-  run: |
-    curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
-    -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
-    -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-    -F "fileInfo=@${{ github.workspace }}/android/app/build/outputs/apk/release/output.json" \
-    -F "file=@${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
-  shell: bash
+    - name: Debug file existence
+      shell: bash
+      run: |
+        ls -l android/app/build/outputs/apk/release/output.json
+        ls -l android/app/build/outputs/apk/release/app-release.apk
+
+    - name: Set permissions
+      shell: bash
+      run: |
+        chmod 644 android/app/build/outputs/apk/release/output.json
+        chmod 644 android/app/build/outputs/apk/release/app-release.apk
+
+    - name: Upload the application on Mstore
+      shell: bash
+      run: |
+        curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
+        -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
+        -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
+        -F "fileInfo=@${{ github.workspace }}/android/app/build/outputs/apk/release/output.json" \
+        -F "file=@${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
