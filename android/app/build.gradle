@@ -89,51 +89,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+          release {
+            storeFile file('release.keystore')
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
+            signingConfig signingConfigs.release
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
     
-    // Move this block inside the android block
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                def fileName = outputFile.name.replace('.apk', '-' + defaultConfig.versionName + '.apk')
-                output.outputFileName = fileName
-                def outputDir = new File("${project.buildDir}/outputs/apk/${variant.name}")
-                def outputJson = new File(outputDir, "output.json")
-                outputJson.text = groovy.json.JsonOutput.toJson([
-                    {
-                        "version": 1,
-                        "artifactType": {
-                            "type": "APK",
-                            "kind": "Directory"
-                        },
-                        "applicationId": defaultConfig.applicationId,
-                        "variantName": variant.name,
-                        "elements": [
-                            {
-                                "type": "SINGLE",
-                                "filters": [],
-                                "attributes": [],
-                                "versionCode": defaultConfig.versionCode,
-                                "versionName": defaultConfig.versionName,
-                                "outputFile": fileName
-                            }
-                        ]
-                    }
-                ])
-            }
-        }
-    }
+
 }
 
 dependencies {

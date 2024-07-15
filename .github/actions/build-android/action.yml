@@ -31,6 +31,8 @@ runs:
     - name: Decode Keystore
       run: |
         echo "${{ inputs.KEYSTORE_FILE }}" | base64 -d > android/app/release.keystore
+        ls -l android/app/release.keystore
+        file android/app/release.keystore
       shell: bash
 
     - name: Grant execute permission for gradlew
@@ -60,9 +62,9 @@ runs:
         cd android
         ./gradlew assembleRelease \
           -Pandroid.injected.signing.store.file=./app/release.keystore \
-          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-          -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+          -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+          -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+          -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
       shell: bash
 
     - name: Upload Android Artifact
