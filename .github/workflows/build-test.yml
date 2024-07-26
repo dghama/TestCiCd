@@ -1,0 +1,163 @@
+name: Lint, Unit Tests, Code Analysis, Build and Deploy to MStore
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [closed]
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  APP_NAME: ${{ secrets.APP_NAME }}
+  CI: true
+  ANDROID_BUILD_DIR: android/app/build/outputs/apk/release
+  ANDROID_KEYSTORE_FILE: android/app/release.keystore
+  ANDROID_BUILD_FILE: android/app/build/outputs/apk/release/app-release.apk
+  ANDROID_INFO_FILE: android/app/build/outputs/apk/release/output.json
+  IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
+  IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+
+jobs:
+  code-checkout:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo
+          path: .
+
+  environment-setup:
+    needs: code-checkout
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Android Environment Setup
+        uses: ./.github/actions/build-test/android-setup/android-runner
+
+      - name: IOS Environment Setup
+        uses: ./.github/actions/build-test/ios-setup/ios-runner
+
+  dependency-installation:
+    needs: environment-setup
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        uses: ./.github/actions/build-test/dependency-installation
+
+  check-pr:
+    runs-on: macos-latest
+    needs: dependency-installation
+    env:
+      PLATFORM: android
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore node modules from cache
+        uses: ./.github/actions/cache-restore
+
+      - name: Check PR codeBase
+        uses: ./.github/actions/build-test/pr-check
+
+  build-ios:
+    runs-on: macos-latest
+    needs: check-pr
+    env:
+      PLATFORM: ios
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Cache Restore Setup
+        uses: ./.github/actions/cache-restore
+      - name: Build iOS
+        uses: ./.github/actions/build-test/ios-setup/ios-build
+        with:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+  build-android:
+    runs-on: macos-latest
+    needs: check-pr
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Cache Restore Setup
+        uses: ./.github/actions/cache-restore
+      - name: Build Android
+        uses: ./.github/actions/build-test/android-setup/android-build
+        with:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+  upload-android:
+    runs-on: macos-latest
+    needs: build-android
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Upload android version to MStore
+        uses: ./.github/actions/mstore-upload/android-upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
+  # Uncomment if using SonarQube
+  # sonarqube-scan:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Perform SonarQube scan
+  #       uses: ./.github/actions/sonar-report
+
+  # upload-ios:
+  #   runs-on: macos-latest
+  #   needs: build-ios
+  #   steps:
+  #     - name: Checkout repository
+  #     uses: actions/checkout@v4
+  #     with:
+  #       fetch-depth: 0
+  #     - name: Upload App
+  #     uses: ./.github/actions/app-upload
+  #     with:
+  #       AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+  #       APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+  #       info-file: ${{ env.IOS_INFO_FILE }}
+  #       build-file: ${{ env.IOS_BUILD_FILE }}

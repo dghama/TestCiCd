@@ -1,0 +1,78 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+
+default_platform(:android)
+
+before_all do
+  @package = load_json(json_path: "./package.json")
+end
+
+platform :ios do
+  desc 'iOS: Increment build number and set the version to package.json version.'
+  private_lane :inc_ver_ios do
+    increment_build_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+    )
+    increment_version_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
+      version_number: @package['version']
+    )
+  end
+
+  desc 'Build the iOS app'
+  lane :build do
+    inc_ver_ios
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile",
+    )
+    build_app(
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      export_method: "app-store",
+      output_directory: "./ios/build",
+      output_name: "#{@package['name']}.ipa"
+    )
+  end
+end
+
+platform :android do
+  desc 'Android: Increment versionCode and set versionName to package.json version.'
+  private_lane :inc_ver_and do
+    increment_version_code(
+      gradle_file_path: "./android/app/build.gradle",
+    )
+    increment_version_name(
+      gradle_file_path: "./android/app/build.gradle",
+      version_name: @package['version']
+    )
+  end
+
+  desc 'Build the Android app'
+  lane :build do
+    inc_ver_and
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: "android/",
+      properties: {
+        "android.injected.signing.store.file" => ENV["KEYSTORE_FILE_PATH"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+      }
+    )
+  end
+end

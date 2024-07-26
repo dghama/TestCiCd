@@ -1,0 +1,38 @@
+name: 'Build IOS'
+
+inputs:
+  KEYSTORE_FILE:
+    required: true
+  KEYSTORE_PASSWORD:
+    required: true
+  KEY_ALIAS:
+    required: true
+  KEY_PASSWORD:
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore node modules from cache
+      uses: ./.github/actions/cache-restore
+
+    - name: Decode Keystore
+      run: |
+        echo "${{ inputs.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+      shell: bash
+
+    - name: Build Android with Fastlane
+      env:
+        KEYSTORE_FILE_PATH: ${{ github.workspace }}/${{ env.ANDROID_KEYSTORE_FILE }}
+        KEYSTORE_PASSWORD: ${{ inputs.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
+      run: |
+        fastlane android build
+      shell: bash
+
+    - name: Upload Android Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-release
+        path: ${{ env.ANDROID_BUILD_FILE }}

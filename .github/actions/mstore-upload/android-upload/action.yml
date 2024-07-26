@@ -12,23 +12,23 @@ runs:
   using: 'composite'
   steps:
     - name: Debug file existence
-      shell: bash
       run: |
-      echo "Checking for output.json file:"
-      ls -l android/app/build/outputs/apk/release/
-      cat android/app/build/outputs/apk/release/output.json
+        echo "Checking for output.json file:"
+        ls -l android/app/build/outputs/apk/release/
+        cat android/app/build/outputs/apk/release/output-metadata.json
+      shell: bash
 
     - name: Set permissions
-      shell: bash
       run: |
-        chmod 644 android/app/build/outputs/apk/release/output.json
+        chmod 644 android/app/build/outputs/apk/release/output-metadata.json
         chmod 644 android/app/build/outputs/apk/release/app-release.apk
+      shell: bash
 
     - name: Upload the application on Mstore
-      shell: bash
       run: |
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
         -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
         -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-        -F "fileInfo=@${{ github.workspace }}/android/app/build/outputs/apk/release/output.json" \
+        -F "fileInfo=@${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json" \
         -F "file=@${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
+      shell: bash

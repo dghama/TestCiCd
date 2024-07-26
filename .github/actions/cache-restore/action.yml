@@ -1,0 +1,48 @@
+name: 'Cache Restore'
+
+description: 'Restores cached dependencies for Node.js, CocoaPods, Ruby gems, and Fastlane plugins.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Node.js modules cache
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+        fail-on-cache-miss: true
+
+    - name: Restore CocoaPods cache
+      if: ${{ env.PLATFORM == 'ios' }}
+      uses: actions/cache@v4
+      with:
+        path: |
+          ios/Pods
+          ios/Podfile.lock
+        key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
+        fail-on-cache-miss: true
+
+    - name: Restore Ruby gems cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          vendor/bundle
+          ~/.gem
+        key: ${{ runner.os }}-ruby-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-ruby-
+        fail-on-cache-miss: true
+
+    - name: Restore Fastlane plugins cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          fastlane/plugins
+        key: ${{ runner.os }}-fastlane-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-fastlane-
+        fail-on-cache-miss: true

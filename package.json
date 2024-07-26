@@ -17,8 +17,7 @@
     "android:cert": "ENVFILE=configuration/.env.cert react-native run-android",
     "lint-autofix": "eslint . -c .eslintrc.js --ext .ts,.tsx --fix",
     "prettify": "prettier --write \"ts/**/*.(ts|tsx)\"",
-    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\"",
-    "build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res"
+    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\""
   },
   "dependencies": {
     "@testing-library/jest-native": "^5.4.3",

@@ -1,0 +1,49 @@
+name: 'iOS Environment Setup'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_15.3.app
+        sudo xcodebuild -license accept
+      shell: bash
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '2.6.10'
+        bundler-cache: true
+
+    - name: Install Bundler 2.4.22
+      run: gem install bundler -v 2.4.22
+      shell: bash
+
+    - name: Cache Bundler gems
+      uses: actions/cache@v4
+      with:
+        path: |
+          vendor/bundle
+          .bundle
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
+
+    - name: Install Ruby dependencies
+      run: bundle install --jobs 4 --retry 3
+      shell: bash
+
+    - name: Install Fastlane
+      run: bundle exec gem install fastlane
+      shell: bash
+
+    - name: Install Fastlane plugins
+      run: bundle exec fastlane install_plugins
+      shell: bash
+
+    - name: Check Ruby Environment
+      run: |
+        ruby -v
+        which ruby
+        gem env
+      shell: bash
