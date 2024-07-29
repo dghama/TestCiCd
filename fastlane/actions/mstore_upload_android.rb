@@ -1,6 +1,6 @@
 module Fastlane
     module Actions
-      class MstoreUploadAction < Action
+      class MstoreUploadAndroidAction < Action
         def self.run(params)
           UI.message("Uploading app to Mstore...")
   
