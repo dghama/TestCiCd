@@ -23,7 +23,7 @@ runs:
 
     - name: Build Android with Fastlane
       env:
-        KEYSTORE_FILE_PATH: ${{ github.workspace }}/${{ env.ANDROID_KEYSTORE_FILE }}
+        KEYSTORE_FILE_PATH: ${{ env.ANDROID_KEYSTORE_FILE }}
         KEYSTORE_PASSWORD: ${{ inputs.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
         KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
