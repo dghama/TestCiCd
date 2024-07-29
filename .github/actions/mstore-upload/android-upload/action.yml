@@ -17,6 +17,8 @@ runs:
         pwd
         echo "Checking for build outputs:"
         ls -R ${{ env.ANDROID_BUILD_DIR }}
+        echo "ANDROID_INFO_FILE: ${{ env.ANDROID_INFO_FILE }}"
+        echo "ANDROID_BUILD_FILE: ${{ env.ANDROID_BUILD_FILE }}"
         if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
           echo "output-metadata.json exists"
           cat ${{ env.ANDROID_INFO_FILE }}
@@ -25,6 +27,7 @@ runs:
         fi
         if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
           echo "app-release.apk exists"
+          ls -l ${{ env.ANDROID_BUILD_FILE }}
         else
           echo "app-release.apk does not exist"
         fi
@@ -34,9 +37,11 @@ runs:
       run: |
         if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
           chmod 644 ${{ env.ANDROID_INFO_FILE }}
+          echo "Set permissions for ${{ env.ANDROID_INFO_FILE }}"
         fi
         if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
           chmod 644 ${{ env.ANDROID_BUILD_FILE }}
+          echo "Set permissions for ${{ env.ANDROID_BUILD_FILE }}"
         fi
       shell: bash
 
