@@ -56,7 +56,7 @@ runs:
         MSTORE_AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
         MSTORE_APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}
       run: |
-        fastlane mstore_upload_android
+        fastlane upload_ios_to_mstore
       shell: bash
 
  - name: Upload iOS version to MStore

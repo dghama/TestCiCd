@@ -3,22 +3,22 @@ name: 'Install dependencies'
 runs:
   using: 'composite'
   steps:
-    - name: Restore node modules from cache
+    - name: 📦 Restore node modules from cache
       uses: ./.github/actions/cache-restore
 
-    - name: Run tests with coverage
-      run: yarn test --coverage
-      shell: bash
-
-    - name: Run type check
+    - name: 🚑  Run type check
       run: yarn typecheck
       shell: bash
 
-    #    - name: Run lint
+    - name: 🏃‍♂️ Run tests with coverage
+      run: yarn test --coverage
+      shell: bash
+
+    #    - name: 🏃‍♂️ Run lint
     #      run: yarn lint
     #      shell: bash
 
-    - name: Setup environment
+    - name: 🏃‍♂️ Setup environment
       run: |
         chmod +x .github/scripts/load-env-vars.sh
         .github/scripts/load-env-vars.sh
