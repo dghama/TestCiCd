@@ -19,9 +19,9 @@ env:
   APP_NAME: ${{ secrets.APP_NAME }}
   CI: true
   ANDROID_KEYSTORE_FILE: android/app/release.keystore
-  ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
-  ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
-  ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
+  ANDROID_BUILD_DIR: android/app/build/outputs/apk/release
+  ANDROID_BUILD_FILE: android/app/build/outputs/apk/release/app-release.apk
+  ANDROID_INFO_FILE: android/app/build/outputs/apk/release/output-metadata.json
   IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
 

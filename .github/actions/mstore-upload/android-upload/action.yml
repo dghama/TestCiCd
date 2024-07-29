@@ -29,6 +29,6 @@ runs:
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
         -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
         -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-        -F "fileInfo=@${{env.ANDROID_INFO_FILE}}n" \
-        -F "file=@${{env.ANDROID_BUILD_FILE}}"
+        -F "fileInfo=@${{ github.workspace }}/${{env.ANDROID_INFO_FILE}}n" \
+        -F "file=@${{ github.workspace }}/${{env.ANDROID_BUILD_FILE}}"
       shell: bash
