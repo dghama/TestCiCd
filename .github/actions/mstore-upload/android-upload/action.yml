@@ -41,10 +41,9 @@ runs:
       shell: bash
 
     - name: Upload the application on Mstore
+      env:
+        MSTORE_AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
+        MSTORE_APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}
       run: |
-        curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
-        -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
-        -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-        -F "fileInfo=@${{env.ANDROID_INFO_FILE}}n" \
-        -F "file=@${{env.ANDROID_BUILD_FILE}}"
+        fastlane upload_to_mstore
       shell: bash

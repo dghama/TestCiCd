@@ -75,4 +75,15 @@ platform :android do
       }
     )
   end
+
+  desc 'Upload the Android app to the MStore'
+  lane :upload_to_mstore do
+    mstore_upload(
+      authorization: ENV['MSTORE_AUTHORIZATION'],
+      app_dev_token: ENV['MSTORE_APP_DEV_TOKEN'],
+      info_file: ENV['ANDROID_INFO_FILE'],
+      apk_file: ENV['ANDROID_BUILD_FILE']
+    )
+  end
+  end
 end

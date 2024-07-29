@@ -1,4 +1,4 @@
-name: 'Build IOS'
+name: 'Build ANDROID'
 
 inputs:
   KEYSTORE_FILE:
