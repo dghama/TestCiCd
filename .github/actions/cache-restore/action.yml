@@ -27,6 +27,7 @@ runs:
         fail-on-cache-miss: true
 
     - name: Restore Ruby gems cache
+      if: ${{ env.PLATFORM == 'ios' }}
       uses: actions/cache@v4
       with:
         path: |
@@ -38,6 +39,7 @@ runs:
         fail-on-cache-miss: true
 
     - name: Restore Fastlane plugins cache
+      if: ${{ env.PLATFORM == 'ios' }}
       uses: actions/cache@v4
       with:
         path: |
