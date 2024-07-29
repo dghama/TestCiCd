@@ -85,5 +85,4 @@ platform :android do
       apk_file: ENV['ANDROID_BUILD_FILE']
     )
   end
-  end
 end
