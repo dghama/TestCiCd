@@ -13,15 +13,31 @@ runs:
   steps:
     - name: Debug file existence
       run: |
-        echo "Checking for output.json file:"
-        ls -l ${{env.ANDROID_BUILD_DIR}}
-        cat ${{env.ANDROID_INFO_FILE}}
+        echo "Current directory:"
+        pwd
+        echo "Checking for build outputs:"
+        ls -R ${{ env.ANDROID_BUILD_DIR }}
+        if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
+          echo "output-metadata.json exists"
+          cat ${{ env.ANDROID_INFO_FILE }}
+        else
+          echo "output-metadata.json does not exist"
+        fi
+        if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
+          echo "app-release.apk exists"
+        else
+          echo "app-release.apk does not exist"
+        fi
       shell: bash
 
     - name: Set permissions
       run: |
-        chmod 644 ${{env.ANDROID_INFO_FILE}}
-        chmod 644 ${{env.ANDROID_BUILD_FILE}}
+        if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
+          chmod 644 ${{ env.ANDROID_INFO_FILE }}
+        fi
+        if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
+          chmod 644 ${{ env.ANDROID_BUILD_FILE }}
+        fi
       shell: bash
 
     - name: Upload the application on Mstore
@@ -29,6 +45,6 @@ runs:
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
         -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
         -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-        -F "fileInfo=@${{ github.workspace }}/${{env.ANDROID_INFO_FILE}}n" \
-        -F "file=@${{ github.workspace }}/${{env.ANDROID_BUILD_FILE}}"
+        -F "fileInfo=@${{env.ANDROID_INFO_FILE}}n" \
+        -F "file=@${{env.ANDROID_BUILD_FILE}}"
       shell: bash

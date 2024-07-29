@@ -31,8 +31,12 @@ runs:
         fastlane android build
       shell: bash
 
-    - name: Upload Android Artifact
+    - name: Upload Android Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: android-release
-        path: ${{ env.ANDROID_BUILD_FILE }}
+        path: |
+          ${{ env.ANDROID_BUILD_DIR }}
+          ${{ env.ANDROID_BUILD_FILE }}
+          ${{ env.ANDROID_INFO_FILE }}
+        if-no-files-found: error
