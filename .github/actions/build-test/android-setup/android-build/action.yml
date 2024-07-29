@@ -37,6 +37,4 @@ runs:
         name: android-release
         path: |
           ${{ env.ANDROID_BUILD_DIR }}
-          ${{ env.ANDROID_BUILD_FILE }}
-          ${{ env.ANDROID_INFO_FILE }}
         if-no-files-found: error

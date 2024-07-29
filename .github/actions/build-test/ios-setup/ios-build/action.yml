@@ -15,10 +15,6 @@ runs:
       uses: ./.github/actions/cache-restore
 
     - name: Build iOS with Fastlane
-      env:
-        FASTLANE_PASSWORD: ${{ inputs.FASTLANE_PASSWORD }}
-        MATCH_PASSWORD: ${{ inputs.MATCH_PASSWORD }}
-        APP_STORE_CONNECT_API_KEY_CONTENT: ${{ inputs.APP_STORE_CONNECT_API_KEY_CONTENT }}
       run: |
         fastlane ios build
       shell: bash
@@ -27,4 +23,4 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ios-release
-        path: ${{ env.build-file }}
+        path: ${{ env.IOS_BUILD_FILE }}
