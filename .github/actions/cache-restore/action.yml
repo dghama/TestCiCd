@@ -24,10 +24,8 @@ runs:
         key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
-        fail-on-cache-miss: true
 
     - name: Restore Ruby gems cache
-      if: ${{ env.PLATFORM == 'ios' }}
       uses: actions/cache@v4
       with:
         path: |
@@ -36,10 +34,8 @@ runs:
         key: ${{ runner.os }}-ruby-${{ hashFiles('**/Gemfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-ruby-
-        fail-on-cache-miss: true
 
     - name: Restore Fastlane plugins cache
-      if: ${{ env.PLATFORM == 'ios' }}
       uses: actions/cache@v4
       with:
         path: |
@@ -47,4 +43,3 @@ runs:
         key: ${{ runner.os }}-fastlane-${{ hashFiles('**/Gemfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-fastlane-
-        fail-on-cache-miss: true
