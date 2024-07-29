@@ -14,14 +14,14 @@ runs:
     - name: Debug file existence
       run: |
         echo "Checking for output.json file:"
-        ls -l android/app/build/outputs/apk/release/
-        cat android/app/build/outputs/apk/release/output-metadata.json
+        ls -l ${{env.ANDROID_BUILD_DIR}}
+        cat ${{env.ANDROID_INFO_FILE}}
       shell: bash
 
     - name: Set permissions
       run: |
-        chmod 644 android/app/build/outputs/apk/release/output-metadata.json
-        chmod 644 android/app/build/outputs/apk/release/app-release.apk
+        chmod 644 ${{env.ANDROID_INFO_FILE}}
+        chmod 644 ${{env.ANDROID_BUILD_FILE}}
       shell: bash
 
     - name: Upload the application on Mstore
@@ -29,6 +29,6 @@ runs:
         curl -X POST https://store.mobelite.fr/console/api_dev.php/api/upload_version \
         -H "Authorization: ${{ inputs.AUTHORIZATION }}" \
         -F "applicationToken=${{ inputs.APP_DEV_TOKEN }}" \
-        -F "fileInfo=@${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json" \
-        -F "file=@${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
+        -F "fileInfo=@${{env.ANDROID_INFO_FILE}}n" \
+        -F "file=@${{env.ANDROID_BUILD_FILE}}"
       shell: bash
