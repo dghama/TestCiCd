@@ -48,7 +48,6 @@ runs:
         chmod 644 ${{ env.ANDROID_INFO_FILE }} ${{ env.ANDROID_BUILD_FILE }}
         echo "Set permissions for ${{ env.ANDROID_INFO_FILE }} and ${{ env.ANDROID_BUILD_FILE }}"
       shell: bash
-      shell: bash
 
     - name: Upload the application on Mstore
       env:
