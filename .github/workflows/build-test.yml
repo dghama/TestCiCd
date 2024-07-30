@@ -1,15 +1,11 @@
-name: Lint, Unit Tests, Code Analysis, Build and Deploy to MStore
+name: CI/CD
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
-      - develop
-    types: [closed]
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, closed]
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
@@ -26,6 +22,37 @@ env:
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
 
 jobs:
+  notify-start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack - Start
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "text": "Starting ${{ github.workflow }} for ${{ secrets.APP_NAME }}",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": "${{ github.repository }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Event",
+                      "value": "${{ github.event_name }}",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   code-checkout:
     runs-on: macos-latest
     steps:
@@ -46,11 +73,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Android Environment Setup
         uses: ./.github/actions/build-test/android-setup/android-runner
-
       - name: IOS Environment Setup
         uses: ./.github/actions/build-test/ios-setup/ios-runner
 
@@ -60,9 +84,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
@@ -74,9 +95,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
@@ -88,8 +106,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Build iOS
         uses: ./.github/actions/build-test/ios-setup/ios-build
 
@@ -99,8 +115,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         with:
@@ -115,14 +129,34 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Upload android version to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+      - name: Notify Slack - Android Upload
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: Android app uploaded to MStore
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  notify-end:
+    runs-on: ubuntu-latest
+    needs: [upload-android]
+    if: always()
+    steps:
+      - name: Notify Slack - End
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: Workflow completed
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # upload-ios:
   #   runs-on: macos-latest
