@@ -27,8 +27,6 @@ runs:
           ios/Pods
           ~/Library/Caches/CocoaPods
         key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-pods-
 
     - name: 📦 Install CocoaPods dependencies
       run: |
