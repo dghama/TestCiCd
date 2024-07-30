@@ -92,10 +92,6 @@ jobs:
           fetch-depth: 0
       - name: Build iOS
         uses: ./.github/actions/build-test/ios-setup/ios-build
-        with:
-          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
 
   build-android:
     runs-on: macos-latest

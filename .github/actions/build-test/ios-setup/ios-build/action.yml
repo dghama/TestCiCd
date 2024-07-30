@@ -8,7 +8,7 @@ runs:
 
     - name: Build iOS with Fastlane
       run: |
-        bundle exec fastlane ios build
+        fastlane ios build
       shell: bash
 
     - name: Upload iOS Artifact
