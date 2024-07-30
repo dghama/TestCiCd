@@ -28,7 +28,7 @@ runs:
         KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
         KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
       run: |
-        fastlane android build
+        bundle exec fastlane android build
       shell: bash
 
     - name: Upload Android Artifact

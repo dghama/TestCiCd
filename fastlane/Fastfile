@@ -44,7 +44,9 @@ platform :ios do
       scheme: @package['name'],
       export_method: "app-store",
       output_directory: "./ios/build",
-      output_name: "#{@package['name']}.ipa"
+      output_name: "#{@package['name']}.ipa",
+      skip_codesigning: true
+
     )
   end
 end

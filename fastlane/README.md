@@ -36,6 +36,22 @@ Build the iOS app
 
 Build the Android app
 
+### android upload_android_to_mstore
+
+```sh
+[bundle exec] fastlane android upload_android_to_mstore
+```
+
+Upload the Android app to the MStore
+
+### android upload_ios_to_mstore
+
+```sh
+[bundle exec] fastlane android upload_ios_to_mstore
+```
+
+Upload the iOS app to the MStore
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

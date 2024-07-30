@@ -1,13 +1,5 @@
 name: 'Build IOS'
 
-inputs:
-  APP_STORE_CONNECT_API_KEY_CONTENT:
-    required: true
-  FASTLANE_PASSWORD:
-    required: true
-  MATCH_PASSWORD:
-    required: true
-
 runs:
   using: 'composite'
   steps:
@@ -16,7 +8,7 @@ runs:
 
     - name: Build iOS with Fastlane
       run: |
-        fastlane ios build
+        bundle exec fastlane ios build
       shell: bash
 
     - name: Upload iOS Artifact

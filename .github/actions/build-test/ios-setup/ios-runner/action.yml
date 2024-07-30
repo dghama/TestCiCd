@@ -25,6 +25,10 @@ runs:
       run: gem install bundler -v 2.4.22
       shell: bash
 
+    - name: Install bundler
+      run: bundle install
+      shell: bash
+
     - name: Cache Bundler gems
       uses: actions/cache@v4
       with:
