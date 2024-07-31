@@ -35,9 +35,9 @@ platform :ios do
   desc 'Build the iOS app'
   lane :build do
     inc_ver_ios
-    bundle_exec(
-      command: "pod install",
-      dir: "./ios"
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile",
     )
     build_app(
       workspace: "./ios/#{@package['name']}.xcworkspace",

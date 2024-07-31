@@ -15,13 +15,14 @@ runs:
         path: vendor/bundle
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '2.6.10'
-        bundler-cache: true
+    - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.0
+          bundler-cache: true
+
     - name: Install specific Bundler version
-      run: gem install bundler -v 2.3.26
+      run: gem install bundler
       shell: bash
 
     - name: Install dependencies
