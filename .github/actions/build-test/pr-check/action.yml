@@ -18,8 +18,8 @@ runs:
     #      run: yarn lint
     #      shell: bash
 
-    - name: 🏃‍♂️ Setup environment
-      run: |
-        chmod +x .github/scripts/load-env-vars.sh
-        .github/scripts/load-env-vars.sh
-      shell: bash
+    # - name: 🏃‍♂️ Setup environment
+    #   run: |
+    #     chmod +x .github/scripts/load-env-vars.sh
+    #     .github/scripts/load-env-vars.sh
+    #   shell: bash
