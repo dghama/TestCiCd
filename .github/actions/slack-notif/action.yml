@@ -1,0 +1,72 @@
+name: 'Slack Notification'
+description: 'Send a notification to Slack'
+inputs:
+  status:
+    description: 'Job status'
+    required: true
+  webhook_url:
+    description: 'Slack webhook URL'
+    required: true
+  custom_message:
+    description: 'Custom message to include in the notification'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send Slack Notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ inputs.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+        username: 'GitHub Actions'
+        icon_emoji: ':github:'
+        text: |
+          ${{ github.workflow }} workflow ${{ inputs.status == 'success' && 'succeeded' || 'failed' }} for ${{ github.repository }}
+          ${{ inputs.custom_message }}
+        blocks: |
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*${{ github.workflow }}* workflow ${{ inputs.status == 'success' && 'succeeded :white_check_mark:' || 'failed :x:' }} for ${{ github.repository }}"
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Branch:*\n${{ github.ref_name }}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Event:*\n${{ github.event_name }}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Commit:*\n${{ github.sha }}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Author:*\n${{ github.actor }}"
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Actions Run"
+                },
+                "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              }
+            ]
+          }
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}

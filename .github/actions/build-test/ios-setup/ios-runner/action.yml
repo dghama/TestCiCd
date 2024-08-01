@@ -14,66 +14,29 @@ runs:
       with:
         path: vendor/bundle
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
 
     - name: Install Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.0.0
+        ruby-version: '2.6.10'
         bundler-cache: true
-
-    - name: Install specific Bundler version
-      run: gem install bundler
-      shell: bash
-
-    - name: Install dependencies
-      run: |
-        bundle config set path 'vendor/bundle'
-        bundle install --jobs 4 --retry 3
-      shell: bash
-
-    - name: Cache Bundler gems
-      uses: actions/cache@v4
-      with:
-        path: |
-          vendor/bundle
-          .bundle
-        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-gems-
 
     - name: Cache Fastlane plugins
       uses: actions/cache@v4
       with:
         path: fastlane/plugins
         key: ${{ runner.os }}-fastlane-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-fastlane-
 
-    - name: Install Fastlane
-      run: bundle exec gem install fastlane
+    - name: Install dependencies and Fastlane
+      run: |
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
       shell: bash
 
     - name: Install Fastlane plugins
       run: bundle exec fastlane install_plugins
-      shell: bash
-
-    - name: Check CocoaPods installation
-      run: bundle exec pod --version
-      shell: bash
-
-    - name: Check Ruby Environment
-      run: |
-        ruby -v
-        which ruby
-        gem env
-        bundle --version
-        bundle exec pod --version
-        bundle exec fastlane --version
-      shell: bash
-
-    - name: Clear caches (if needed)
-      if: failure()
-      run: |
-        rm -rf vendor/bundle
-        rm -rf ~/.bundle
-        rm -rf ios/Pods
-        rm -rf ~/Library/Caches/CocoaPods
       shell: bash

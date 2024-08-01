@@ -12,7 +12,6 @@ runs:
         key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-node-modules-
-        fail-on-cache-miss: true
 
     - name: Restore CocoaPods cache
       if: ${{ env.PLATFORM == 'ios' }}
