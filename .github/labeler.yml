@@ -1,40 +1,35 @@
 # Label definitions for automatic assignment
 
 api:
-  - title: '^API.*'
-  - path: 'api/**'
+- any: ['api/**']
+- any: ['title', 'API.*']
 
 bug:
-  - title: '(bug|fix|defect).*'
-  - body: '(bug|fix|defect).*'
-  - head-branch: ['bug']
+- any: ['title', '(bug|fix|defect).*']
+- any: ['body', '(bug|fix|defect).*']
 
 config:
-  - path: 'config/**'
-  - path: 'misc/**'
+- any: ['config/**', 'misc/**']
 
 enhancement:
-  - title: '(enhance|improve|better).*'
-  - body: '(enhance|improve|better).*'
-  - head-branch: ['enhance']
+- any: ['title', '(enhance|improve|better).*']
+- any: ['body', '(enhance|improve|better).*']
 
 feature:
-  - title: '(feature|feat|new).*'
-  - body: '(feature|feat|new).*'
-  - head-branch: ['feature']
+- any: ['title', '(feature|feat|new).*']
+- any: ['body', '(feature|feat|new).*']
 
 nfr:
-  - title: 'nfr.*'
-  - body: 'nfr.*'
+- any: ['title', 'nfr.*']
+- any: ['body', 'nfr.*']
 
 refactor:
-  - title: '(refactor|cleanup).*'
-  - body: '(refactor|cleanup).*'
-  - head-branch: ['refactor']
+- any: ['title', '(refactor|cleanup).*']
+- any: ['body', '(refactor|cleanup).*']
 
 release:
-  - title: 'release.*'
-  - body: 'release.*'
+- any: ['title', 'release.*']
+- any: ['body', 'release.*']
 
 ui-component:
-  - path: 'ui/**'
+- any: ['ui/**']
