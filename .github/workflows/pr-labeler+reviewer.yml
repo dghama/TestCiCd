@@ -18,7 +18,6 @@ jobs:
         uses: kentaro-m/auto-assign-action@v2.0.0
         with:
           configuration_path: ./.github/auto_assign.yml
-        if: github.event.action == 'opened'
 
       # Labeling (potentially with conditions)
       - name: Update Labels (Consider conditions)
