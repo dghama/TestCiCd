@@ -1,17 +1,19 @@
 name: 'Pull Request Labeler and Reviewer Assigner' # More descriptive name
 
 on:
-  pull_request: # Trigger on pull request events
-    types: [opened, edited] # For both opened and edited PRs
+  pull_request:
+    types: [opened, edited]
+  push:
+    branches: [main, develop]
 
 jobs:
-  label-and-assign: # Combined job name for clarity
+  label-and-assign:
     runs-on: ubuntu-latest
-    permissions: # Combined permissions for all steps
+    permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4 # Checkout the repository code (implicitly assumed)
+      - uses: actions/checkout@v4
 
       # Reviewer Assignment (only on opened PRs)
       - name: Assign Reviewers (Only on Opened PR)
@@ -21,6 +23,6 @@ jobs:
 
       # Labeling (potentially with conditions)
       - name: Update Labels (Consider conditions)
-        uses: actions/labeler@v5 # Label the pull request
+        uses: actions/labeler@v5
         with:
           configuration_file: ./.github/labeler.yml
