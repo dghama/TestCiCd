@@ -4,7 +4,6 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened, closed]
 
-
 jobs:
   label-and-assign:
     runs-on: macos-latest
@@ -16,9 +15,11 @@ jobs:
 
       # Reviewer Assignment (only on opened PRs)
       - name: Assign Reviewers (Only on Opened PR)
-        uses: kentaro-m/auto-assign-action@v2.0.0
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: ./.github/auto_assign.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Labeling (potentially with conditions)
       - name: Update Labels
