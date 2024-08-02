@@ -130,7 +130,6 @@ jobs:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: 'New iOS version is available on MStore'
-
   # Uncomment if using SonarQube
   # sonarqube-scan:
   #   runs-on: macos-latest
