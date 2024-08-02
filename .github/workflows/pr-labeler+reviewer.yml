@@ -2,9 +2,7 @@ name: 'Pull Request Labeler and Reviewer Assigner' # More descriptive name
 
 on:
   pull_request:
-    types: [opened, edited]
-  push:
-    branches: [main, develop]
+    types: [opened, edited, synchronize, reopened, closed]
 
 jobs:
   label-and-assign:
@@ -19,10 +17,11 @@ jobs:
       - name: Assign Reviewers (Only on Opened PR)
         uses: kentaro-m/auto-assign-action@v2.0.0
         with:
-          configuration_path: ./.github/auto_assign.yml
+          configuration-path: ./.github/auto_assign.yml
 
       # Labeling (potentially with conditions)
-      - name: Update Labels (Consider conditions)
+      - name: Update Labels
+        if: github.event.action == 'opened' || github.event.action == 'edited'
         uses: actions/labeler@v5
         with:
-          configuration_file: ./.github/labeler.yml
+          configuration-path: ./.github/labeler.yml
