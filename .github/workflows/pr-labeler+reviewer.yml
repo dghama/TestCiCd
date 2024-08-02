@@ -17,11 +17,11 @@ jobs:
       - name: Assign Reviewers (Only on Opened PR)
         uses: kentaro-m/auto-assign-action@v2.0.0 # Assign reviewers
         with:
-          configuration_path: '.github/auto_assign.yml' # Default path
+          configuration_path: ./.github/auto_assign.yml
         if: github.event.action == 'opened' # Only run on pull_request opened event
 
       # Labeling (potentially with conditions)
       - name: Update Labels (Consider conditions)
         uses: actions/labeler@v5 # Label the pull request
         with:
-          configuration_file: .github/labels.yml
+          configuration_file: ./.github/labels.yml
