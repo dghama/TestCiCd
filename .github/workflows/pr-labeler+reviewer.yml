@@ -25,7 +25,6 @@ jobs:
 
       # Labeling (potentially with conditions)
       - name: Update Labels
-        if: github.event.action == 'opened' || github.event.action == 'edited'
         uses: actions/labeler@v5
         with:
           configuration-path: .github/labeler.yml
