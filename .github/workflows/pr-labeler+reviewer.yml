@@ -3,12 +3,10 @@ name: 'Pull Request Labeler and Reviewer Assigner' # More descriptive name
 on:
   pull_request:
     types: [opened, edited]
-  push:
-    branches: [main, develop]
 
 jobs:
   label-and-assign:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: read
       pull-requests: write
