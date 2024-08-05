@@ -58,6 +58,9 @@ jobs:
   check-pr:
     runs-on: macos-latest
     needs: dependency-installation
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       PLATFORM: android
     steps:
