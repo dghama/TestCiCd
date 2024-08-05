@@ -27,11 +27,13 @@ feature:
 # Add 'release' label to any PR that is opened against the `main` branch
 release:
 - base-branch: 'main'
+- color: 'blue'
 
 # New labels to be added
 api:
 - changed-files:
   - any-glob-to-any-file: 'api/*'
+
 
 bug:
 - head-branch: ['^bugfix/', '^bug/', '^fix/']
