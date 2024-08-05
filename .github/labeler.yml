@@ -1,35 +1,45 @@
-# Label definitions for automatic assignment
 
-api:
-  - any: ['api/**']
-  - any: ['title', 'API.*']
+Documentation:
+- changed-files:
+  - any-glob-to-any-file: '**/*.md'
 
-bug:
-  - any: ['title', '(bug|fix|defect).*']
-  - any: ['body', '(bug|fix|defect).*']
-
-config:
-  - any: ['config/**', 'misc/**']
-
-enhancement:
-  - any: ['title', '(enhance|improve|better).*']
-  - any: ['body', '(enhance|improve|better).*']
+source:
+- all:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/*'
+    - all-globs-to-all-files: '!src/docs/*'
 
 feature:
-  - any: ['title', '(feature|feat|new).*']
-  - any: ['body', '(feature|feat|new).*']
-
-nfr:
-  - any: ['title', 'nfr.*']
-  - any: ['body', 'nfr.*']
-
-refactor:
-  - any: ['title', '(refactor|cleanup).*']
-  - any: ['body', '(refactor|cleanup).*']
+- head-branch: ['^feature', 'feature']
 
 release:
-  - any: ['title', 'release.*']
-  - any: ['body', 'release.*']
+- base-branch: 'main'
+- color: 'blue'
+
+api:
+- changed-files:
+  - any-glob-to-any-file: 'api/*'
+
+bug:
+- head-branch: ['^bugfix/', '^bug/', '^fix/']
+
+config:
+- head-branch: ['^misc/', '^config/', '^others/']
+
+enhancement:
+- head-branch: ['^enhancement/', '^enhance/', '^improvement/', '^improve/']
+
+nfr:
+- changed-files:
+  - any-glob-to-any-file: 'nfr/*'
+
+refactor:
+- head-branch: ['^refactor/', '^cleanup/']
 
 ui-component:
-  - any: ['ui/**']
+- changed-files:
+  - any-glob-to-any-file: 'ui/*'
+
+ci-cd:
+- changed-files:
+  - any-glob-to-any-file: '.github/**/*'

@@ -21,15 +21,13 @@ runs:
         path: ./coverage
         if-no-files-found: error
         retention-days: 1
-      shell: bash
 
     - name: 💯 Comment coverage report
       uses: romeovs/lcov-reporter-action@v0.3.1
       if: github.event_name == 'pull_request'
       with:
         lcov-file: ./coverage/lcov.info
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-      shell: bash
+        github-token: ${{ github.token }}
 
     #    - name: 🏃‍♂️ Run lint
     #      run: yarn lint
