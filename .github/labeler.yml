@@ -1,35 +1,35 @@
 # Label definitions for automatic assignment
 
 api:
-- any: ['api/**']
-- any: ['title', 'API.*']
+  - any: ['api/**']
+  - any: ['title', 'API.*']
 
 bug:
-- any: ['title', '(bug|fix|defect).*']
-- any: ['body', '(bug|fix|defect).*']
+  - any: ['title', '(bug|fix|defect).*']
+  - any: ['body', '(bug|fix|defect).*']
 
 config:
-- any: ['config/**', 'misc/**']
+  - any: ['config/**', 'misc/**']
 
 enhancement:
-- any: ['title', '(enhance|improve|better).*']
-- any: ['body', '(enhance|improve|better).*']
+  - any: ['title', '(enhance|improve|better).*']
+  - any: ['body', '(enhance|improve|better).*']
 
 feature:
-- any: ['title', '(feature|feat|new).*']
-- any: ['body', '(feature|feat|new).*']
+  - any: ['title', '(feature|feat|new).*']
+  - any: ['body', '(feature|feat|new).*']
 
 nfr:
-- any: ['title', 'nfr.*']
-- any: ['body', 'nfr.*']
+  - any: ['title', 'nfr.*']
+  - any: ['body', 'nfr.*']
 
 refactor:
-- any: ['title', '(refactor|cleanup).*']
-- any: ['body', '(refactor|cleanup).*']
+  - any: ['title', '(refactor|cleanup).*']
+  - any: ['body', '(refactor|cleanup).*']
 
 release:
-- any: ['title', 'release.*']
-- any: ['body', 'release.*']
+  - any: ['title', 'release.*']
+  - any: ['body', 'release.*']
 
 ui-component:
-- any: ['ui/**']
+  - any: ['ui/**']
