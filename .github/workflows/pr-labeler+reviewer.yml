@@ -2,29 +2,24 @@ name: 'PR Labeler and Reviewer Assigner'
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, closed]
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
   label-and-assign:
-    runs-on: macos-latest
-    permissions:
-      contents: read
-      pull-requests: write
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       # Reviewer Assignment (only on opened PRs)
-      - name: Assign Reviewers (Only on Opened PR)
+      - name: Assign Reviewers
+        if: github.event.action == 'opened'
         uses: kentaro-m/auto-assign-action@v2.0.0
         with:
           configuration-path: .github/auto_assign.yml
 
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Labeling (potentially with conditions)
-      - name: Update Labels
+      # Labeling
+      - name: Label PR
         uses: actions/labeler@v5
         with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: .github/labeler.yml
