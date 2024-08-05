@@ -1,0 +1,152 @@
+name: Deploy RN App to Mstore
+
+on:
+  push:
+    branches: [master, develop]
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  APP_NAME: ${{ secrets.APP_NAME }}
+  CI: true
+  ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+  ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
+  ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
+  ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
+  IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
+  IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+
+jobs:
+  code-checkout:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo
+          path: .
+
+  environment-setup:
+    needs: code-checkout
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Android Environment Setup
+        uses: ./.github/actions/build-test/android-setup/android-runner
+      - name: IOS Environment Setup
+        uses: ./.github/actions/build-test/ios-setup/ios-runner
+
+  dependency-installation:
+    needs: environment-setup
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        uses: ./.github/actions/build-test/dependency-installation
+
+  check-pr:
+    runs-on: macos-latest
+    needs: dependency-installation
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PLATFORM: android
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Check PR codeBase
+        uses: ./.github/actions/build-test/pr-check
+
+  build-ios:
+    runs-on: macos-latest
+    needs: check-pr
+    env:
+      PLATFORM: ios
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build iOS
+        uses: ./.github/actions/build-test/ios-setup/ios-build
+
+  build-android:
+    runs-on: macos-latest
+    needs: check-pr
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build Android
+        uses: ./.github/actions/build-test/android-setup/android-build
+
+  sonarqube-scan:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/sonar-report
+
+  mirror-exclusions:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create mirror repository
+        run: ./scripts/create-mirror.sh
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-repo
+          path: clean-repo.zip
+
+  upload-android:
+    runs-on: macos-latest
+    needs: build-android
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Upload android version to MStore
+        uses: ./.github/actions/mstore-upload/android-upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+      - name: Notify teams - End
+        uses: ./.github/actions/teams-notify
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          custom_message: 'New android version is available on MStore'
+
+  upload-ios:
+    runs-on: macos-latest
+    needs: build-ios
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Upload App
+        uses: ./.github/actions/app-upload/upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+          info-file: ${{ env.IOS_INFO_FILE }}
+          build-file: ${{ env.IOS_BUILD_FILE }}
+      - name: Notify teams - End
+        uses: ./.github/actions/teams-notify
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          custom_message: 'New iOS version is available on MStore'
