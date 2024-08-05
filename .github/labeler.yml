@@ -49,10 +49,6 @@ nfr:
 refactor:
 - head-branch: ['^refactor/', '^cleanup/']
 
-release:
-- changed-files:
-  - any-glob-to-any-file: 'release/*'
-
 ui-component:
 - changed-files:
   - any-glob-to-any-file: 'ui/*'
