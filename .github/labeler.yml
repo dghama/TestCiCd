@@ -42,9 +42,6 @@ config:
 enhancement:
 - head-branch: ['^enhancement/', '^enhance/', '^improvement/', '^improve/']
 
-feature:
-- head-branch: ['^feature/', '^feat/']
-
 nfr:
 - changed-files:
   - any-glob-to-any-file: 'nfr/*'
