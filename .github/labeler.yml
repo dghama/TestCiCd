@@ -1,26 +1,10 @@
-api:
-  - any: ['api/**', 'title:API.*']
-
-bug:
-  - any: ['title:(bug|fix|defect).*', 'body:(bug|fix|defect).*']
-
-config:
-  - any: ['config/**', 'misc/**']
-
-enhancement:
-  - any: ['title:(enhance|improve|better).*', 'body:(enhance|improve|better).*']
-
-feature:
-  - any: ['title:(feature|feat|new).*', 'body:(feature|feat|new).*']
-
-nfr:
-  - any: ['title:nfr.*', 'body:nfr.*']
-
-refactor:
-  - any: ['title:(refactor|cleanup).*', 'body:(refactor|cleanup).*']
-
-release:
-  - any: ['title:release.*', 'body:release.*']
-
-ui-component:
-  - any: ['ui/**']
+api: api/*
+bug: ['bugfix/*', 'bug/*', 'fix/*']
+config: ['misc/*', 'config/*', 'others/*']
+enhancement: ['enhancement/*', 'enhance/*', 'improvement/*', 'improve/*']
+feature: ['feature/*', 'feat/*']
+nfr: nfr/*
+refactor: ['refactor/*', 'cleanup/*']
+release: release/*
+ui-component: ui/*
+OCD: feature/OCD/*
