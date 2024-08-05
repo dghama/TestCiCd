@@ -1,8 +1,6 @@
 name: CI/CD
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
     types: [opened, synchronize, reopened, closed]
@@ -69,6 +67,16 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
+  sonarqube-scan:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/sonar-report
+
   build-ios:
     runs-on: macos-latest
     needs: check-pr
@@ -133,14 +141,3 @@ jobs:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: 'New iOS version is available on MStore'
-
-  # Uncomment if using SonarQube
-  # sonarqube-scan:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Perform SonarQube scan
-  #       uses: ./.github/actions/sonar-report

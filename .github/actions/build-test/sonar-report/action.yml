@@ -3,8 +3,24 @@ name: SonarQube scan
 runs:
   using: 'composite'
   steps:
-    - name: Perform SonarQube scan
-      uses: sonarsource/sonarqube-scan-action@master
+    - name: Download SQ scanner
+      uses: SonarSource/sonarqube-scan-action@master
+      with:
+        args: >
+          -Dsonar.projectVersion=${{ github.sha }}
+          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+          -Dsonar.pullrequest.branch=${{ github.head_ref }}
+          -Dsonar.pullrequest.base=${{ github.base_ref }}
       env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
+        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
+
+    - name: SonarQube quality gate check
+      id: quality-gate
+      uses: SonarSource/sonarqube-quality-gate-action@master
+      with:
+        scanMetadataReportFile: .scannerwork/report-task.txt
+      env:
+        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
+        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
+      timeout-minutes: 5

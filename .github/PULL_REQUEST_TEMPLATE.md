@@ -2,15 +2,15 @@
 
 _Include [link](https://mobelite.atlassian.net/browse/KEY-) to the ticket as needed._
 
-## Description
+## Feature Details
 
 _Insert a description of the feature you are implementing or bug you are fixing. Context about why the change matters is very helpful_
 
-## Screenshots
+## Screenshots / Screen recordings
 
 _Include screenshots or screen recordings as needed._
 
-## Checklist
+## Related Changes checklist
 
 - [ ] Checked on iOS
 - [ ] Checked on Android
