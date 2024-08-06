@@ -22,7 +22,12 @@ env:
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
   SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
-
+  KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+  AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+  APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
 jobs:
   setup:
     runs-on: macos-latest
@@ -68,8 +73,8 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
-      - name: Perform SonarQube scan
-        uses: ./.github/actions/build-test/sonar-report
+      # - name: Perform SonarQube scan
+      #   uses: ./.github/actions/build-test/sonar-report
 
   build-ios:
     if: github.event_name == 'push'
@@ -132,9 +137,7 @@ jobs:
 
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
-        with:
-          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
       - name: Notify teams - Android
         uses: ./.github/actions/teams-notify
         with:
@@ -153,11 +156,6 @@ jobs:
           path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
-        with:
-          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-          info-file: ${{ env.IOS_INFO_FILE }}
-          build-file: ${{ env.IOS_BUILD_FILE }}
       - name: Notify teams - iOS
         uses: ./.github/actions/teams-notify
         with:

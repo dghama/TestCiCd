@@ -1,15 +1,5 @@
 name: 'Build ANDROID'
 
-inputs:
-  KEYSTORE_FILE:
-    required: true
-  KEYSTORE_PASSWORD:
-    required: true
-  KEY_ALIAS:
-    required: true
-  KEY_PASSWORD:
-    required: true
-
 runs:
   using: 'composite'
   steps:
@@ -22,17 +12,12 @@ runs:
 
     - name: Decode Keystore
       run: |
-        echo "${{ inputs.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+        echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
       shell: bash
 
     - name: Build Android with Fastlane
-      env:
-        KEYSTORE_FILE_PATH: ${{ env.ANDROID_KEYSTORE_FILE }}
-        KEYSTORE_PASSWORD: ${{ inputs.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ inputs.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ inputs.KEY_PASSWORD }}
       run: |
-        fastlane android build
+        bundle exec fastlane android build
       shell: bash
 
     - name: Upload Android Artifact
