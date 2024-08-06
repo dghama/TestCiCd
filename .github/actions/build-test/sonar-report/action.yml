@@ -17,14 +17,23 @@ runs:
 
     - name: Perform SonarQube scan
       run: |
-        sonar-scanner \
-          -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
-          -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
-          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
-          -Dsonar.pullrequest.branch=${{ github.head_ref }} \
-          -Dsonar.pullrequest.base=${{ github.base_ref }}
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          sonar-scanner \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
+            -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+            -Dsonar.pullrequest.branch=${{ github.head_ref }} \
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+        else
+          sonar-scanner \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
+            -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
+            -Dsonar.branch.name=${{ github.ref_name }}
+        fi
       shell: bash
 
     - name: SonarQube quality gate check
