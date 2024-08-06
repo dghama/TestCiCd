@@ -17,6 +17,7 @@ runs:
 
     - name: Build Android with Fastlane
       run: |
+        bundle config path vendor/bundle
         bundle exec fastlane android build
       shell: bash
 

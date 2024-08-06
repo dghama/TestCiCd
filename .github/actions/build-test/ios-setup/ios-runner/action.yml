@@ -20,9 +20,10 @@ runs:
         ruby-version: '2.6.10'
         bundler-cache: true
 
-    - name: Install dependencies and Fastlane
+    - name: Install Ruby dependencies
       run: |
-        bundle install --path vendor/bundle
-        bundle exec fastlane install_plugins
+        gem install bundler
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
       shell: bash
 
