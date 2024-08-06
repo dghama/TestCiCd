@@ -5,7 +5,11 @@ runs:
   steps:
     - name: Restore node modules from cache
       uses: ./.github/actions/cache-restore
-
+    - name: Install Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '2.6.10'
+        bundler-cache: false  # Disable built-in caching
     - name: Build iOS with Fastlane
       run: |
         fastlane ios build

@@ -10,6 +10,12 @@ runs:
       run: chmod +x android/gradlew
       shell: bash
 
+    - name: Install Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '2.6.10'
+        bundler-cache: false  # Disable built-in caching
+        
     - name: Decode Keystore
       run: |
         echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
@@ -17,7 +23,8 @@ runs:
 
     - name: Build Android with Fastlane
       run: |
-        fastlane android build
+        bundle config path vendor/bundle
+        bundle exec fastlane android build
       shell: bash
 
     - name: Upload Android Artifact
