@@ -6,6 +6,7 @@ runs:
     - name: 📦 Restore node modules from cache
       uses: ./.github/actions/cache-restore
 
+
     - name: 🚑 Run type check
       run: yarn typecheck
       shell: bash

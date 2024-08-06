@@ -70,16 +70,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: repo
-      - name: Debug Ruby and Bundler setup
-        run: |
-              ruby --version
-              which ruby
-              gem --version
-              which gem
-              bundle --version
-              which bundle
-              bundle config get path
-              ls -la vendor/bundle
+
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
