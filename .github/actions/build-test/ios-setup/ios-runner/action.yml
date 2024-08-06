@@ -26,3 +26,11 @@ runs:
         bundle config path vendor/bundle
         bundle install --jobs 4 --retry 3
       shell: bash
+
+    - name: Cache Dependencies
+      uses: actions/cache@v3
+      with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gem-cache-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gem-cache-
