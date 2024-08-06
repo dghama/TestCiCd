@@ -20,7 +20,8 @@ env:
   ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
   IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
-
+  SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 jobs:
   setup:
     runs-on: macos-latest
