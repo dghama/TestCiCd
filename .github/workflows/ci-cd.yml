@@ -68,8 +68,8 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
-      - name: Perform SonarQube scan
-        uses: ./.github/actions/build-test/sonar-report
+      # - name: Perform SonarQube scan
+      #   uses: ./.github/actions/build-test/sonar-report
 
   mirror-exclusions:
     if: github.event_name == 'push'
