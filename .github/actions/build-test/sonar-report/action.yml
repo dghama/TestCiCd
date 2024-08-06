@@ -20,8 +20,8 @@ runs:
         sonar-scanner \
           -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
           -Dsonar.sources=. \
-          -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
-          -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} \
+          -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
+          -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
           -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
           -Dsonar.pullrequest.branch=${{ github.head_ref }} \
           -Dsonar.pullrequest.base=${{ github.base_ref }}
@@ -32,5 +32,5 @@ runs:
       with:
         scanMetadataReportFile: .scannerwork/report-task.txt
       env:
-        SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST }}
+        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
+        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
