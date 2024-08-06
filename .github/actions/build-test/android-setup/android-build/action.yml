@@ -9,6 +9,7 @@ runs:
     - name: Set gradlew permissions
       run: chmod +x android/gradlew
       shell: bash
+      
     - name: Debug Ruby and Bundler setup
       run: |
         ruby --version

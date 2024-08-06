@@ -49,16 +49,14 @@ jobs:
     needs: setup
     runs-on: macos-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download repository
+        uses: actions/download-artifact@v4
         with:
-         fetch-depth: 0
+          name: repo
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
-        uses: ./.github/workflows/setup-ruby.yml
-        with:
-         ruby-version: '2.6.10'
+        uses: ./.github/actions/build-test/ios-setup/ios-runner
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
@@ -101,6 +99,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: repo
+      - name: Debug Ruby and Bundler setup
+        run: |
+            ruby --version
+            which ruby
+            gem --version
+            which gem
+            bundle --version
+            which bundle
+            bundle config get path
+            ls -la vendor/bundle
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
