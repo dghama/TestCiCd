@@ -18,6 +18,7 @@ runs:
 
     - name: Set gradlew permissions
       run: chmod +x android/gradlew
+      shell: bash
 
     - name: Decode Keystore
       run: |
