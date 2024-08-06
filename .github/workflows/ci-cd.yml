@@ -48,9 +48,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: repo
-      - name: Setup environment
+      - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
-      - uses: ./.github/actions/build-test/ios-setup/ios-runner
+      - name: Setup ios environment
+        uses: ./.github/actions/build-test/ios-setup/ios-runner
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
