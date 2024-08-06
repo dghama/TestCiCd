@@ -8,10 +8,12 @@ runs:
       run: |
         SONAR_PROJECT_KEY=$(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)
         echo "SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Install SonarQube Scanner
       run: |
         brew install sonar-scanner
+      shell: bash
 
     - name: Perform SonarQube scan
       run: |

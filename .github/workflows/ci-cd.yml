@@ -70,9 +70,29 @@ jobs:
       - name: Perform SonarQube scan
         uses: ./.github/actions/build-test/sonar-report
 
+  mirror-exclusions:
+    if: github.event_name == 'push'
+    runs-on: macos-latest
+    needs: quality-checks
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update script permissions
+        run: chmod +x ./.github/scripts/create-mirror.sh
+
+      - name: Create mirror repository
+        run: ./.github/scripts/create-mirror.sh
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-repo
+          path: clean-repo.zip
+
   build-ios:
     if: github.event_name == 'push'
-    needs: quality-checks
+    needs: mirror-exclusions
     runs-on: macos-latest
     steps:
       - name: Download repository
@@ -86,7 +106,7 @@ jobs:
 
   build-android:
     if: github.event_name == 'push'
-    needs: quality-checks
+    needs: mirror-exclusions
     runs-on: macos-latest
     steps:
       - name: Download repository
@@ -141,22 +161,3 @@ jobs:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: 'New iOS version is available on MStore'
-
-  mirror-exclusions:
-    if: github.event_name == 'push'
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Update script permissions
-        run: chmod +x ./.github/scripts/create-mirror.sh
-
-      - name: Create mirror repository
-        run: ./.github/scripts/create-mirror.sh
-      - name: Upload repository
-        uses: actions/upload-artifact@v4
-        with:
-          name: clean-repo
-          path: clean-repo.zip
