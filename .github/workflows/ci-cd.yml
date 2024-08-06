@@ -101,7 +101,7 @@ jobs:
   mirror-exclusions:
     if: github.event_name == 'push'
     runs-on: macos-latest
-    needs: quality-checks
+    needs: [build-ios, build-android]
     outputs:
       clean-repo-path: ${{ steps.unzip.outputs.unzipped-path }}
     steps:
