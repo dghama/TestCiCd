@@ -56,7 +56,9 @@ jobs:
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
-        uses: ./.github/actions/build-test/ios-setup/ios-runner
+        uses: ./.github/workflows/setup-ruby.yml
+        with:
+         ruby-version: '2.6.10'
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
