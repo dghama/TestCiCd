@@ -24,14 +24,17 @@ runs:
         ruby-version: '2.6.10'
         bundler-cache: true  # Disable built-in caching
 
-    - name: Set Bundler Path
-      run: bundle config set --local path 'vendor/bundle'
+    - uses: actions/cache@v4
+      with:
+        path: vendor/bundle
+        key: bundle-use-ruby-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          bundle-use-ruby-
+    - name: Bundle install
+      run: |
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
       shell: bash
-
-    - name: Install Bundler dependencies
-      run: bundle install
-      shell: bash
-
 
     - name: Check Ruby Version
       run: |
