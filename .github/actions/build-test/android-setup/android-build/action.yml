@@ -5,11 +5,14 @@ runs:
   steps:
     - name: Restore node modules from cache
       uses: ./.github/actions/cache-restore
-    - name: Install Ruby
-      uses: ruby/setup-ruby@v1
+
+    - name: Restore cache
+      uses: actions/cache@v3
       with:
-        ruby-version: '2.6.10'
-        bundler-cache: true  # Disable built-in caching
+              path: |
+                vendor/bundle
+              key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
+
     - name: Set gradlew permissions
       run: chmod +x android/gradlew
       shell: bash
