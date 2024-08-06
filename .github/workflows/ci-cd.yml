@@ -49,10 +49,10 @@ jobs:
     needs: setup
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          name: repo
+         fetch-depth: 0
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
