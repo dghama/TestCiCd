@@ -9,7 +9,17 @@ runs:
     - name: Set gradlew permissions
       run: chmod +x android/gradlew
       shell: bash
-
+    - name: Debug Ruby and Bundler setup
+      run: |
+        ruby --version
+        which ruby
+        gem --version
+        which gem
+        bundle --version
+        which bundle
+        bundle config get path
+        ls -la vendor/bundle
+      shell: bash
     - name: Decode Keystore
       run: |
         echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}

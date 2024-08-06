@@ -14,16 +14,17 @@ runs:
         brew update
       shell: bash
 
-    - name: Install Ruby
+    - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '2.6.10'
+        ruby-version: '3.0.0'  # Match this to the Ruby version in the error message
         bundler-cache: true
+        working-directory: '.'  # Ensure it's using the Gemfile in your project root
 
     - name: Install Ruby dependencies
       run: |
-        gem install bundler -v 2.4.22
-        bundle config path vendor/bundle
+        gem install bundler
+        bundle config set --local path 'vendor/bundle'
         bundle install --jobs 4 --retry 3
       shell: bash
 
