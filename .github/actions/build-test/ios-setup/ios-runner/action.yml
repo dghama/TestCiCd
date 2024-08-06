@@ -17,13 +17,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-bundler-
 
-    - name: Cache Fastlane plugins
-      uses: actions/cache@v4
-      with:
-        path: ~/.fastlane/plugins
-        key: ${{ runner.os }}-fastlane-${{ hashFiles('Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-fastlane-
 
     - name: Install Ruby
       uses: ruby/setup-ruby@v1
@@ -39,9 +32,6 @@ runs:
       run: bundle install
       shell: bash
 
-    - name: Install Fastlane plugins
-      run: bundle exec fastlane add_plugin <plugin_name>
-      shell: bash
 
     - name: Check Ruby Version
       run: |
@@ -54,7 +44,3 @@ runs:
           ls -la vendor/bundle
       shell: bash
 
-    - name: Check Fastlane Plugins
-      run: |
-        ls -la ~/.fastlane/plugins
-      shell: bash
