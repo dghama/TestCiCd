@@ -67,35 +67,64 @@ jobs:
       - name: Perform SonarQube scan
         uses: ./.github/actions/sonar-report
 
-  build:
+  build-ios:
+    if: github.event_name == 'push'
     needs: quality-checks
     runs-on: macos-latest
-    strategy:
-      matrix:
-        platform: [ios, android]
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
           name: repo
-      - name: Build ${{ matrix.platform }}
-        uses: ./.github/actions/build-test/${{ matrix.platform }}-setup/${{ matrix.platform }}-build
+      - name: Build iOS
+        uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
-          PLATFORM: ${{ matrix.platform }}
+          PLATFORM: ios
 
-  deploy:
-    needs: build
+  build-android:
+    if: github.event_name == 'push'
+    needs: quality-checks
     runs-on: macos-latest
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
           name: repo
-      - name: Upload to MStore
+      - name: Build Android
+        uses: ./.github/actions/build-test/android-setup/android-build
+        env:
+          PLATFORM: android
+
+  deploy-android:
+    if: github.event_name == 'push'
+    needs: build-android
+    runs-on: macos-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+      - name: Notify teams - Android
+        uses: ./.github/actions/teams-notify
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          custom_message: 'New Android version is available on MStore'
+
+  deploy-ios:
+    if: github.event_name == 'push'
+    needs: build-ios
+    runs-on: macos-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         with:
@@ -103,14 +132,15 @@ jobs:
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
           info-file: ${{ env.IOS_INFO_FILE }}
           build-file: ${{ env.IOS_BUILD_FILE }}
-      - name: Notify teams
+      - name: Notify teams - iOS
         uses: ./.github/actions/teams-notify
         with:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          custom_message: 'New versions are available on MStore'
+          custom_message: 'New iOS version is available on MStore'
 
   mirror-exclusions:
+    if: github.event_name == 'push'
     runs-on: macos-latest
     steps:
       - name: Checkout repository
