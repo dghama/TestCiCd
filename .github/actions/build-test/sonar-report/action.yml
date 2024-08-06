@@ -3,23 +3,31 @@ name: SonarQube scan
 runs:
   using: 'composite'
   steps:
-    - name: Download SQ scanner
-      uses: SonarSource/sonarqube-scan-action@master
-      with:
-        args: >
-          -Dsonar.projectVersion=${{ github.sha }}
-          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
-          -Dsonar.pullrequest.branch=${{ github.head_ref }}
+    - name: Extract SonarQube Project Key
+      id: extract-key
+      run: |
+        SONAR_PROJECT_KEY=$(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)
+        echo "SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY}" >> $GITHUB_ENV
+
+    - name: Install SonarQube Scanner
+      run: |
+        brew install sonar-scanner
+
+    - name: Perform SonarQube scan
+      run: |
+        sonar-scanner \
+          -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
+          -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} \
+          -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+          -Dsonar.pullrequest.branch=${{ github.head_ref }} \
           -Dsonar.pullrequest.base=${{ github.base_ref }}
-      env:
-        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
-        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
 
     - name: SonarQube quality gate check
-      id: quality-gate
       uses: SonarSource/sonarqube-quality-gate-action@master
       with:
         scanMetadataReportFile: .scannerwork/report-task.txt
       env:
-        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
-        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
+        SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST }}

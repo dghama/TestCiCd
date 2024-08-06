@@ -22,6 +22,7 @@ env:
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
   SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+  SONAR_PROJECT_KEY: $(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)" >> $GITHUB_ENV
 jobs:
   setup:
     runs-on: macos-latest
@@ -149,6 +150,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Update script permissions
+        run: chmod +x ./.github/scripts/create-mirror.sh
+
       - name: Create mirror repository
         run: ./.github/scripts/create-mirror.sh
       - name: Upload repository
