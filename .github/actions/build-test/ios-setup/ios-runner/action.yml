@@ -20,6 +20,17 @@ runs:
         ruby -v
       shell: bash
 
-    - name: Install Fastlane
-      run:  bundle install 
+    - name: Set Bundler Path
+      run: bundle config set --local path 'vendor/bundle'
       shell: bash
+
+    - name: Install Bundler dependencies
+      run: bundle install
+      shell: bash
+
+    - name: Check Bundler Path
+      run: |
+          bundle config get path
+          ls -la vendor/bundle
+      shell: bash
+
