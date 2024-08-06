@@ -10,12 +10,6 @@ runs:
       run: chmod +x android/gradlew
       shell: bash
 
-    - name: Install Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '2.6.10'
-        bundler-cache: false  # Disable built-in caching
-        
     - name: Decode Keystore
       run: |
         echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}

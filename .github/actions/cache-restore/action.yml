@@ -24,3 +24,19 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pods-
           
+    - name: Restore Ruby gems cache
+      uses: actions/cache@v4
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-bundler-${{ hashFiles('Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bundler-
+
+    - name: Restore Fastlane plugins cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.fastlane/plugins
+        key: ${{ runner.os }}-fastlane-${{ hashFiles('Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-fastlane-
