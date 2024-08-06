@@ -32,7 +32,6 @@ runs:
             -Dsonar.sources=. \
             -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
             -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
-            -Dsonar.branch.name=${{ github.ref_name }}
         fi
       shell: bash
 
