@@ -63,10 +63,9 @@ jobs:
           name: repo
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
-        env:
-          PLATFORM: android
+
       - name: Perform SonarQube scan
-        uses: ./.github/actions/sonar-report
+        uses: ./.github/actions/build-test/sonar-report
 
   build-ios:
     if: github.event_name == 'push'
