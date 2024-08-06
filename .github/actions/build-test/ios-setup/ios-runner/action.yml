@@ -44,12 +44,3 @@ runs:
           ls -la vendor/bundle
       shell: bash
     
-    - name: Upload Ruby Environment
-      uses: actions/upload-artifact@v4
-      with:
-          name: ruby-environment
-          path: |
-            /usr/local/bin/ruby
-            /usr/local/lib/ruby
-            vendor/bundle
-

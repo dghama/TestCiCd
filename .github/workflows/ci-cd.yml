@@ -48,6 +48,8 @@ jobs:
   prepare:
     needs: setup
     runs-on: macos-latest
+    outputs:
+      ruby-version: ${{ steps.ruby-setup.outputs.ruby-version }}
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -70,6 +72,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: repo
+
+      - name: Use Ruby
+        run: echo "Ruby version is ${{ needs.setup.outputs.ruby-version }}"
+  
+      - name: check ruby version
+        run:  ruby -v
+  
 
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
