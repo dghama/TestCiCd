@@ -74,7 +74,7 @@ jobs:
           name: repo
 
       - name: Use Ruby
-        run: echo "Ruby version is ${{ needs.setup.outputs.ruby-version }}"
+        run: echo "Ruby version is ${{ needs.prepare.outputs.ruby-version }}"
   
       - name: check ruby version
         run:  ruby -v

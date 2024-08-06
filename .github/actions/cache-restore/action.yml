@@ -31,9 +31,3 @@ runs:
         key: ${{ runner.os }}-bundler-${{ hashFiles('Gemfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-bundler-
-
-    - name: Download Ruby Environment
-      uses: actions/download-artifact@v4
-      with:
-            name: ruby-environment
-
