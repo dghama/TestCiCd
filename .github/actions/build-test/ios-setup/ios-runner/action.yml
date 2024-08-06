@@ -9,22 +9,20 @@ runs:
         sudo xcodebuild -license accept
       shell: bash
 
-    - name: Update Homebrew
-      run: |
-        brew update
-      shell: bash
-
-    - name: Set up Ruby
+    - name: Install Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.0.0'  # Match this to the Ruby version in the error message
+        ruby-version: '2.6.10'
         bundler-cache: true
-        working-directory: '.'  # Ensure it's using the Gemfile in your project root
+
+    - name: Check Ruby Version
+      run: |
+        ruby -v
+      shell: bash
 
     - name: Install Ruby dependencies
       run: |
-        gem install bundler
-        bundle config set --local path 'vendor/bundle'
+        gem install bundler -v 2.4.22
+        bundle config path vendor/bundle
         bundle install --jobs 4 --retry 3
       shell: bash
-
