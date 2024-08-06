@@ -35,19 +35,12 @@ git fetch origin
 git checkout -b main origin/main
 
 # Remove the excluded directories and files
-# Note: Ensure that the excluded files/directories do not include the current directory
 for EXCLUDE in "${EXCLUDES[@]}"; do
-  if [ -e "$EXCLUDE" ]; then
-    rm -rf "$EXCLUDE"
-  fi
+  rm -rf "$EXCLUDE"
 done
 
 # Optional: You can remove untracked files and directories
 git clean -fdx
-
-# Commit the changes
-git add .
-git commit -m "Cleaned up repository for deployment"
 
 # Zip the clean repository
 cd ..

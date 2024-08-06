@@ -5,7 +5,7 @@ on:
     branches: [master, develop, main]
   pull_request:
     branches: [main, develop]
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
@@ -23,6 +23,7 @@ env:
   SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
   SONAR_PROJECT_KEY: $(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)" >> $GITHUB_ENV
+
 jobs:
   setup:
     runs-on: macos-latest
@@ -76,10 +77,10 @@ jobs:
     runs-on: macos-latest
     needs: quality-checks
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download repository
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          name: repo
 
       - name: Create mirror repository
         run: ./.github/scripts/create-mirror.sh
@@ -97,7 +98,9 @@ jobs:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: clean-repo
+      - name: Unzip cleaned repository
+        run: unzip clean-repo.zip -d repo
       - name: Build iOS
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
@@ -111,7 +114,9 @@ jobs:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: clean-repo
+      - name: Unzip cleaned repository
+        run: unzip clean-repo.zip -d repo
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
@@ -125,7 +130,9 @@ jobs:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: clean-repo
+      - name: Unzip cleaned repository
+        run: unzip clean-repo.zip -d repo
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
@@ -146,7 +153,9 @@ jobs:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
-          name: repo
+          name: clean-repo
+      - name: Unzip cleaned repository
+        run: unzip clean-repo.zip -d repo
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         with:
