@@ -13,6 +13,10 @@ runs:
                 vendor/bundle
               key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
 
+    - name: Install dependencies
+      run: bundle install --jobs 4 --retry 3
+      shell: bash
+
     - name: Set gradlew permissions
       run: chmod +x android/gradlew
       shell: bash
