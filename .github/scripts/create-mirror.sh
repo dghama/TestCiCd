@@ -35,8 +35,11 @@ git fetch origin
 git checkout -b main origin/main
 
 # Remove the excluded directories and files
+# Note: Ensure that the excluded files/directories do not include the current directory
 for EXCLUDE in "${EXCLUDES[@]}"; do
-  rm -rf "$EXCLUDE"
+  if [ -e "$EXCLUDE" ]; then
+    rm -rf "$EXCLUDE"
+  fi
 done
 
 # Optional: You can remove untracked files and directories
