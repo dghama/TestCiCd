@@ -31,7 +31,7 @@ runs:
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
             -Dsonar.sources=. \
             -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
-            -Dsonar.login=${{ env.SONARQUBE_TOKEN }} \
+            -Dsonar.login=${{ env.SONARQUBE_TOKEN }}
         fi
       shell: bash
 
