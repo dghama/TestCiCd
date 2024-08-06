@@ -97,7 +97,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
-        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Build iOS
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
@@ -109,7 +111,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
-        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
@@ -121,7 +126,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
-        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
@@ -140,7 +147,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
-        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         with:
