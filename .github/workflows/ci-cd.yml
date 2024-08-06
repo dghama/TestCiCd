@@ -56,6 +56,8 @@ jobs:
   quality-checks:
     needs: prepare
     runs-on: macos-latest
+    timeout-minutes: 10
+
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4

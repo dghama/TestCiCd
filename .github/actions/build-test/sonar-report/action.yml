@@ -23,4 +23,3 @@ runs:
       env:
         SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
         SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
-      timeout-minutes: 5
