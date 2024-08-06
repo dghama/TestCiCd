@@ -60,7 +60,6 @@ jobs:
     needs: prepare
     runs-on: macos-latest
     timeout-minutes: 10
-
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -68,7 +67,6 @@ jobs:
           name: repo
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
-
       # - name: Perform SonarQube scan
       #   uses: ./.github/actions/build-test/sonar-report
 
@@ -76,33 +74,30 @@ jobs:
     if: github.event_name == 'push'
     runs-on: macos-latest
     needs: quality-checks
+    outputs:
+      clean-repo-path: ${{ steps.unzip.outputs.unzipped-path }}
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
         with:
           name: repo
-
       - name: Update script permissions
         run: chmod +x ./.github/scripts/create-mirror.sh
       - name: Create mirror repository
         run: ./.github/scripts/create-mirror.sh
-      - name: Upload repository
-        uses: actions/upload-artifact@v4
-        with:
-          name: clean-repo
-          path: clean-repo.zip
+      - name: Unzip cleaned repository
+        id: unzip
+        run: unzip clean-repo.zip -d clean-repo
+      - name: Set cleaned repo path
+        run: echo "clean-repo-path=clean-repo" >> $GITHUB_ENV
 
   build-ios:
     if: github.event_name == 'push'
     needs: mirror-exclusions
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: clean-repo
-      - name: Unzip cleaned repository
-        run: unzip clean-repo.zip -d repo
+      - name: Checkout clean repository
+        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Build iOS
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
@@ -113,12 +108,8 @@ jobs:
     needs: mirror-exclusions
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: clean-repo
-      - name: Unzip cleaned repository
-        run: unzip clean-repo.zip -d repo
+      - name: Checkout clean repository
+        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
@@ -129,12 +120,8 @@ jobs:
     needs: build-android
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: clean-repo
-      - name: Unzip cleaned repository
-        run: unzip clean-repo.zip -d repo
+      - name: Checkout clean repository
+        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
@@ -152,13 +139,8 @@ jobs:
     needs: build-ios
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: clean-repo
-
-      - name: Unzip cleaned repository
-        run: unzip clean-repo.zip -d repo
+      - name: Checkout clean repository
+        run: cd ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         with:
