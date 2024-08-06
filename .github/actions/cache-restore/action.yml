@@ -24,10 +24,3 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pods-
           
-    - name: Restore Ruby gems cache
-      uses: actions/cache@v4
-      with:
-        path: vendor/bundle
-        key: bundle-use-ruby-${{ hashFiles('**/Gemfile.lock') }}
-        restore-keys: |
-          bundle-use-ruby-
