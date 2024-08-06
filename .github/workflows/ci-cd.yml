@@ -82,6 +82,8 @@ jobs:
         with:
           name: repo
 
+      - name: Update script permissions
+        run: chmod +x ./.github/scripts/create-mirror.sh
       - name: Create mirror repository
         run: ./.github/scripts/create-mirror.sh
       - name: Upload repository
