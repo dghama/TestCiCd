@@ -22,8 +22,6 @@ env:
   IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
   SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
   SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
-  SONAR_PROJECT_KEY: $(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)" >> $GITHUB_ENV
-
 jobs:
   setup:
     runs-on: macos-latest
@@ -60,6 +58,7 @@ jobs:
     needs: prepare
     runs-on: macos-latest
     timeout-minutes: 10
+
     steps:
       - name: Download repository
         uses: actions/download-artifact@v4
@@ -67,8 +66,37 @@ jobs:
           name: repo
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
-      # - name: Perform SonarQube scan
-      #   uses: ./.github/actions/build-test/sonar-report
+
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/build-test/sonar-report
+
+  build-ios:
+    if: github.event_name == 'push'
+    needs: quality-checks
+    runs-on: macos-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Build iOS
+        uses: ./.github/actions/build-test/ios-setup/ios-build
+        env:
+          PLATFORM: ios
+
+  build-android:
+    if: github.event_name == 'push'
+    needs: quality-checks
+    runs-on: macos-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Build Android
+        uses: ./.github/actions/build-test/android-setup/android-build
+        env:
+          PLATFORM: android
 
   mirror-exclusions:
     if: github.event_name == 'push'
@@ -91,44 +119,16 @@ jobs:
       - name: Set cleaned repo path
         run: echo "clean-repo-path=clean-repo" >> $GITHUB_ENV
 
-  build-ios:
-    if: github.event_name == 'push'
-    needs: mirror-exclusions
-    runs-on: macos-latest
-    steps:
-      - name: Checkout clean repository
-        uses: actions/checkout@v4
-        with:
-          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
-      - name: Build iOS
-        uses: ./.github/actions/build-test/ios-setup/ios-build
-        env:
-          PLATFORM: ios
-
-  build-android:
-    if: github.event_name == 'push'
-    needs: mirror-exclusions
-    runs-on: macos-latest
-    steps:
-      - name: Checkout clean repository
-        uses: actions/checkout@v4
-        with:
-          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
-
-      - name: Build Android
-        uses: ./.github/actions/build-test/android-setup/android-build
-        env:
-          PLATFORM: android
-
   deploy-android:
     if: github.event_name == 'push'
-    needs: build-android
+    needs: [build-android, mirror-exclusions]
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
         uses: actions/checkout@v4
         with:
           path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
+
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         with:
@@ -143,7 +143,7 @@ jobs:
 
   deploy-ios:
     if: github.event_name == 'push'
-    needs: build-ios
+    needs: [build-ios, mirror-exclusions]
     runs-on: macos-latest
     steps:
       - name: Checkout clean repository
