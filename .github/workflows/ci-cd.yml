@@ -55,7 +55,7 @@ jobs:
 
   quality-checks:
     needs: prepare
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
@@ -150,7 +150,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create mirror repository
-        run: ./scripts/create-mirror.sh
+        run: ./.github/scripts/create-mirror.sh
       - name: Upload repository
         uses: actions/upload-artifact@v4
         with:
