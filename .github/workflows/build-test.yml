@@ -1,6 +1,8 @@
-name: Code Quality Assurance & Repository Mirroring
+name: CI/CD Pipeline
 
 on:
+  push:
+    branches: [master, develop]
   pull_request:
     branches: [main, develop]
     types: [opened, synchronize, reopened, closed]
@@ -9,58 +11,116 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+env:
+  APP_NAME: ${{ secrets.APP_NAME }}
+  CI: true
+  ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+  ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
+  ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
+  ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
+  IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
+  IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+
 jobs:
-  code-checkout:
+  setup:
     runs-on: macos-latest
+    outputs:
+      repo-path: ${{ steps.upload.outputs.artifact-path }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Upload repository
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo
+          path: .
 
-  environment-setup:
-    needs: code-checkout
+  prepare:
+    needs: setup
     runs-on: macos-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Android Environment Setup
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Setup environment
         uses: ./.github/actions/build-test/android-setup/android-runner
-
-      - name: IOS Environment Setup
-        uses: ./.github/actions/build-test/ios-setup/ios-runner
-
-  dependency-installation:
-    needs: environment-setup
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: ./.github/actions/build-test/ios-setup/ios-runner
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
-  check-pr:
+  quality-checks:
+    needs: prepare
     runs-on: macos-latest
-    needs: dependency-installation
-    permissions:
-      contents: read
-      pull-requests: write
-    env:
-      PLATFORM: android
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
+        env:
+          PLATFORM: android
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/sonar-report
 
-  sonarqube-scan:
+  build:
+    needs: quality-checks
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        platform: [ios, android]
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Build ${{ matrix.platform }}
+        uses: ./.github/actions/build-test/${{ matrix.platform }}-setup/${{ matrix.platform }}-build
+        env:
+          PLATFORM: ${{ matrix.platform }}
+
+  deploy:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v4
+        with:
+          name: repo
+      - name: Upload to MStore
+        uses: ./.github/actions/mstore-upload/android-upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+      - name: Upload iOS App
+        uses: ./.github/actions/app-upload/upload
+        with:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+          info-file: ${{ env.IOS_INFO_FILE }}
+          build-file: ${{ env.IOS_BUILD_FILE }}
+      - name: Notify teams
+        uses: ./.github/actions/teams-notify
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          custom_message: 'New versions are available on MStore'
+
+  mirror-exclusions:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Perform SonarQube scan
-        uses: ./.github/actions/sonar-report
+      - name: Create mirror repository
+        run: ./scripts/create-mirror.sh
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-repo
+          path: clean-repo.zip
