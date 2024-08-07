@@ -41,9 +41,7 @@ runs:
           if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
             echo "Cache miss. Installing gems..."
             bundle install --jobs 4 --retry 3
-          elif [ ! -f "vendor/bundle/ruby/2.6.0/gems/bundler-2.4.22/exe/bundle" ]; then
-            echo "Cache hit, but bundler executable not found. Reinstalling..."
-            bundle install --jobs 4 --retry 3
+     
           else
             echo "Using cached gems"
             bundle install --local
