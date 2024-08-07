@@ -103,8 +103,9 @@ jobs:
 
       - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
         run: |
-          ./.github/actions/build-test/${{ matrix.platform }}-setup/${{ matrix.platform }}-build
+         bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
+        
         env:
           PLATFORM: ${{ matrix.platform }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
