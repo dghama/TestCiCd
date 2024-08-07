@@ -27,8 +27,7 @@ jobs:
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
         uses: ./.github/actions/build-test/ios-setup/ios-runner
-      - name: Install dependencies
-        uses: ./.github/actions/build-test/dependency-installation
+
 
   install-dependencies:
     runs-on: macos-latest
