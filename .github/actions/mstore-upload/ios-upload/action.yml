@@ -1,14 +1,6 @@
  
  name: Upload APK Version
 
-inputs:
-  AUTHORIZATION:
-    description: 'Authorization token'
-    required: true
-  APP_DEV_TOKEN:
-    description: 'Application dev token'
-    required: true
-
 runs:
   using: 'composite'
   steps:
@@ -22,9 +14,4 @@ runs:
      
       run: |
        bundle exec fastlane upload_ios_to_mstore
-      shell: bash
-
-    - name: Upload iOS version to MStore
-      run: |
-        fastlane ios upload_to_mstore
       shell: bash

@@ -23,6 +23,7 @@ runs:
         key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
+
     - name: Set bundle config path
       run: bundle config set --local path 'vendor/bundle'
       shell: bash
@@ -31,19 +32,19 @@ runs:
       uses: actions/cache@v4
       id: cache-gems
       with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gems-
+        path: vendor/bundle
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
 
     - name: Install Ruby dependencies
       run: |
-          if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
-            echo "Cache miss. Installing gems..."
-            bundle install --jobs 4 --retry 3
-     
-          else
-            echo "Using cached gems"
-            bundle install --local
-          fi
+        if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
+          echo "Cache miss. Installing gems..."
+          bundle install --jobs 4 --retry 3
+
+        else
+          echo "Using cached gems"
+          bundle install --local
+        fi
       shell: bash

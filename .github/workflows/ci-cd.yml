@@ -55,11 +55,11 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
-      # - name: Perform SonarQube scan
-      #   uses: ./.github/actions/build-test/sonar-report
-      #   env:
-      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/build-test/sonar-report
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   build-ios:
     if: github.event_name == 'push'
