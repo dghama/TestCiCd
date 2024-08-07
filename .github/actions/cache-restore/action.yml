@@ -40,6 +40,6 @@ runs:
           echo "Using cached gems"
         else
           echo "No cached gems found or vendor/bundle is empty. Installing gems..."
-          bundle install --jobs 4 --retry 3
+          bundle install
         fi
       shell: bash
