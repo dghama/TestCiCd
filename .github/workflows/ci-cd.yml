@@ -44,12 +44,19 @@ jobs:
     needs: install-dependencies
     runs-on: macos-latest
     timeout-minutes: 10
-
+    outputs:
+      app_name: ${{ steps.get_app_name.outputs.APP_NAME }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Get app name
+        id: get_app_name
+        run: |
+            APP_NAME=$(node -p "require('./package.json').name")
+            echo "APP_NAME=${APP_NAME}" >> $GITHUB_OUTPUT
 
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
@@ -75,8 +82,8 @@ jobs:
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
           PLATFORM: ios
-          IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
-          IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+          IOS_BUILD_FILE: ios/build/ ${{ steps.get_app_name.outputs.APP_NAME }}.ipa
+          IOS_INFO_FILE: ios/build/ ${{ steps.get_app_name.outputs.APP_NAME }}-info.plist
 
   build-android:
     if: github.event_name == 'push'
@@ -133,7 +140,7 @@ jobs:
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         env:
-          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/${{ env.APP_NAME }}_*.apk
+          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/${{ needs.quality-checks.outputs.app_name }}_*.apk
           ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
           ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
@@ -152,8 +159,8 @@ jobs:
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         env:
-          IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
-          IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+          IOS_BUILD_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}.ipa
+          IOS_INFO_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}-info.plist
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
 
