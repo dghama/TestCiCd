@@ -65,10 +65,10 @@ platform :android do
 
   desc 'Prepare Android build environment'
   lane :prepare_keystore do
-    sh "ls -la android/"
+    sh "ls -la ./android/"
 
     # Set gradlew permissions
-    sh "chmod +x android/gradlew"
+    sh "chmod +x ./android/gradlew"
   
     # Decode Keystore
     sh "echo \"#{ENV['KEYSTORE_FILE']}\" | base64 --decode > #{ENV['ANDROID_KEYSTORE_FILE']}"
