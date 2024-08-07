@@ -7,6 +7,19 @@ on:
     branches: [main, develop]
     types: [opened, synchronize, reopened]
 
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to build for'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - prod
+          - staging
+          - dev
+          - beta
+
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
@@ -42,20 +55,11 @@ jobs:
     needs: install-dependencies
     runs-on: macos-latest
     timeout-minutes: 10
-    outputs:
-      app_name: ${{ steps.get_app_name.outputs.APP_NAME }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Get app name
-        id: get_app_name
-        run: |
-            APP_NAME=$(node -p "require('./package.json').name")
-            echo "APP_NAME=${APP_NAME}" >> $GITHUB_OUTPUT
-
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
@@ -65,105 +69,110 @@ jobs:
       #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
       #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
-  build-ios:
-    if: github.event_name == 'push'
-    needs: quality-checks
+  get-app-name:
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.get_app_name.outputs.APP_NAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get app name
+        id: get_app_name
+        run: |
+          APP_NAME=$(node -p "require('./package.json').name")
+          echo "APP_NAME=${APP_NAME}" >> $GITHUB_OUTPUT
+        shell: bash
+
+  build:
+    needs: [get-app-name, quality-checks]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
+    strategy:
+      matrix:
+        platform: [ios, android]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Build iOS
-        id: build_ios
-        uses: ./.github/actions/build-test/ios-setup/ios-build
-        env:
-          PLATFORM: ios
-          IOS_BUILD_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}.ipa
-          IOS_INFO_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}-info.plist
+      - name: Restore node modules from cache
+        uses: ./.github/actions/cache-restore
 
-  build-android:
-    if: github.event_name == 'push'
-    needs: quality-checks
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build Android
-        uses: ./.github/actions/build-test/android-setup/android-build
+      - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
+        run: |
+          ./.github/actions/build-test/${{ matrix.platform }}-setup/${{ matrix.platform }}-build
+        shell: bash
         env:
-          PLATFORM: android
+          PLATFORM: ${{ matrix.platform }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+          APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
           ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
           ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-  # mirror-exclusions:
-  #   if: github.event_name == 'push'
-  #   runs-on: macos-latest
-  #   needs: [build-ios, build-android]
-  #   outputs:
-  #     clean-repo-path: ${{ steps.unzip.outputs.unzipped-path }}
-  #   steps:
-  #     - name: Download repository
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: repo
-  #     - name: Update script permissions
-  #       run: chmod +x ./.github/scripts/create-mirror.sh
-  #     - name: Create mirror repository
-  #       run: ./.github/scripts/create-mirror.sh
-  #     - name: Unzip cleaned repository
-  #       id: unzip
-  #       run: unzip clean-repo.zip -d clean-repo
-  #     - name: Set cleaned repo path
-  #       run: echo "clean-repo-path=clean-repo" >> $GITHUB_ENV
+          IOS_BUILD_DIR: ${{ github.workspace }}/ios/build
 
-  deploy-android:
-    if: github.event_name == 'push'
-    needs: build-android
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ github.event.inputs.environment }}-build
+          path: |
+            ${{ matrix.platform == 'ios' && env.IOS_BUILD_DIR || env.ANDROID_BUILD_DIR }}
+
+  deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [get-app-name,build]
     runs-on: macos-latest
+    strategy:
+      matrix:
+        platform: [ios, android]
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
+      ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
+      ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/${{ needs.get-app-name.outputs.app_name }}_*.apk
+      IOS_BUILD_FILE: ios/build/${{ needs.get-app-name.outputs.app_name }}.ipa
+      IOS_INFO_FILE: ios/build/${{ needs.get-app-name.outputs.app_name }}-info.plist
+      IOS_BUILD_DIR: ${{ github.workspace }}/ios/build
+      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Upload Android to MStore
-        uses: ./.github/actions/mstore-upload/android-upload
-        env:
-          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/${{ needs.quality-checks.outputs.app_name }}_*.apk
-          ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
-          ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
-          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-
-  deploy-ios:
-    if: github.event_name == 'push'
-    needs: build-ios
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: dwonload artifact
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          name: ${{ matrix.platform }}-${{ github.event.inputs.environment }}-build
+          path: |
+            ${{ matrix.platform == 'ios' && env.IOS_BUILD_DIR || env.ANDROID_BUILD_DIR }}
 
-      - name: Upload iOS App
-        uses: ./.github/actions/app-upload/upload
-        env:
-          IOS_BUILD_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}.ipa
-          IOS_INFO_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}-info.plist
-          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+      - name: Upload ${{ matrix.platform }} - ${{ github.event.inputs.environment }} the application on Mstore
+        if: github.event.inputs.environment != 'prod'
+        run: |
+          bundle exec fastlane upload_${{ matrix.platform }}_to_mstore
+        shell: bash
+
+      - name: Upload ${{ matrix.platform }} - ${{ github.event.inputs.environment }} the application on store
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          echo "This step will be added in the future"
+        shell: bash
+
+
 
   notify-teams:
     if: github.event_name == 'push'
-    needs: [deploy-ios, deploy-android]
+    needs: deploy
     runs-on: macos-latest
     steps:
       - name: Notify teams

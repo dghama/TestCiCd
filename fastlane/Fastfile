@@ -63,8 +63,19 @@ platform :android do
     )
   end
 
+  desc 'Prepare Android build environment'
+  lane :prepare_keystore do
+    # Set gradlew permissions
+    sh "chmod +x android/gradlew"
+  
+    # Decode Keystore
+    sh "echo \"#{ENV['KEYSTORE_FILE']}\" | base64 --decode > #{ENV['ANDROID_KEYSTORE_FILE']}"
+  end
+  
+
   desc 'Build the Android app'
   lane :build do
+    prepare_keystore
     inc_ver_and
     gradle(
       task: "clean assembleRelease",
