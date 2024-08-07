@@ -65,6 +65,8 @@ platform :android do
 
   desc 'Prepare Android build environment'
   lane :prepare_keystore do
+    sh "ls -la android/"
+
     # Set gradlew permissions
     sh "chmod +x android/gradlew"
   
