@@ -83,6 +83,8 @@ android {
         versionCode 1
         versionName "1.0"
         setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
+        resValue "string", "build_config_package", "com.testcicd"
+
     }
     signingConfigs {
         debug {
@@ -124,3 +126,4 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"

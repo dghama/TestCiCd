@@ -134,7 +134,7 @@ jobs:
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         env:
-          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
+          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/${{ env.APP_NAME }}_*.apk
           ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
           ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
