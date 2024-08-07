@@ -19,6 +19,18 @@ runs:
 
     - name: Bundle install
       run: |
-        bundle install 
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
+      shell: bash
+
+    - name: Check Ruby Version
+      run: |
+        ruby -v
+      shell: bash
+
+    - name: Check Bundler Path
+      run: |
+          bundle config get path
+          ls -la vendor/bundle
       shell: bash
     

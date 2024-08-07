@@ -33,13 +33,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-bundler-
 
-    - name: Install Ruby dependencies
+    - name: Configure Bundler and environment
       run: |
-        if [ -d "vendor/bundle" ] && [ "$(ls -A vendor/bundle)" ]; then
-          ls -l vendor/bundle/ruby
-          echo "Using cached gems"
-        else
-          echo "No cached gems found or vendor/bundle is empty. Installing gems..."
-          bundle install
-        fi
+            bundle config path vendor/bundle
+            bundle config set --local deployment 'true' # This simulates a `bundle install` without actually installing
+            bundle config set --local without 'development test' # Exclude unnecessary groups
+            bundle binstubs --all # Ensure all executables are available
+            bundle exec gem env # Debug: Check gem environment
       shell: bash
