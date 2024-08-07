@@ -1,0 +1,64 @@
+name: 'Teams Notification'
+description: 'Send build status notification to Microsoft Teams'
+inputs:
+  status:
+    description: 'Job status'
+    required: true
+  webhook_url:
+    description: 'Microsoft Teams webhook URL'
+    required: true
+  custom_message:
+    description: 'Custom message to include in the notification'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send Teams Notification
+      shell: bash
+      env:
+        STATUS: ${{ inputs.status }}
+        WEBHOOK_URL: ${{ inputs.webhook_url }}
+        CUSTOM_MESSAGE: ${{ inputs.custom_message }}
+      run: |
+        if [ "$STATUS" = "success" ]; then
+          COLOR="00FF00"
+          TITLE="Build Succeeded"
+        else
+          COLOR="FF0000"
+          TITLE="Build Failed"
+        fi
+
+        PAYLOAD=$(cat <<EOF
+        {
+          "@type": "MessageCard",
+          "@context": "http://schema.org/extensions",
+          "themeColor": "$COLOR",
+          "summary": "$TITLE",
+          "sections": [
+            {
+              "activityTitle": "$TITLE",
+              "activitySubtitle": "GitHub Actions",
+              "facts": [
+                {
+                  "name": "Repository:",
+                  "value": "$GITHUB_REPOSITORY"
+                },
+                {
+                  "name": "Workflow:",
+                  "value": "$GITHUB_WORKFLOW"
+                },
+                {
+                  "name": "Branch:",
+                  "value": "$GITHUB_REF_NAME"
+                }
+              ],
+              "text": "$CUSTOM_MESSAGE"
+            }
+          ]
+        }
+        EOF
+        )
+
+        curl -H "Content-Type: application/json" -d "$PAYLOAD" "$WEBHOOK_URL"

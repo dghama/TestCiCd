@@ -24,6 +24,7 @@ import {
   ReloadInstructions
 } from 'react-native/Libraries/NewAppScreen';
 import SectionComponent from './src/components/section/SectionComponent';
+import Config from 'react-native-config';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -32,6 +33,7 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter
   };
 
+  console.log(Config.ENV);
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar

@@ -16,9 +16,7 @@ runs:
         pwd
         echo "Checking for build outputs:"
         ls -R ${{ env.ANDROID_BUILD_DIR }}
-        echo "ANDROID_INFO_FILE: ${{ env.ANDROI
-
-        D_INFO_FILE }}"
+        echo "ANDROID_INFO_FILE: ${{ env.ANDROID_INFO_FILE }}"
         echo "ANDROID_BUILD_FILE: ${{ env.ANDROID_BUILD_FILE }}"
         if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
           echo "output-metadata.json exists"
@@ -45,5 +43,5 @@ runs:
 
     - name: Upload the application on Mstore
       run: |
-        bundle exec fastlane upload_android_to_mstore
+        bundle execfastlane upload_android_to_mstore
       shell: bash
