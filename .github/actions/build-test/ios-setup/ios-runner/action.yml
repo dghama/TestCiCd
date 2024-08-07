@@ -9,18 +9,8 @@ runs:
         sudo xcodebuild -license accept
       shell: bash
 
-
     - name: Install Ruby
       uses: ruby/setup-ruby@v1
       with:
-       ruby-version: '2.6.10'
-       bundler-cache: false  # Disable built-in caching
-
-    - name: Set bundle config path
-      run: bundle config set --local path 'vendor/bundle'
-      shell: bash
-
-    - name: Bundle install
-      run: |
-        bundle install --jobs 4 --retry 3
-      shell: bash
+        ruby-version: '2.6.10'
+        bundler-cache: false
