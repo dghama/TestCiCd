@@ -47,6 +47,11 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
@@ -61,6 +66,11 @@ jobs:
     needs: quality-checks
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Build iOS
         id: build_ios
         uses: ./.github/actions/build-test/ios-setup/ios-build
@@ -74,6 +84,11 @@ jobs:
     needs: quality-checks
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
@@ -111,6 +126,11 @@ jobs:
     needs: build-android
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
         env:
@@ -124,6 +144,11 @@ jobs:
     needs: build-ios
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
         env:
