@@ -24,19 +24,22 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pods-
 
-    - name: Restore cache
-      uses: actions/cache@v3
+    - name: Restore Ruby gems cache
+      uses: actions/cache@v4
       with:
-              path: |
-                vendor/bundle
-              key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
+        path: |
+          vendor/bundle
+        key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bundler-
 
     - name: Install Ruby dependencies
       run: |
-        if [ ! -d "vendor/bundle" ]; then
-          bundle install --jobs 4 --retry 3
-        else
+        if [ -d "vendor/bundle" ] && [ "$(ls -A vendor/bundle)" ]; then
+          ls -l vendor/bundle/ruby
           echo "Using cached gems"
+        else
+          echo "No cached gems found or vendor/bundle is empty. Installing gems..."
+          bundle install --jobs 4 --retry 3
         fi
       shell: bash
-          
