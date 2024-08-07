@@ -13,24 +13,14 @@ runs:
     - name: Install Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '2.6.10'
-        bundler-cache: true  # Disable built-in caching
+       ruby-version: '2.6.10'
+       bundler-cache: false  # Disable built-in caching
 
+    - name: Set bundle config path
+      run: bundle config set --local path 'vendor/bundle'
+      shell: bash
 
     - name: Bundle install
       run: |
-        bundle config path vendor/bundle
         bundle install --jobs 4 --retry 3
       shell: bash
-
-    - name: Check Ruby Version
-      run: |
-        ruby -v
-      shell: bash
-
-    - name: Check Bundler Path
-      run: |
-          bundle config get path
-          ls -la vendor/bundle
-      shell: bash
-    

@@ -23,24 +23,29 @@ runs:
         key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
+    - name: Set bundle config path
+      run: bundle config set --local path 'vendor/bundle'
+      shell: bash
 
     - name: Restore Ruby gems cache
       uses: actions/cache@v4
+      id: cache-gems
       with:
-        path: |
-          vendor/bundle
-        key: ${{ runner.os }}-bundler-${{ hashFiles('**/Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bundler-
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
 
     - name: Install Ruby dependencies
       run: |
-          if [ ! -d "vendor/bundle" ] || [ "$(ls -A vendor/bundle | wc -l)" -eq 0 ]; then
-            echo "No cached gems found or vendor/bundle is empty. Running bundle install..."
+          if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
+            echo "Cache miss. Installing gems..."
+            bundle install --jobs 4 --retry 3
+          elif [ ! -f "vendor/bundle/ruby/2.6.0/gems/bundler-2.4.22/exe/bundle" ]; then
+            echo "Cache hit, but bundler executable not found. Reinstalling..."
             bundle install --jobs 4 --retry 3
           else
             echo "Using cached gems"
-            bundle config path vendor/bundle
-            bundle binstubs --all
+            bundle install --local
           fi
       shell: bash
