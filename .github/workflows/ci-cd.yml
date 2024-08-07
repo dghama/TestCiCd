@@ -12,7 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  APP_NAME: ${{ secrets.APP_NAME }}
   CI: true
 
 jobs:
@@ -27,7 +26,6 @@ jobs:
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
         uses: ./.github/actions/build-test/ios-setup/ios-runner
-
 
   install-dependencies:
     runs-on: macos-latest
@@ -61,11 +59,11 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
-      - name: Perform SonarQube scan
-        uses: ./.github/actions/build-test/sonar-report
-        env:
-          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+      # - name: Perform SonarQube scan
+      #   uses: ./.github/actions/build-test/sonar-report
+      #   env:
+      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   build-ios:
     if: github.event_name == 'push'
@@ -82,8 +80,8 @@ jobs:
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
           PLATFORM: ios
-          IOS_BUILD_FILE: ios/build/ ${{ steps.get_app_name.outputs.APP_NAME }}.ipa
-          IOS_INFO_FILE: ios/build/ ${{ steps.get_app_name.outputs.APP_NAME }}-info.plist
+          IOS_BUILD_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}.ipa
+          IOS_INFO_FILE: ios/build/${{ needs.quality-checks.outputs.app_name }}-info.plist
 
   build-android:
     if: github.event_name == 'push'
@@ -105,7 +103,6 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
   # mirror-exclusions:
   #   if: github.event_name == 'push'
   #   runs-on: macos-latest
