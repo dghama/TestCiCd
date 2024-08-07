@@ -25,11 +25,11 @@ module Fastlane
         def self.available_options
           [
             FastlaneCore::ConfigItem.new(key: :authorization,
-                                         env_name: "MSTORE_AUTHORIZATION",
+                                         env_name: "AUTHORIZATION",
                                          description: "Authorization token for Mstore",
                                          is_string: true),
             FastlaneCore::ConfigItem.new(key: :app_dev_token,
-                                         env_name: "MSTORE_APP_DEV_TOKEN",
+                                         env_name: "APP_DEV_TOKEN",
                                          description: "App dev token for Mstore",
                                          is_string: true),
             FastlaneCore::ConfigItem.new(key: :info_file,

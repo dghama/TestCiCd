@@ -81,8 +81,8 @@ platform :android do
   desc 'Upload the Android app to the MStore'
   lane :upload_android_to_mstore do
     mstore_upload_android(
-      authorization: ENV['MSTORE_AUTHORIZATION'],
-      app_dev_token: ENV['MSTORE_APP_DEV_TOKEN'],
+      authorization: ENV['AUTHORIZATION'],
+      app_dev_token: ENV['APP_DEV_TOKEN'],
       info_file: ENV['ANDROID_INFO_FILE'],
       apk_file: ENV['ANDROID_BUILD_FILE']
     )
@@ -92,8 +92,8 @@ platform :android do
   desc 'Upload the iOS app to the MStore'
   lane :upload_ios_to_mstore do
     mstore_upload_ios(
-      authorization: ENV['MSTORE_AUTHORIZATION'],
-      app_dev_token: ENV['MSTORE_APP_DEV_TOKEN'],
+      authorization: ENV['AUTHORIZATION'],
+      app_dev_token: ENV['APP_DEV_TOKEN'],
       info_file: ENV['IOS_INFO_FILE'],
       ipa_file: ENV['IOS_BUILD_FILE']
     )

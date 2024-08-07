@@ -50,9 +50,6 @@ runs:
       shell: bash
 
     - name: Upload the application on Mstore
-      env:
-        MSTORE_AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
-        MSTORE_APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}
       run: |
         fastlane upload_android_to_mstore
       shell: bash

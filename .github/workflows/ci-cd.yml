@@ -14,45 +14,15 @@ concurrency:
 env:
   APP_NAME: ${{ secrets.APP_NAME }}
   CI: true
-  ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-  ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
-  ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
-  ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
-  IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
-  IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
-  SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-  SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
-  KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-  AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-  APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
 jobs:
-  setup:
+  prepare-environment:
     runs-on: macos-latest
-    outputs:
-      repo-path: ${{ steps.upload.outputs.artifact-path }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Upload repository
-        id: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: repo
-          path: .
-
-  prepare:
-    needs: setup
-    runs-on: macos-latest
-    steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
       - name: Setup ios environment
@@ -60,107 +30,116 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/build-test/dependency-installation
 
+  install-dependencies:
+    runs-on: macos-latest
+    needs: prepare-environment
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        uses: ./.github/actions/build-test/dependency-installation
+
   quality-checks:
-    needs: prepare
+    needs: install-dependencies
     runs-on: macos-latest
     timeout-minutes: 10
 
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
-
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
       # - name: Perform SonarQube scan
       #   uses: ./.github/actions/build-test/sonar-report
+      #   env:
+      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   build-ios:
     if: github.event_name == 'push'
     needs: quality-checks
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
       - name: Build iOS
+        id: build_ios
         uses: ./.github/actions/build-test/ios-setup/ios-build
         env:
           PLATFORM: ios
+          IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
+          IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
 
   build-android:
     if: github.event_name == 'push'
     needs: quality-checks
     runs-on: macos-latest
     steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
-
       - name: Build Android
         uses: ./.github/actions/build-test/android-setup/android-build
         env:
           PLATFORM: android
+          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+          ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-  mirror-exclusions:
-    if: github.event_name == 'push'
-    runs-on: macos-latest
-    needs: [build-ios, build-android]
-    outputs:
-      clean-repo-path: ${{ steps.unzip.outputs.unzipped-path }}
-    steps:
-      - name: Download repository
-        uses: actions/download-artifact@v4
-        with:
-          name: repo
-      - name: Update script permissions
-        run: chmod +x ./.github/scripts/create-mirror.sh
-      - name: Create mirror repository
-        run: ./.github/scripts/create-mirror.sh
-      - name: Unzip cleaned repository
-        id: unzip
-        run: unzip clean-repo.zip -d clean-repo
-      - name: Set cleaned repo path
-        run: echo "clean-repo-path=clean-repo" >> $GITHUB_ENV
+  # mirror-exclusions:
+  #   if: github.event_name == 'push'
+  #   runs-on: macos-latest
+  #   needs: [build-ios, build-android]
+  #   outputs:
+  #     clean-repo-path: ${{ steps.unzip.outputs.unzipped-path }}
+  #   steps:
+  #     - name: Download repository
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: repo
+  #     - name: Update script permissions
+  #       run: chmod +x ./.github/scripts/create-mirror.sh
+  #     - name: Create mirror repository
+  #       run: ./.github/scripts/create-mirror.sh
+  #     - name: Unzip cleaned repository
+  #       id: unzip
+  #       run: unzip clean-repo.zip -d clean-repo
+  #     - name: Set cleaned repo path
+  #       run: echo "clean-repo-path=clean-repo" >> $GITHUB_ENV
 
   deploy-android:
     if: github.event_name == 'push'
-    needs: [build-android, mirror-exclusions]
+    needs: build-android
     runs-on: macos-latest
     steps:
-      - name: Checkout clean repository
-        uses: actions/checkout@v4
-        with:
-          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
-
       - name: Upload Android to MStore
         uses: ./.github/actions/mstore-upload/android-upload
-
-      - name: Notify teams - Android
-        uses: ./.github/actions/teams-notify
-        with:
-          status: ${{ job.status }}
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          custom_message: 'New Android version is available on MStore'
+        env:
+          ANDROID_BUILD_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
+          ANDROID_INFO_FILE: ${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
 
   deploy-ios:
     if: github.event_name == 'push'
-    needs: [build-ios, mirror-exclusions]
+    needs: build-ios
     runs-on: macos-latest
     steps:
-      - name: Checkout clean repository
-        uses: actions/checkout@v4
-        with:
-          path: ${{ needs.mirror-exclusions.outputs.clean-repo-path }}
       - name: Upload iOS App
         uses: ./.github/actions/app-upload/upload
-      - name: Notify teams - iOS
+        env:
+          IOS_BUILD_FILE: ios/build/${{ secrets.APP_NAME }}.ipa
+          IOS_INFO_FILE: ios/build/${{ secrets.APP_NAME }}-info.plist
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+
+  notify-teams:
+    if: github.event_name == 'push'
+    needs: [deploy-ios, deploy-android]
+    runs-on: macos-latest
+    steps:
+      - name: Notify teams
         uses: ./.github/actions/teams-notify
         with:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          custom_message: 'New iOS version is available on MStore'
+          custom_message: 'New version is available on MStore'

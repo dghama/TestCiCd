@@ -16,55 +16,15 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: android-release
-        path: ${{ env.ANDROID_BUILD_DIR }}
-
-    - name: Debug File Existence
-      run: |
-        set -e  # Exit immediately if a command exits with a non-zero status.
-        echo "Current directory:"
-        pwd
-        echo "Checking for build outputs:"
-        ls -R ${{ env.ANDROID_BUILD_DIR }}
-        echo "ANDROID_INFO_FILE: ${{ env.ANDROID_INFO_FILE }}"
-        echo "ANDROID_BUILD_FILE: ${{ env.ANDROID_BUILD_FILE }}"
-        if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
-          echo "output-metadata.json exists"
-          cat ${{ env.ANDROID_INFO_FILE }}
-        else
-          echo "output-metadata.json does not exist"
-          exit 1
-        fi
-        if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
-          echo "app-release.apk exists"
-          ls -l ${{ env.ANDROID_BUILD_FILE }}
-        else
-          echo "app-release.apk does not exist"
-          exit 1
-        fi
-      shell: bash
-
-    - name: Set Permissions
-      run: |
-        set -e  # Exit immediately if a command exits with a non-zero status.
-        chmod 644 ${{ env.ANDROID_INFO_FILE }} ${{ env.ANDROID_BUILD_FILE }}
-        echo "Set permissions for ${{ env.ANDROID_INFO_FILE }} and ${{ env.ANDROID_BUILD_FILE }}"
-      shell: bash
-      shell: bash
+        path: ${{ env.IOS_BUILD_FILE }}
 
     - name: Upload the application on Mstore
-      env:
-        MSTORE_AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
-        MSTORE_APP_DEV_TOKEN: ${{ inputs.APP_DEV_TOKEN }}
+     
       run: |
-        fastlane upload_ios_to_mstore
+       bundle exec fastlane upload_ios_to_mstore
       shell: bash
 
- - name: Upload iOS version to MStore
-      env:
-        MSTORE_AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-        MSTORE_APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-        IOS_INFO_FILE: ${{ env.IOS_INFO_FILE }}
-        IOS_BUILD_FILE: ${{ env.IOS_BUILD_FILE }}
+    - name: Upload iOS version to MStore
       run: |
         fastlane ios upload_to_mstore
       shell: bash
