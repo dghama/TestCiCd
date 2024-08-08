@@ -92,7 +92,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [ios, android]
+        platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment }}
@@ -138,7 +138,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [ios, android]
+        platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment }}
