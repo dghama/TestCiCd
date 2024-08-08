@@ -37,8 +37,7 @@ jobs:
           fetch-depth: 0
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
-        env:
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+
       - name: Setup ios environment
         uses: ./.github/actions/build-test/ios-setup/ios-runner
 
@@ -94,6 +93,17 @@ jobs:
     strategy:
       matrix:
         platform: [ios, android]
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
+      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+      ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
+      IOS_BUILD_DIR: ${{ github.workspace }}/ios/build
+      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,24 +117,13 @@ jobs:
         if: matrix.platform == 'android'
         run: |
           chmod +x android/gradlew
-          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
-          echo "ANDROID_KEYSTORE_FILE=${{ github.workspace }}/android/app/release.keystore" >> $GITHUB_ENV
+          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
         shell: bash
 
       - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ENVIRONMENT: ${{ github.event.inputs.environment }}
-          APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
-          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-          ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          IOS_BUILD_DIR: ${{ github.workspace }}/ios/build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -151,14 +150,13 @@ jobs:
       IOS_BUILD_DIR: ${{ github.workspace }}/ios/build
       AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
       APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: dwonload artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ github.event.inputs.environment }}-build
