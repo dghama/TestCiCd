@@ -1,93 +1,110 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
-
-default_platform(:android)
-
 before_all do
   @package = load_json(json_path: "./package.json")
+  @environment = ENV['ENVIRONMENT'] || 'staging'
+  @android_version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
+  @ios_build_number = increment_build_number_in_plist(plist: "ios/#{@package['name']}/Info.plist")
 end
 
 platform :ios do
-  desc 'iOS: Increment build number and set the version to package.json version.'
-  private_lane :inc_ver_ios do
+  desc 'Build the iOS app for the specified environment'
+  lane :build do |options|
+    environment = options[:environment] || @environment
+
     increment_build_number(
       xcodeproj: "./ios/#{@package['name']}.xcodeproj"
     )
     increment_version_number(
       xcodeproj: "./ios/#{@package['name']}.xcodeproj",
-      version_number: @package['version']
+      version_number: "#{@package['version']}.#{@ios_build_number}"
     )
-  end
 
-  desc 'Build the iOS app'
-  lane :build do
-    inc_ver_ios
     cocoapods(
       clean_install: true,
-      podfile: "./ios/Podfile",
+      podfile: "./ios/Podfile"
     )
-    build_app(
+
+    gym(
       workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
+      scheme: "#{@package['name']}-#{environment}",
       export_method: "app-store",
       output_directory: "./ios/build",
-      output_name: "#{@package['name']}.ipa",
+      output_name: "#{@package['name']}-#{environment}.ipa",
       skip_codesigning: true
-
     )
   end
 end
 
 platform :android do
-  desc 'Android: Increment versionCode and set versionName to package.json version.'
-  private_lane :inc_ver_and do
+  desc 'Build the Android app for the specified environment'
+  lane :build do |options|
+    environment = options[:environment] || @environment
+
     increment_version_code(
       gradle_file_path: "./android/app/build.gradle",
+      version_code: @android_version_code + 1
     )
-    increment_version_name(
+    set_version_name(
       gradle_file_path: "./android/app/build.gradle",
-      version_name: @package['version']
+      version_name: "#{@package['version']}.#{@android_version_code + 1}"
     )
-  end
-  
-  desc 'Build the Android app'
-  lane :build do
-    inc_ver_and
+
     gradle(
-      task: "clean assembleRelease",
+      task: "clean assemble#{environment.capitalize}Release",
       project_dir: "android/",
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
       }
     )
   end
-  
-  
+end
 
-  desc 'Upload the app to the MStore'
-  lane :upload_app_to_mstore do
-    mstore_upload_app(
-      authorization: ENV['AUTHORIZATION'],
-      app_dev_token: ENV['APP_DEV_TOKEN'],
-      info_file: ENV['INFO_FILE'],
-      build_file: ENV['BUILD_FILE']
-    )
+desc 'Update the version after successful upload for both Android and iOS'
+lane :update_version do
+  @android_version_code += 1
+  @ios_build_number += 1
+
+  increment_version_code(
+    gradle_file_path: "./android/app/build.gradle",
+    version_code: @android_version_code
+  )
+  set_version_name(
+    gradle_file_path: "./android/app/build.gradle",
+    version_name: "#{@package['version']}.#{@android_version_code}"
+  )
+
+  increment_build_number(
+    xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+  )
+  increment_version_number(
+    xcodeproj: "./ios/#{@package['name']}.xcodeproj",
+    version_number: "#{@package['version']}.#{@ios_build_number}"
+  )
+end
+
+def get_android_version_name(gradle_file_path:)
+  File.open(gradle_file_path, 'r') do |file|
+    file.each_line do |line|
+      if line =~ /versionName/
+        return line.split('=')[1].strip.tr('"', '')
+      end
+    end
   end
+end
 
+def get_android_version_code(gradle_file_path:)
+  File.open(gradle_file_path, 'r') do |file|
+    file.each_line do |line|
+      if line =~ /versionCode/
+        return line.split('=')[1].strip.to_i
+      end
+    end
+  end
+end
+
+def increment_build_number_in_plist(plist:)
+  current_build_number = `xcodebuild -showBuildSettings | grep CURRENT_PROJECT_VERSION | awk '{print $3}'`.strip.to_i
+  return current_build_number + 1
 end

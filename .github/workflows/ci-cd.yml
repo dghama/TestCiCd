@@ -109,8 +109,8 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
-      - name: Set up environment
-        id: setup_env
+      - name: Set up build environment
+        id: setup_build_env
         uses: ./.github/actions/setup-build-env
 
       - name: Build ${{ matrix.platform }}
@@ -141,6 +141,8 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
+      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -157,15 +159,14 @@ jobs:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ needs.build.outputs.build_dir }}
 
+      - name: Set up deploy environment
+        id: setup_deploy_env
+        uses: ./.github/actions/setup-build-env
+
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           bundle exec fastlane upload_app_to_mstore
-        env:
-          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-          BUILD_FILE: ${{ needs.build.outputs.build_file }}
-          INFO_FILE: ${{ needs.build.outputs.info_file }}
         shell: bash
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
@@ -173,6 +174,12 @@ jobs:
         run: |
           echo "This step will be added in the future"
         shell: bash
+
+      - name: Commit version update
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'Bump version'
+          branch: ${{ github.head_ref }}
 
   notify-teams:
     if: github.event_name == 'push'
