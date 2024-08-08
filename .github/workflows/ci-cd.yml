@@ -63,11 +63,11 @@ jobs:
       - name: Check PR codeBase
         uses: ./.github/actions/build-test/pr-check
 
-      # - name: Perform SonarQube scan
-      #   uses: ./.github/actions/build-test/sonar-report
-      #   env:
-      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+      - name: Perform SonarQube scan
+        uses: ./.github/actions/build-test/sonar-report
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   get-app-name:
     runs-on: ubuntu-latest
@@ -122,7 +122,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup_env.outputs.artifact_name }}
-          path: ${{ steps.setup_env.outputs.build_dir }}
+          path: |
+            ${{ steps.setup_env.outputs.build_dir }}
+          if-no-files-found: error
 
     outputs:
       build_dir: ${{ steps.setup_env.outputs.build_dir }}

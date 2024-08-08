@@ -14,7 +14,7 @@ runs:
         else
           echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
         fi
-        echo "artifact_name=${{ env.PLATFORM  }}-${{ env.PLATFORM }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "artifact_name=${{ env.PLATFORM  }}-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set gradlew permissions
