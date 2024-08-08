@@ -121,8 +121,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BUILD_DIR}}
-          path: ${{ env.ARTIFACT_NAME}}
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.BUILD_DIR }}/*
+          if-no-files-found: error
+          compression-level: 6
+          overwrite: false
 
     outputs:
       build_dir: ${{ env.BUILD_DIR}}
