@@ -1,6 +1,6 @@
 module Fastlane
     module Actions
-      class MstoreUploadAndroidAction < Action
+      class MstoreUploadAppAction < Action
         def self.run(params)
           UI.message("Uploading app to Mstore...")
   
@@ -11,7 +11,7 @@ module Fastlane
           command << "-H \"Authorization: #{params[:authorization]}\""
           command << "-F \"applicationToken=#{params[:app_dev_token]}\""
           command << "-F \"fileInfo=@#{params[:info_file]}\""
-          command << "-F \"file=@#{params[:apk_file]}\""
+          command << "-F \"file=@#{params[:build_file]}\""
   
           result = Actions.sh(command.join(" "))
           UI.success("Successfully uploaded app to Mstore!")
@@ -36,7 +36,7 @@ module Fastlane
                                          env_name: "MSTORE_INFO_FILE",
                                          description: "Path to the output-metadata.json file",
                                          is_string: true),
-            FastlaneCore::ConfigItem.new(key: :apk_file,
+            FastlaneCore::ConfigItem.new(key: :build_file,
                                          env_name: "MSTORE_APK_FILE",
                                          description: "Path to the APK file",
                                          is_string: true)

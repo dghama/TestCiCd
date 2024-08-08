@@ -166,7 +166,7 @@ jobs:
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
-          bundle exec fastlane upload_${{ matrix.platform }}_to_mstore
+          bundle exec fastlane upload_app_to_mstore
         env:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
