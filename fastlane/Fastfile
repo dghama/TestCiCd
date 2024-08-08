@@ -62,39 +62,9 @@ platform :android do
       version_name: @package['version']
     )
   end
-
-  desc 'Prepare Android build environment'
-  lane :prepare_keystore do
-    # Path to the android directory
-    android_dir = "./android/"
-  
-    # Check if the android directory exists
-    if Dir.exist?(android_dir)
-      # List files in the android directory for debugging purposes
-      sh "ls -la #{android_dir}"
-  
-      # Check if the gradlew file exists before setting permissions
-      gradlew_path = "#{android_dir}gradlew"
-      if File.exist?(gradlew_path)
-        sh "chmod +x #{gradlew_path}"
-      else
-        UI.user_error!("gradlew file not found at path: #{gradlew_path}")
-      end
-  
-      # Decode Keystore
-      if ENV['KEYSTORE_FILE'] && ENV['ANDROID_KEYSTORE_FILE']
-        sh "echo \"#{ENV['KEYSTORE_FILE']}\" | base64 --decode > #{ENV['ANDROID_KEYSTORE_FILE']}"
-      else
-        UI.user_error!("Keystore environment variables are not set")
-      end
-    else
-      UI.user_error!("Android directory not found at path: #{android_dir}")
-    end
-  end
   
   desc 'Build the Android app'
   lane :build do
-    prepare_keystore
     inc_ver_and
     gradle(
       task: "clean assembleRelease",

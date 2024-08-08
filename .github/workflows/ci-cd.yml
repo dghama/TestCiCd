@@ -37,6 +37,8 @@ jobs:
           fetch-depth: 0
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
       - name: Setup ios environment
         uses: ./.github/actions/build-test/ios-setup/ios-runner
 
@@ -103,16 +105,14 @@ jobs:
 
       - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
         run: |
-         bundle exec fastlane ${{ matrix.platform }} build
+          bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
-        
         env:
           PLATFORM: ${{ matrix.platform }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
           ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
           ANDROID_BUILD_DIR: ${{ github.workspace }}/android/app/build/outputs/apk/release
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -127,7 +127,7 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [get-app-name,build]
+    needs: [get-app-name, build]
     runs-on: macos-latest
     strategy:
       matrix:
@@ -168,8 +168,6 @@ jobs:
         run: |
           echo "This step will be added in the future"
         shell: bash
-
-
 
   notify-teams:
     if: github.event_name == 'push'
