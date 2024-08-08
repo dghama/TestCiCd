@@ -85,8 +85,8 @@ platform :android do
     mstore_upload_android(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
-      info_file: ENV['ANDROID_INFO_FILE'],
-      apk_file: ENV['ANDROID_BUILD_FILE']
+      info_file: ENV['INFO_FILE'],
+      apk_file: ENV['BUILD_FILE']
     )
   end
 

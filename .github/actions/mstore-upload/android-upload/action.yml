@@ -7,7 +7,7 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: android-release
-        path: ${{ env.ANDROID_BUILD_DIR }}
+        path: ${{ env.BUILD_DIR }}
 
     - name: Debug File Existence
       run: |
@@ -15,19 +15,19 @@ runs:
         echo "Current directory:"
         pwd
         echo "Checking for build outputs:"
-        ls -R ${{ env.ANDROID_BUILD_DIR }}
-        echo "ANDROID_INFO_FILE: ${{ env.ANDROID_INFO_FILE }}"
-        echo "ANDROID_BUILD_FILE: ${{ env.ANDROID_BUILD_FILE }}"
-        if [ -f "${{ env.ANDROID_INFO_FILE }}" ]; then
+        ls -R ${{ env.BUILD_DIR }}
+        echo "INFO_FILE: ${{ env.INFO_FILE }}"
+        echo "BUILD_FILE: ${{ env.BUILD_FILE }}"
+        if [ -f "${{ env.INFO_FILE }}" ]; then
           echo "output-metadata.json exists"
-          cat ${{ env.ANDROID_INFO_FILE }}
+          cat ${{ env.INFO_FILE }}
         else
           echo "output-metadata.json does not exist"
           exit 1
         fi
-        if [ -f "${{ env.ANDROID_BUILD_FILE }}" ]; then
+        if [ -f "${{ env.BUILD_FILE }}" ]; then
           echo "app-release.apk exists"
-          ls -l ${{ env.ANDROID_BUILD_FILE }}
+          ls -l ${{ env.BUILD_FILE }}
         else
           echo "app-release.apk does not exist"
           exit 1
@@ -37,8 +37,8 @@ runs:
     - name: Set Permissions
       run: |
         set -e  # Exit immediately if a command exits with a non-zero status.
-        chmod 644 ${{ env.ANDROID_INFO_FILE }} ${{ env.ANDROID_BUILD_FILE }}
-        echo "Set permissions for ${{ env.ANDROID_INFO_FILE }} and ${{ env.ANDROID_BUILD_FILE }}"
+        chmod 644 ${{ env.INFO_FILE }} ${{ env.BUILD_FILE }}
+        echo "Set permissions for ${{ env.INFO_FILE }} and ${{ env.BUILD_FILE }}"
       shell: bash
 
     - name: Upload the application on Mstore
