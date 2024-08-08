@@ -17,7 +17,7 @@ runs:
 
     - name: setup build environment  artifact name
       run: |
-        echo "ARTIFACT_NAME=${{ env.PLATFORM  }}-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "ARTIFACT_NAME=build-${{ env.PLATFORM  }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set gradlew permissions

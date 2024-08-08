@@ -122,9 +122,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BUILD_DIR}}
-          path: |
-            ${{ env.ARTIFACT_NAME}}
-          if-no-files-found: error
+          path: ${{ env.ARTIFACT_NAME}}
 
     outputs:
       build_dir: ${{ env.BUILD_DIR}}
