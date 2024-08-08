@@ -17,26 +17,16 @@ runs:
         echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
         echo "PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
-    - name: Set gradlew permissions
-      run: chmod +x android/gradlew
-      shell: bash
+    - name: Cache Gradle Wrapper
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-    - name: Decode Keystore
-      run: |
-        echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
-        echo "ANDROID_KEYSTORE_FILE=${{ github.workspace }}/android/app/release.keystore" >> $GITHUB_ENV
-      shell: bash
-
-    # - name: Cache Gradle Wrapper
-    #   uses: actions/cache@v3
-    #   with:
-    #       path: ~/.gradle/wrapper
-    #       key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-
-    # - name: Cache Gradle Dependencies
-    #   uses: actions/cache@v3
-    #   with:
-    #       path: ~/.gradle/caches
-    #       key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-    #       restore-keys: |
-    #         ${{ runner.os }}-gradle-caches-
+    - name: Cache Gradle Dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-caches-

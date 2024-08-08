@@ -103,6 +103,14 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
+      - name: Set gradlew permissions and setup keystore file
+        if: matrix.platform == 'android'
+        run: |
+          chmod +x android/gradlew
+          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
+          echo "ANDROID_KEYSTORE_FILE=${{ github.workspace }}/android/app/release.keystore" >> $GITHUB_ENV
+        shell: bash
+
       - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
