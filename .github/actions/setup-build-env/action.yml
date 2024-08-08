@@ -8,12 +8,20 @@ outputs:
 runs:
   using: composite
   steps:
-    - run: |
-        if [ "${{ env.PLATFORM  }}" == "ios" ]; then
-          echo "build_dir=${{ github.workspace }}/ios/build" >> $GITHUB_ENV
-        else
-          echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
-        fi
+    - name: Setup build environment android dir
+      if: ${{ env.PLATFORM == 'android' }}
+      run: |
+        echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
+      shell: bash
+
+    - name: setup build environment ios dir
+      if: ${{ env.PLATFORM == 'ios' }}
+      run: |
+        echo "build_dir=${{ github.workspace }}/ios/build" >> $GITHUB_ENV
+      shell: bash
+
+    - name: setup build environment  artifact name
+      run: |
         echo "artifact_name=${{ env.PLATFORM  }}-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
 
