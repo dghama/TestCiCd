@@ -11,18 +11,15 @@ runs:
     - name: Setup build environment android dir
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
+        echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
+        echo "artifact_name=build-android-${{ env.ENVIRONMENT }}" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: setup build environment ios dir
+    - name: Setup build environment ios dir
       if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        echo "build_dir=${{ github.workspace }}/ios/build" >> $GITHUB_ENV
-      shell: bash
-
-    - name: setup build environment  artifact name
-      run: |
-        echo "artifact_name=${{ env.PLATFORM  }}-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "build_dir=${{ github.workspace }}/ios/build" >> $GITHUB_OUTPUT
+        echo "artifact_name=build-ios-${{ env.ENVIRONMENT }}" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Set gradlew permissions
