@@ -92,6 +92,11 @@ jobs:
     strategy:
       matrix:
         platform: [android]
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,20 +109,22 @@ jobs:
       - name: Set up environment
         id: setup_env
         uses: ./.github/actions/setup-build-env
-        with:
-          platform: ${{ matrix.platform }}
-          environment: ${{ github.event.inputs.environment || 'staging' }}
 
       - name: Set gradlew permissions and setup keystore file
         if: matrix.platform == 'android'
         run: |
           chmod +x android/gradlew
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
+          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{env.ANDROID_KEYSTORE_FILE}}
         shell: bash
 
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         shell: bash
 
       - name: Upload artifact
@@ -140,6 +147,7 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
