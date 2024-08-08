@@ -37,7 +37,6 @@ jobs:
           fetch-depth: 0
       - name: Setup android environment
         uses: ./.github/actions/build-test/android-setup/android-runner
-
       - name: Setup ios environment
         uses: ./.github/actions/build-test/ios-setup/ios-runner
 
@@ -113,7 +112,7 @@ jobs:
         if: matrix.platform == 'android'
         run: |
           chmod +x android/gradlew
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ secrets.ANDROID_KEYSTORE_FILE }}
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
         shell: bash
 
       - name: Build ${{ matrix.platform }}
