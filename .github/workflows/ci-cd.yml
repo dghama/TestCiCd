@@ -159,7 +159,7 @@ jobs:
               echo "BUILD_FILE=${{ env.BUILD_DIR }}/${{ needs.get-app-name.outputs.app_name }}_*.apk" >> $GITHUB_OUTPUT
               echo "INFO_FILE=${{ env.BUILD_DIR }}/output-metadata.json" >> $GITHUB_OUTPUT
             fi
-          shell: bash
+        shell: bash
 
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
