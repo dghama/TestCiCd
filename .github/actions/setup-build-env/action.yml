@@ -1,12 +1,5 @@
 name: 'Set up build environment'
 description: 'Determine build directory and artifact name based on platform'
-inputs:
-  platform:
-    description: 'Target platform (android or ios)'
-    required: true
-  environment:
-    description: 'Build environment (e.g., staging, production)'
-    required: true
 outputs:
   build_dir:
     description: 'Path to the build output directory'
@@ -16,21 +9,21 @@ runs:
   using: composite
   steps:
     - run: |
-        if [ "${{ inputs.platform }}" == "ios" ]; then
+        if [ "${{ env.PLATFORM  }}" == "ios" ]; then
           echo "build_dir=${{ github.workspace }}/ios/build" >> $GITHUB_ENV
         else
           echo "build_dir=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
         fi
-        echo "artifact_name=${{ inputs.platform }}-${{ inputs.environment }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "artifact_name=${{ env.PLATFORM  }}-${{ env.PLATFORM }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set gradlew permissions
-      if: ${{ inputs.platform == 'android' }}
+      if: ${{ env.PLATFORM == 'android' }}
       run: chmod +x android/gradlew
       shell: bash
 
     - name: Setup keystore file
-      if: ${{ inputs.platform == 'android' }}
+      if: ${{ env.PLATFORM == 'android' }}
       run: |
         echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
       shell: bash
