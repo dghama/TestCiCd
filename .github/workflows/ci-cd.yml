@@ -95,7 +95,7 @@ jobs:
         platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
       APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
       ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
       BUILD_DIR: ${{ matrix.platform }} == 'ios' && ${{ github.workspace }}/ios/build || ${{ github.workspace }}/android/app/build/outputs/apk/release
@@ -119,7 +119,7 @@ jobs:
           echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
         shell: bash
 
-      - name: Build ${{ matrix.platform }} for ${{ github.event.inputs.environment }}
+      - name: Build ${{ matrix.platform }} for ${{ env.ENVIRONMENT }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
@@ -127,9 +127,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ github.event.inputs.environment }}-build
+          name: ${{ matrix.platform }}-${{ env.ENVIRONMENT }}-build
           path: |
-            ${{ matrix.platform == 'ios' && env.BUILD_DIR || env.BUILD_DIR }}
+            ${{ env.BUILD_DIR }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -140,7 +140,7 @@ jobs:
         platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
       BUILD_DIR: ${{ matrix.platform }} == 'ios' && ${{ github.workspace }}/ios/build || ${{ github.workspace }}/android/app/build/outputs/apk/release
       AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
       APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
@@ -167,18 +167,18 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ github.event.inputs.environment }}-build
+          name: ${{ matrix.platform }}-${{ env.ENVIRONMENT }}-build
           path: |
-            ${{ matrix.platform == 'ios' && env.BUILD_DIR || env.BUILD_DIR }}
+            ${{ env.BUILD_DIR }}
 
-      - name: Upload ${{ matrix.platform }} - ${{ github.event.inputs.environment }} the application on Mstore
-        if: github.event.inputs.environment != 'prod'
+      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on Mstore
+        if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           bundle exec fastlane upload_${{ matrix.platform }}_to_mstore
         shell: bash
 
-      - name: Upload ${{ matrix.platform }} - ${{ github.event.inputs.environment }} the application on store
-        if: github.event.inputs.environment == 'prod'
+      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
+        if: ${{ env.ENVIRONMENT }} == 'prod'
         run: |
           echo "This step will be added in the future"
         shell: bash
