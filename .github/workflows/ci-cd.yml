@@ -95,7 +95,11 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
-
+      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -109,22 +113,9 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup-build-env
 
-      - name: Set gradlew permissions and setup keystore file
-        if: matrix.platform == 'android'
-        run: |
-          chmod +x android/gradlew
-          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/android/app/release.keystore
-        shell: bash
-
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
-        env:
-          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         shell: bash
 
       - name: Upload artifact
