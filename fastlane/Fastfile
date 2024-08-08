@@ -80,7 +80,7 @@ platform :android do
   
   
 
-  desc 'Upload the Android app to the MStore'
+  desc 'Upload the app to the MStore'
   lane :upload_android_to_mstore do
     mstore_upload_android(
       authorization: ENV['AUTHORIZATION'],

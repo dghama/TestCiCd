@@ -93,16 +93,6 @@ jobs:
     strategy:
       matrix:
         platform: [android]
-    env:
-      PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
-      APP_NAME: ${{ needs.get-app-name.outputs.app_name }}
-      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-      BUILD_DIR: ${{ matrix.platform }} == 'ios' && ${{ github.workspace }}/ios/build || ${{ github.workspace }}/android/app/build/outputs/apk/release
-      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -112,14 +102,21 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
+      - name: Set up environment
+        id: setup_env
+        uses: ./.github/actions/setup-build-env
+        with:
+          platform: ${{ matrix.platform }}
+          environment: ${{ github.event.inputs.environment || 'staging' }}
+
       - name: Set gradlew permissions and setup keystore file
         if: matrix.platform == 'android'
         run: |
           chmod +x android/gradlew
-          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ secrets.ANDROID_KEYSTORE_FILE }}
         shell: bash
 
-      - name: Build ${{ matrix.platform }} for ${{ env.ENVIRONMENT }}
+      - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
@@ -127,8 +124,12 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ env.ENVIRONMENT }}-build
-          path: ${{ env.BUILD_DIR }}
+          name: ${{ steps.setup_env.outputs.artifact_name }}
+          path: ${{ steps.setup_env.outputs.build_dir }}
+
+    outputs:
+      build_dir: ${{ steps.setup_env.outputs.build_dir }}
+      artifact_name: ${{ steps.setup_env.outputs.artifact_name }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -140,25 +141,11 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
-      BUILD_DIR: ${{ matrix.platform }} == 'ios' && ${{ github.workspace }}/ios/build || ${{ github.workspace }}/android/app/build/outputs/apk/release
-      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set environment variables
-        id: set-env
-        run: |
-          if [ '${{ matrix.platform }}' == 'ios' ]; then
-              echo "BUILD_FILE=${{ env.BUILD_DIR }}/${{ needs.get-app-name.outputs.app_name }}.ipa" >> $GITHUB_OUTPUT
-              echo "INFO_FILE=${{ env.BUILD_DIR }}/${{ needs.get-app-name.outputs.app_name }}-info.plist" >> $GITHUB_OUTPUT
-            else
-              echo "BUILD_FILE=${{ env.BUILD_DIR }}/${{ needs.get-app-name.outputs.app_name }}_*.apk" >> $GITHUB_OUTPUT
-              echo "INFO_FILE=${{ env.BUILD_DIR }}/output-metadata.json" >> $GITHUB_OUTPUT
-            fi
-        shell: bash
 
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
@@ -166,13 +153,18 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ env.ENVIRONMENT }}-build
-          path: ${{ env.BUILD_DIR }}
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: ${{ steps.build.outputs.build_dir }}
 
-      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on Mstore
+      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           bundle exec fastlane upload_${{ matrix.platform }}_to_mstore
+        env:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+          BUILD_FILE: ${{ steps.build.outputs.build_file }}
+          INFO_FILE: ${{ steps.build.outputs.info_file }}
         shell: bash
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store

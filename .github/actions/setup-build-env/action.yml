@@ -1,0 +1,27 @@
+# Separate action for setup environment
+# .github/actions/setup-build-env/action.yml
+name: 'Set up build environment'
+description: 'Determine build directory and artifact name based on platform'
+inputs:
+  platform:
+    description: 'Target platform (android or ios)'
+    required: true
+  environment:
+    description: 'Build environment (e.g., staging, production)'
+    required: true
+outputs:
+  build_dir:
+    description: 'Path to the build output directory'
+  artifact_name:
+    description: 'Name for the build artifact'
+runs:
+  using: composite
+  steps:
+    - run: |
+        if [ '${{ inputs.platform }}' == 'ios' ]; then
+          echo "::set-output name=build_dir::${{ github.workspace }}/ios/build"
+        else
+          echo "::set-output name=build_dir::${{ github.workspace }}/android/app/build/outputs/apk/release"
+        fi
+        echo "::set-output name=artifact_name::${{ inputs.platform }}-${{ inputs.environment }}-${{ github.sha }}"
+      shell: bash
