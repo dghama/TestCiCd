@@ -1,4 +1,7 @@
 before_all do
+  # Ensure Fastlane runs from the root of the project
+  Dir.chdir(File.expand_path("..", __dir__))
+
   @package = load_json(json_path: "./package.json")
   @environment = ENV['ENVIRONMENT'] || 'staging'
   @android_version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
