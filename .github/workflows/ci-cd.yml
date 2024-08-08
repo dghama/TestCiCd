@@ -117,6 +117,8 @@ jobs:
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
+        working-directory: ${{ github.workspace }}
+
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -168,6 +170,8 @@ jobs:
         run: |
           bundle exec fastlane upload_app_to_mstore
         shell: bash
+        working-directory: ${{ github.workspace }}
+
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
         if: ${{ env.ENVIRONMENT }} == 'prod'

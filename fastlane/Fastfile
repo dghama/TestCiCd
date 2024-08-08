@@ -1,7 +1,12 @@
-before_all do
-  # Ensure Fastlane runs from the root of the project
-  Dir.chdir(File.expand_path("..", __dir__))
+# Fastfile for React Native CI/CD Pipeline
 
+default_platform(:ios)
+
+before_all do
+  puts "Current working directory: #{Dir.pwd}"
+  puts "Looking for package.json at: #{File.expand_path('./package.json')}"
+
+  # Load the package.json data
   @package = load_json(json_path: "./package.json")
   @environment = ENV['ENVIRONMENT'] || 'staging'
   @android_version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
@@ -35,6 +40,12 @@ platform :ios do
       skip_codesigning: true
     )
   end
+
+  desc 'Upload iOS app to MStore'
+  lane :upload_app_to_mstore do
+    # Example for uploading to MStore (replace with your command or API call)
+    sh "echo 'Uploading iOS app to MStore...'"
+  end
 end
 
 platform :android do
@@ -62,9 +73,15 @@ platform :android do
       }
     )
   end
+
+  desc 'Upload Android app to MStore'
+  lane :upload_app_to_mstore do
+    # Example for uploading to MStore (replace with your command or API call)
+    sh "echo 'Uploading Android app to MStore...'"
+  end
 end
 
-desc 'Update the version after successful upload for both Android and iOS'
+desc 'Update the version after a successful upload for both Android and iOS'
 lane :update_version do
   @android_version_code += 1
   @ios_build_number += 1
@@ -85,8 +102,12 @@ lane :update_version do
     xcodeproj: "./ios/#{@package['name']}.xcodeproj",
     version_number: "#{@package['version']}.#{@ios_build_number}"
   )
+
+  # Commit version updates if needed
+  sh "git add . && git commit -m 'Bump version to #{@package['version']}.#{@ios_build_number}' && git push"
 end
 
+# Helper methods to retrieve version information from build files
 def get_android_version_name(gradle_file_path:)
   File.open(gradle_file_path, 'r') do |file|
     file.each_line do |line|
