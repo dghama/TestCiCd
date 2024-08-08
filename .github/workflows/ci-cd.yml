@@ -153,7 +153,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ steps.build.outputs.build_dir }}
+          path: ${{ needs.build.outputs.build_dir }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
@@ -162,8 +162,8 @@ jobs:
         env:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-          BUILD_FILE: ${{ steps.build.outputs.build_file }}
-          INFO_FILE: ${{ steps.build.outputs.info_file }}
+          BUILD_FILE: ${{ needs.build.outputs.build_file }}
+          INFO_FILE: ${{ needs.build.outputs.info_file }}
         shell: bash
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
