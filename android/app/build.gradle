@@ -1,3 +1,5 @@
+// android/app/build.gradle
+
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
@@ -55,10 +57,7 @@ react {
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
 def enableProguardInReleaseBuilds = false
-def jscFlavor = 'org.webkit:android-jsc:+'
-def env = System.getenv('ENVIRONMENT') ?: "PRODUCTION"
-def android_version_code = @android_version_code
-def android_version_name = "@android_version_name"
+
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
  *
@@ -71,7 +70,6 @@ def android_version_name = "@android_version_name"
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
-def env = System.getenv('ENVIRONMENT') ?: "PRODUCTION"
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -83,12 +81,10 @@ android {
         applicationId "com.testcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode android_version_code
-        versionName android_version_name
-        setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
-        resValue "string", "build_config_package", "com.testcicd"
-
+        versionCode 1
+        versionName "1.0"
     }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -96,13 +92,14 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-          release {
+        release {
             storeFile file('release.keystore')
             storePassword System.getenv("KEYSTORE_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
         }
     }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -112,62 +109,33 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
-        stagingRelease {
-            signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        }
+    }
 
-        prodRelease {
-            signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+    flavorDimensions "default"
+    productFlavors {
+        staging {
+            applicationId "com.testcicd.staging"
+            resValue "string", "app_name", "TestCICD Staging"
         }
-
-        devRelease {
-            signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        prod {
+            applicationId "com.testcicd.prod"
+            resValue "string", "app_name", "TestCICD"
         }
-
-        betaRelease {
-            signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        dev {
+            applicationId "com.testcicd.dev"
+            resValue "string", "app_name", "TestCICD Dev"
+        }
+        beta {
+            applicationId "com.testcicd.beta"
+            resValue "string", "app_name", "TestCICD Beta"
         }
     }
-  productFlavors {
-    staging {
-        applicationId "com.testcicd.staging"
-        versionCode @android_version_code + 1
-        versionName "@android_version_name.1"
-    }
-
-    prod {
-        applicationId "com.testcicd.prod"
-        versionCode @android_version_code + 2
-        versionName "@android_version_name.2"
-    }
-
-    dev {
-        applicationId "com.testcicd.dev"
-        versionCode @android_version_code + 3
-        versionName "@android_version_name.3"
-    }
-
-    beta {
-        applicationId "com.testcicd.beta"
-        versionCode @android_version_code + 4
-        versionName "@android_version_name.4"
-    }
-}
-    
-
 }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

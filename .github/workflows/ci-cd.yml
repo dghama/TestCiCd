@@ -112,18 +112,17 @@ jobs:
       - name: Set up build environment
         id: setup_build_env
         uses: ./.github/actions/setup-build-env
-
-      - name: Build ${{ matrix.platform }}
+ 
+      - name: Build ${{ matrix.platform }} for ${{ matrix.environment }}
         run: |
-          bundle exec fastlane ${{ matrix.platform }} build
+          bundle exec fastlane ${{ matrix.platform }} build environment:${{ matrix.environment }}
         shell: bash
         working-directory: ${{ github.workspace }}
-
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ matrix.platform }}-${{ matrix.environment }}-build
           path: ${{ env.BUILD_DIR }}/*
           if-no-files-found: error
           compression-level: 6
@@ -158,31 +157,26 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.artifact_name }}
+          name: ${{ matrix.platform }}-${{ matrix.environment }}-build
           path: ${{ needs.build.outputs.build_dir }}
 
-      - name: Set up deploy environment
-        id: setup_deploy_env
-        uses: ./.github/actions/setup-build-env
-
-      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
-        if: ${{ env.ENVIRONMENT }} != 'prod'
+      - name: Upload ${{ matrix.platform }} - ${{ matrix.environment }} to MStore
         run: |
-          bundle exec fastlane upload_app_to_mstore
+          bundle exec fastlane ${{ matrix.platform }} upload_app_to_mstore environment:${{ matrix.environment }}
         shell: bash
         working-directory: ${{ github.workspace }}
 
-
-      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
-        if: ${{ env.ENVIRONMENT }} == 'prod'
+      - name: Increment version
+        if: success()
         run: |
-          echo "This step will be added in the future"
+          bundle exec fastlane update_version platform:${{ matrix.platform }} environment:${{ matrix.environment }}
         shell: bash
+        working-directory: ${{ github.workspace }}
 
       - name: Commit version update
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'Bump version'
+          commit_message: 'Bump version for ${{ matrix.environment }}'
           branch: ${{ github.head_ref }}
 
   notify-teams:
