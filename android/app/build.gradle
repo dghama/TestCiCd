@@ -83,8 +83,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-    }
+        setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
+        resValue "string", "build_config_package", "com.testcicd"
 
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -92,14 +94,13 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
+          release {
             storeFile file('release.keystore')
             storePassword System.getenv("KEYSTORE_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
         }
     }
-
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -110,8 +111,8 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
-
-    flavorDimensions "default"
+    
+ flavorDimensions "default"
     productFlavors {
         staging {
             applicationId "com.testcicd.staging"

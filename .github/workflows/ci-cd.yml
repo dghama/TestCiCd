@@ -145,7 +145,7 @@ jobs:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
       AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
       APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -163,7 +163,7 @@ jobs:
 
       - name: Set up deploy environment
         id: setup_deploy_env
-        uses: ./.github/actions/setup-build-env
+        uses: ./.github/actions/setup-deploy-env
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
@@ -179,13 +179,11 @@ jobs:
         run: |
           echo "This step will be added in the future"
         shell: bash
-
       - name: Commit version update
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'Bump version'
           branch: ${{ github.head_ref }}
-
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
