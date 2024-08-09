@@ -151,15 +151,16 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
-      - name: check build path container
-        run: |
-          echo "ls -l ${{ needs.build.outputs.build_dir }}"
-
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ needs.build.outputs.build_dir }}
+
+      - name: Check build path contents
+        run: |
+          echo "Contents of the build path:"
+          ls -l ${{ needs.build.outputs.build_dir }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
