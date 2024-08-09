@@ -6,16 +6,12 @@ runs:
     - name: Setup deploy environment for Android
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        APP_NAME=$(node -p "require('./package.json').name")
-        VERSION=$(node -p "require('./package.json').version")
-        BUILD_FILE="${{ github.workspace }}/android/app/build/outputs/apk/${{ env.ENVIRONMENT }}/release/${APP_NAME}-${{ env.ENVIRONMENT }}-release.apk"
-        INFO_FILE="${{ github.workspace }}/android/app/build/outputs/apk/${{ env.ENVIRONMENT }}/release/output-metadata.json"
+        BUILD_FILE="${{ needs.get-app-name.outputs.app_name }}_${{ env.ENVIRONMENT }}_V_$(node -p "require('./package.json').version").${{ github.run_number }}.apk"
+        INFO_FILE="${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json"
         
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
           echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
           echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
-          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
         else
           echo "Required files not found!" >&2
           exit 1
@@ -25,16 +21,12 @@ runs:
     - name: Setup deploy environment for iOS
       if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        APP_NAME=$(node -p "require('./package.json').name")
-        VERSION=$(node -p "require('./package.json').version")
-        BUILD_FILE="ios/build/${APP_NAME}.ipa"
-        INFO_FILE="ios/build/${APP_NAME}-info.plist"
+        BUILD_FILE="ios/build/${{ secrets.APP_NAME }}.ipa"
+        INFO_FILE="ios/build/${{ secrets.APP_NAME }}-info.plist"
 
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
           echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
           echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
-          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
         else
           echo "Required files not found!" >&2
           exit 1

@@ -1,95 +1,104 @@
-# Fastfile
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
 
 default_platform(:android)
 
 before_all do
   @package = load_json(json_path: "./package.json")
-  @environment = ENV['ENVIRONMENT'] || 'staging'
+end
+
+platform :ios do
+  desc 'iOS: Increment build number and set the version to package.json version.'
+  private_lane :inc_ver_ios do
+    increment_build_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+    )
+    increment_version_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
+      version_number: @package['version']
+    )
+  end
+
+  desc 'Build the iOS app'
+  lane :build do
+    inc_ver_ios
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile",
+    )
+    build_app(
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      export_method: "app-store",
+      output_directory: "./ios/build",
+      output_name: "#{@package['name']}.ipa",
+      skip_codesigning: true
+
+    )
+  end
 end
 
 platform :android do
-  desc 'Build the Android app for the specified environment'
-  lane :build do |options|
-    environment = options[:environment] || @environment
-
-    # Load current version info
-    version_info = get_version_info(environment)
-
-    # Increment version code
-    new_version_code = version_info[:version_code] + 1
-    new_version_name = "#{version_info[:version_name].split('.')[0..1].join('.')}.#{new_version_code}"
-
-    # Update build.gradle
-    update_gradle_file(
-      file_path: "./android/app/build.gradle",
-      regex: /versionCode\s+(\d+)/,
-      replacement: "versionCode #{new_version_code}"
+  desc 'Android: Increment versionCode and set versionName to package.json version.'
+  private_lane :inc_ver_and do
+    increment_version_code(
+      gradle_file_path: "./android/app/build.gradle",
     )
-    update_gradle_file(
-      file_path: "./android/app/build.gradle",
-      regex: /versionName\s+"([^"]+)"/,
-      replacement: "versionName \"#{new_version_name}\""
+    increment_version_name(
+      gradle_file_path: "./android/app/build.gradle",
+      version_name: @package['version']
     )
+  end
 
+
+  
+
+  desc 'Build the Android app'
+  lane :build do
+    inc_ver_and
     gradle(
-      task: "assemble#{environment.capitalize}Release",
+      task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
       }
     )
   end
 
-  desc 'Upload Android app to MStore'
-  lane :upload_app_to_mstore do |options|
-    environment = options[:environment] || @environment
-    
-    mstore_upload_app(
+  desc 'Upload the Android app to the MStore'
+  lane :upload_android_to_mstore do
+    mstore_upload_android(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
-      info_file: "./android/app/build/outputs/apk/#{environment}/release/output-metadata.json",
-      build_file: "./android/app/build/outputs/apk/#{environment}/release/app-#{environment}-release.apk"
+      info_file: ENV['ANDROID_INFO_FILE'],
+      apk_file: ENV['ANDROID_BUILD_FILE']
     )
   end
-end
 
-desc 'Update the version after a successful upload'
-lane :update_version do |options|
-  platform = options[:platform]
-  environment = options[:environment] || @environment
-
-  if platform == 'android'
-    version_info = get_version_info(environment)
-    new_version_code = version_info[:version_code] + 1
-    new_version_name = "#{version_info[:version_name].split('.')[0..1].join('.')}.#{new_version_code}"
-
-    update_gradle_file(
-      file_path: "./android/app/build.gradle",
-      regex: /versionCode\s+(\d+)/,
-      replacement: "versionCode #{new_version_code}"
-    )
-    update_gradle_file(
-      file_path: "./android/app/build.gradle",
-      regex: /versionName\s+"([^"]+)"/,
-      replacement: "versionName \"#{new_version_name}\""
-    )
-  end
-  # Add similar logic for iOS if needed
-end
-
-def get_version_info(environment)
-  gradle_file = File.read("./android/app/build.gradle")
-  version_code = gradle_file.match(/versionCode\s+(\d+)/)[1].to_i
-  version_name = gradle_file.match(/versionName\s+"([^"]+)"/)[1]
   
-  { version_code: version_code, version_name: version_name }
-end
-
-def update_gradle_file(file_path:, regex:, replacement:)
-  text = File.read(file_path)
-  new_contents = text.gsub(regex, replacement)
-  File.open(file_path, "w") {|file| file.puts new_contents }
+  desc 'Upload the iOS app to the MStore'
+  lane :upload_ios_to_mstore do
+    mstore_upload_ios(
+      authorization: ENV['AUTHORIZATION'],
+      app_dev_token: ENV['APP_DEV_TOKEN'],
+      info_file: ENV['IOS_INFO_FILE'],
+      ipa_file: ENV['IOS_BUILD_FILE']
+    )
+  end
 end
