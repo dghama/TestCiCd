@@ -6,7 +6,7 @@ runs:
     - name: Setup deploy environment for Android
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        BUILD_FILE="${{ needs.get-app-name.outputs.app_name }}_${{ env.ENVIRONMENT }}_V_$(node -p "require('./package.json').version").${{ github.run_number }}.apk"
+        BUILD_FILE="${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
         INFO_FILE="${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json"
         
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
