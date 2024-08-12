@@ -111,7 +111,31 @@ android {
         }
     }
 
-   applicationVariants.all { variant ->
+    flavorDimensions "environment"
+    productFlavors {
+        staging {
+            dimension "environment"
+            applicationId "com.testcicd.staging"
+            resValue "string", "app_name", "TestCICD Staging"
+        }
+        prod {
+            dimension "environment"
+            applicationId "com.testcicd.prod"
+            resValue "string", "app_name", "TestCICD"
+        }
+        dev {
+            dimension "environment"
+            applicationId "com.testcicd.dev"
+            resValue "string", "app_name", "TestCICD Dev"
+        }
+        beta {
+            dimension "environment"
+            applicationId "com.testcicd.beta"
+            resValue "string", "app_name", "TestCICD Beta"
+        }
+    }
+
+    applicationVariants.all { variant ->
         variant.outputs.all { output ->
             def outputFile = output.outputFile
             if (outputFile != null && outputFile.name.endsWith('.apk')) {
@@ -123,27 +147,6 @@ android {
                     outputFileName = fileName
                 }
             }
-        }
-    }
-}
-    
- flavorDimensions "default"
-    productFlavors {
-        staging {
-            applicationId "com.testcicd.staging"
-            resValue "string", "app_name", "TestCICD Staging"
-        }
-        prod {
-            applicationId "com.testcicd.prod"
-            resValue "string", "app_name", "TestCICD"
-        }
-        dev {
-            applicationId "com.testcicd.dev"
-            resValue "string", "app_name", "TestCICD Dev"
-        }
-        beta {
-            applicationId "com.testcicd.beta"
-            resValue "string", "app_name", "TestCICD Beta"
         }
     }
 }
