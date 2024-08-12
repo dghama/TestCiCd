@@ -13,22 +13,47 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
-
 default_platform(:android)
 
 before_all do
   @package = load_json(json_path: "./package.json")
+  @environment = ENV["ENVIRONMENT"] || "staging"
+  @version_type = ENV["VERSION_TYPE"] || "patch"
+end
+
+def get_version_suffix
+  case @environment
+  when "prod"
+    ""
+  when "staging"
+    "-rc"
+  when "dev"
+    "-dev"
+  when "beta"
+    "-beta"
+  else
+    "-#{@environment}"
+  end
 end
 
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
-    increment_build_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+    new_version = increment_version_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
+      version_number: @package['version'],
+      bump_type: @version_type
     )
+    
+    new_version_with_suffix = "#{new_version}#{get_version_suffix}"
+    
     increment_version_number(
       xcodeproj: "./ios/#{@package['name']}.xcodeproj",
-      version_number: @package['version']
+      version_number: new_version_with_suffix
+    )
+    
+    increment_build_number(
+      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
     )
   end
 
@@ -46,7 +71,6 @@ platform :ios do
       output_directory: "./ios/build",
       output_name: "#{@package['name']}.ipa",
       skip_codesigning: true
-
     )
   end
 end
@@ -57,9 +81,18 @@ platform :android do
     increment_version_code(
       gradle_file_path: "./android/app/build.gradle",
     )
-    increment_version_name(
+    
+    new_version = increment_version_name(
       gradle_file_path: "./android/app/build.gradle",
-      version_name: @package['version']
+      version_name: @package['version'],
+      bump_type: @version_type
+    )
+    
+    new_version_with_suffix = "#{new_version}#{get_version_suffix}"
+    
+    android_set_version_name(
+      gradle_file: "./android/app/build.gradle",
+      version_name: new_version_with_suffix
     )
   end
   
@@ -78,8 +111,6 @@ platform :android do
     )
   end
   
-  
-
   desc 'Upload the app to the MStore'
   lane :upload_app_to_mstore do
     mstore_upload_app(
@@ -89,5 +120,4 @@ platform :android do
       build_file: ENV['BUILD_FILE']
     )
   end
-
 end

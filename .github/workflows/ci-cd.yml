@@ -148,6 +148,7 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+      BUMP_TYPE: ${{ github.event.inputs.bump_type || 'patch' }}
 
     steps:
       - name: Checkout repository

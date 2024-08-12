@@ -68,8 +68,6 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
-def env = project.hasProperty('ENV') ? project.ENV : "PRODUCTION"
-
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -82,9 +80,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
         resValue "string", "build_config_package", "com.testcicd"
-
     }
     signingConfigs {
         debug {
