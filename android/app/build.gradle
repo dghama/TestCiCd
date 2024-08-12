@@ -78,8 +78,11 @@ android {
         applicationId "com.testcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName project.hasProperty('VERSION_NAME') ? project.VERSION_NAME : "0.0.1"
+        versionCode 2
+        versionName project.hasProperty('versionName') ? project.VERSION_NAME : "0.0.1"
+        setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
+        resValue "string", "build_config_package", "com.testcicd"
+
     }
     signingConfigs {
         debug {
