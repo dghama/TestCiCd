@@ -95,9 +95,13 @@ platform :android do
     
     new_version_with_app_name = generate_version_string(new_version)
     
-    android_set_version_name(
-      gradle_file: "./android/app/build.gradle",
-      version_name: new_version_with_app_name
+    # Use gradle action to set the new version name
+    gradle(
+      task: 'app:properties',
+      properties: {
+        "android.injected.version.name": new_version_with_app_name
+      },
+      project_dir: "android/"
     )
   end
   
