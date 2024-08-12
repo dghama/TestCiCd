@@ -13,22 +13,69 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
-
 default_platform(:android)
 
 before_all do
+  ensure_git_status_clean
   @package = load_json(json_path: "./package.json")
+  @environment = ENV["ENVIRONMENT"] || "staging"
+  @version_type = ENV["VERSION_TYPE"] || "patch"
+  @app_name = @package['name']
+
+  # Debug: Print the loaded package information
+  puts "Loaded package: #{@package}"
+  puts "Environment: #{@environment}"
+  puts "Version Type: #{@version_type}"
+  puts "App Name: #{@app_name}"
+end
+
+def get_version_suffix
+  case @environment
+  when "prod"
+    ""
+  when "staging"
+    "-rc"
+  when "dev"
+    "-dev"
+  when "beta"
+    "-beta"
+  else
+    "-#{@environment}"
+  end
+end
+
+def generate_version_string(version)
+  # Ensure version is a string and not empty
+  version_str = version.to_s.strip
+  if version_str.empty?
+    version_str = @package['version']
+  end
+  # Debug: print the version string
+  puts "Version string: #{version_str}"
+
+  # Construct the version string with the app name, version, and suffix
+  "#{@app_name}-#{version_str}#{get_version_suffix}"
 end
 
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
-    increment_build_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+    # Increment the version number and build number
+    new_version = increment_version_number(
+      xcodeproj: "./ios/#{@app_name}.xcodeproj",
+      version_number: @package['version'],
+      bump_type: @version_type
     )
+
+    new_version_with_app_name = generate_version_string(new_version)
+
     increment_version_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
-      version_number: @package['version']
+      xcodeproj: "./ios/#{@app_name}.xcodeproj",
+      version_number: new_version_with_app_name
+    )
+
+    increment_build_number(
+      xcodeproj: "./ios/#{@app_name}.xcodeproj"
     )
   end
 
@@ -40,13 +87,12 @@ platform :ios do
       podfile: "./ios/Podfile",
     )
     build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
+      workspace: "./ios/#{@app_name}.xcworkspace",
+      scheme: @app_name,
       export_method: "app-store",
       output_directory: "./ios/build",
-      output_name: "#{@package['name']}.ipa",
+      output_name: "#{@app_name}.ipa",
       skip_codesigning: true
-
     )
   end
 end
@@ -54,15 +100,15 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    # Increment the versionCode
     increment_version_code(
-      gradle_file_path: "./android/app/build.gradle",
+      gradle_file_path: "./android/app/build.gradle"
     )
-    increment_version_name(
-      gradle_file_path: "./android/app/build.gradle",
-      version_name: @package['version']
-    )
+
+    sh("ruby update_version_name.rb")
+
   end
-  
+
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
@@ -77,8 +123,6 @@ platform :android do
       }
     )
   end
-  
-  
 
   desc 'Upload the app to the MStore'
   lane :upload_app_to_mstore do
@@ -90,4 +134,39 @@ platform :android do
     )
   end
 
+  desc 'Print the current version'
+  lane :print_version do
+    if is_ios?
+      version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+      puts "Current iOS version: #{version}"
+    elsif is_android?
+      version = android_get_version_name(gradle_file: "./android/app/build.gradle")
+      puts "Current Android version: #{version}"
+    end
+  end
+
+  desc 'Bump build numbers, and set the version to match the package.json version.'
+  lane :commit_version_changes do
+    # Stage all changes
+    sh("git add .")
+
+    # Commit the changes with a message that includes the new version name
+    version_name = get_version_name_from_gradle
+    message = "Bump version to #{version_name}"
+    git_commit(
+      path: '.',
+      message: message
+    )
+    add_git_tag(
+      tag: @package['version']
+    )
+
+    # Push the changes to the remote repository
+    git_push
+  end
+
+  def get_version_name_from_gradle
+    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
+    return version_name
+  end
 end

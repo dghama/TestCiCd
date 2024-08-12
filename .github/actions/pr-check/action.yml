@@ -1,0 +1,63 @@
+name: 'PR Check codeBase'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 📦 Restore node modules from cache
+      uses: ./.github/actions/cache-restore
+
+    - name: 🚑 Run type check
+      run: yarn typecheck
+      shell: bash
+
+    - name: 🏃‍♂️ Run tests with coverage
+      run: yarn test --coverage --coverageReporters="text" --coverageReporters="lcov"
+      shell: bash
+
+    - name: 📦 Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-${{ github.sha }}
+        path: ./coverage
+        if-no-files-found: error
+        retention-days: 1
+
+    - name: 💯 Comment coverage report
+      uses: romeovs/lcov-reporter-action@v0.3.1
+      if: github.event_name == 'pull_request'
+      with:
+        lcov-file: ./coverage/lcov.info
+        github-token: ${{ github.token }}
+
+    #    - name: 🏃‍♂️ Run lint
+    #      run: yarn lint
+    #      shell: bash
+
+    # - name: Extract SonarQube Project Key
+    #   id: extract-key
+    #   run: |
+    #     SONAR_PROJECT_KEY=$(grep '^sonar.projectKey=' sonar-project.properties | cut -d'=' -f2-)
+    #     echo "SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY}" >> $GITHUB_ENV
+    #   shell: bash
+
+    # - name: Install SonarQube Scanner
+    #   run: |
+    #     brew install sonar-scanner
+    #   shell: bash
+
+    # - name: Perform SonarQube scan
+    #   run: |
+    #     sonar-scanner \
+    #       -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+    #       -Dsonar.sources=. \
+    #       -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
+    #       -Dsonar.token=${{ env.SONARQUBE_TOKEN }} \
+    #       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+    #       -Dsonar.typescript.tsconfigPath=tsconfig.json
+    #   shell: bash
+
+    # - name: SonarQube quality gate check
+    #   uses: sonarsource/sonarqube-quality-gate-action@master
+    #   env:
+    #     SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
+    #     SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}

@@ -20,6 +20,16 @@ on:
           - dev
           - beta
 
+      version_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
@@ -36,9 +46,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup android environment
-        uses: ./.github/actions/build-test/android-setup/android-runner
+        uses: ./.github/actions/setup/android-runner
       - name: Setup ios environment
-        uses: ./.github/actions/build-test/ios-setup/ios-runner
+        uses: ./.github/actions/setup/ios-runner
 
   install-dependencies:
     runs-on: macos-latest
@@ -49,7 +59,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install dependencies
-        uses: ./.github/actions/build-test/dependency-installation
+        uses: ./.github/actions/dependency-installation
 
   quality-checks:
     needs: install-dependencies
@@ -61,32 +71,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check PR codeBase
-        uses: ./.github/actions/build-test/pr-check
-
-      # - name: Perform SonarQube scan
-      #   uses: ./.github/actions/build-test/sonar-report
-      #   env:
-      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
-
-  get-app-name:
-    runs-on: ubuntu-latest
-    outputs:
-      app_name: ${{ steps.get_app_name.outputs.APP_NAME }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Get app name
-        id: get_app_name
-        run: |
-          APP_NAME=$(node -p "require('./package.json').name")
-          echo "APP_NAME=${APP_NAME}" >> $GITHUB_OUTPUT
-        shell: bash
+        uses: ./.github/actions/pr-check
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   build:
-    needs: [get-app-name, quality-checks]
+    needs: quality-checks
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     strategy:
@@ -100,6 +91,7 @@ jobs:
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      VERSION_TYPE: ${{ github.event.inputs.version_type || 'patch' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -109,9 +101,9 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
-      - name: Set up build environment
-        id: setup_build_env
-        uses: ./.github/actions/setup-build-env
+      - name: Set up environment
+        id: setup_env
+        uses: ./.github/actions/setup/setup-build-env
 
       - name: Build ${{ matrix.platform }}
         run: |
@@ -135,17 +127,15 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: [get-app-name, build]
+    needs: build
     runs-on: macos-latest
     strategy:
       matrix:
         platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
-      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-      
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -161,9 +151,17 @@ jobs:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ needs.build.outputs.build_dir }}
 
-      - name: Set up deploy environment
-        id: setup_deploy_env
-        uses: ./.github/actions/setup-deploy-env
+      - name: Check build path contents
+        run: |
+          echo "Contents of the build path:"
+          ls -l ${{ needs.build.outputs.build_dir }}
+
+      - name: Read output-metadata.json
+        run: |
+          echo "Contents of output-metadata.json:"
+          cd "${{ needs.build.outputs.build_dir }}" || exit 1
+          chmod 777 output-metadata.json
+          cat output-metadata.json
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
