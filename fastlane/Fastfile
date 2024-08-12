@@ -38,7 +38,12 @@ def get_version_suffix
 end
 
 def generate_version_string(version)
-  "#{@app_name}-#{version}#{get_version_suffix}"
+  # Ensure version is a string and not empty
+  version_str = version.to_s.strip
+  if version_str.empty?
+    version_str = @package['version']
+  end
+  "#{@app_name}-#{version_str}#{get_version_suffix}"
 end
 
 platform :ios do
@@ -103,6 +108,9 @@ platform :android do
       },
       project_dir: "android/"
     )
+
+    # Print the new version for verification
+    puts "New Android version: #{new_version_with_app_name}"
   end
   
   desc 'Build the Android app'
@@ -128,5 +136,16 @@ platform :android do
       info_file: ENV['INFO_FILE'],
       build_file: ENV['BUILD_FILE']
     )
+  end
+end
+
+desc 'Print the current version'
+lane :print_version do
+  if is_ios?
+    version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+    puts "Current iOS version: #{version}"
+  elsif is_android?
+    version = android_get_version_name(gradle_file: "./android/app/build.gradle")
+    puts "Current Android version: #{version}"
   end
 end
