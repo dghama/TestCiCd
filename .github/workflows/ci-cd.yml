@@ -116,7 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.BUILD_DIR }}/*
+          path: ${{ env.BUILD_DIR }}/${{ env.ENVIRONMENT }}/*
           if-no-files-found: error
           compression-level: 6
           overwrite: false
@@ -149,7 +149,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ needs.build.outputs.build_dir }}
+          path: ${{ needs.build.outputs.build_dir }}/${{ env.ENVIRONMENT }}/*
 
       - name: Check build path contents
         run: |
@@ -159,7 +159,7 @@ jobs:
       - name: Read output-metadata.json
         run: |
           echo "Contents of output-metadata.json:"
-          cd "${{ needs.build.outputs.build_dir }}" || exit 1
+          cd "${{ needs.build.outputs.build_dir }}/${{ env.ENVIRONMENT }}/*" || exit 1
           chmod 777 output-metadata.json
           cat output-metadata.json
 

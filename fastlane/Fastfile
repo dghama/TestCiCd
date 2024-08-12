@@ -1,17 +1,4 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
+# Fastfile
 
 default_platform(:android)
 
@@ -22,45 +9,33 @@ before_all do
   @version_type = ENV["VERSION_TYPE"] || "patch"
   @app_name = @package['name']
 
-  # Debug: Print the loaded package information
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
   puts "Version Type: #{@version_type}"
   puts "App Name: #{@app_name}"
 end
 
-def get_version_suffix
+def generate_version_string(version)
+  version_str = version.to_s.strip
+  version_str = @package['version'] if version_str.empty?
+  
   case @environment
   when "prod"
-    ""
+    "#{@app_name}-#{version_str}"
   when "staging"
-    "-rc"
+    "#{@app_name}-#{version_str}-rc"
   when "dev"
-    "-dev"
+    "#{@app_name}-#{version_str}-dev"
   when "beta"
-    "-beta"
+    "#{@app_name}-#{version_str}-beta"
   else
-    "-#{@environment}"
+    "#{@app_name}-#{version_str}-#{@environment}"
   end
-end
-
-def generate_version_string(version)
-  # Ensure version is a string and not empty
-  version_str = version.to_s.strip
-  if version_str.empty?
-    version_str = @package['version']
-  end
-  # Debug: print the version string
-  puts "Version string: #{version_str}"
-
-  # Construct the version string with the app name, version, and suffix
-  "#{@app_name}-#{version_str}#{get_version_suffix}"
 end
 
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
-    # Increment the version number and build number
     new_version = increment_version_number(
       xcodeproj: "./ios/#{@app_name}.xcodeproj",
       version_number: @package['version'],
@@ -86,32 +61,43 @@ platform :ios do
       clean_install: true,
       podfile: "./ios/Podfile",
     )
+    
+    version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+    build_number = get_build_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+    output_dir = "./ios/builds/#{@environment}/#{version}_#{build_number}"
+    
     build_app(
       workspace: "./ios/#{@app_name}.xcworkspace",
       scheme: @app_name,
       export_method: "app-store",
-      output_directory: "./ios/build",
+      output_directory: output_dir,
       output_name: "#{@app_name}.ipa",
       skip_codesigning: true
     )
+    
+    # Create build info file
+    File.write("#{output_dir}/build_info.txt", "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
   end
 end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    # Increment the versionCode
     increment_version_code(
       gradle_file_path: "./android/app/build.gradle"
     )
 
     sh("ruby update_version_name.rb")
-
   end
 
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
+    
+    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
+    version_code = android_get_version_code(gradle_file: "./android/app/build.gradle")
+    output_dir = "./android/builds/#{@environment}/#{version_name}_#{version_code}"
+    
     gradle(
       task: "clean assembleRelease",
       project_dir: "android/",
@@ -120,8 +106,12 @@ platform :android do
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+        "output.dir" => output_dir
       }
     )
+    
+    # Create build info file
+    File.write("#{output_dir}/build_info.txt", "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
 
   desc 'Upload the app to the MStore'
@@ -147,10 +137,7 @@ platform :android do
 
   desc 'Bump build numbers, and set the version to match the package.json version.'
   lane :commit_version_changes do
-    # Stage all changes
     sh("git add .")
-
-    # Commit the changes with a message that includes the new version name
     version_name = get_version_name_from_gradle
     message = "Bump version to #{version_name}"
     git_commit(
@@ -160,13 +147,10 @@ platform :android do
     add_git_tag(
       tag: @package['version']
     )
-
-    # Push the changes to the remote repository
     git_push
   end
 
   def get_version_name_from_gradle
-    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
-    return version_name
+    android_get_version_name(gradle_file: "./android/app/build.gradle")
   end
 end

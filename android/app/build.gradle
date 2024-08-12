@@ -70,6 +70,7 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -81,8 +82,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2
-        versionName project.hasProperty('versionName') ? project.VERSION_NAME : "0.0.1"
-        setProperty("archivesBaseName", versionName + "." + versionCode)
+        versionName "0.0.1"
         resValue "string", "build_config_package", "com.testcicd"
 
     }
@@ -108,6 +108,15 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "${rootProject.name}-${variant.versionName}.apk"
+            if (project.hasProperty('output.dir')) {
+                outputDirectory = new File(project.property('output.dir'))
+            }
         }
     }
     
