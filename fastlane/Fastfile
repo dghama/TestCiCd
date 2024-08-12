@@ -98,30 +98,31 @@ platform :ios do
     )
   end
 
-  desc 'Build the iOS app'
-  lane :build do
-    inc_ver_ios
-    cocoapods(
-      clean_install: true,
-      podfile: ios_dir.join("Podfile"),
-    )
-    
-    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
-    build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
-    output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
-    
-    build_app(
-      workspace: ios_dir.join("#{@app_name}.xcworkspace"),
-      scheme: @app_name,
-      export_method: "app-store",
-      output_directory: output_dir,
-      output_name: "#{@app_name}.ipa",
-      skip_codesigning: true
-    )
-    
-    File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
+  platform :ios do  
+    desc 'Build the iOS app'
+    lane :build do
+      inc_ver_ios
+      cocoapods(
+        clean_install: true,
+        podfile: ios_dir.join("Podfile").to_s,
+      )
+      
+      version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+      build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+      output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
+      
+      build_app(
+        workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
+        scheme: @app_name,
+        export_method: "app-store",
+        output_directory: output_dir.to_s,
+        output_name: "#{@app_name}.ipa",
+        skip_codesigning: true
+      )
+      
+      File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
+    end
   end
-end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
@@ -147,18 +148,20 @@ platform :android do
     
     gradle(
       task: "clean assembleRelease",
-      project_dir: android_dir,
+      project_dir: android_dir.to_s,  # Convert Pathname to String
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "output.dir" => output_dir
+        "output.dir" => output_dir.to_s  # Convert Pathname to String
       }
     )
     
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
+
+end
 
   desc 'Upload the app to the MStore'
   lane :upload_app_to_mstore do
