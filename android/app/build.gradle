@@ -109,6 +109,20 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+         applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                def fileName = "${rootProject.name}-${variant.versionName}.apk"
+                if (project.hasProperty('output.dir')) {
+                    def outputDir = new File(project.property('output.dir'))
+                    outputFileName = new File(outputDir, fileName).absolutePath
+                } else {
+                    outputFileName = fileName
+                }
+            }
+        }
+    }
     }
 
     flavorDimensions "environment"
@@ -135,21 +149,8 @@ android {
         }
     }
 
-  applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def fileName = "${rootProject.name}-${variant.versionName}.apk"
-
-            if (project.hasProperty('output.dir')) {
-                def outputDir = project.property('output.dir')
-                output.outputFileName = "${outputDir}/${fileName}"
-            } else {
-                output.outputFileName = fileName
-            }
-        }
-    }
+   
 }
-
-
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
