@@ -111,7 +111,21 @@ android {
         }
     
     }
-   
+  applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                  
+            def fileName = project.hasProperty('output.name') 
+                ? project.property('output.name') 
+                : "${variant.name}-${variant.versionName}.apk"
+               
+                    outputFileName = fileName
+                
+            }
+        }
+    }
+
     flavorDimensions "environment"
     productFlavors {
         staging {
@@ -135,36 +149,6 @@ android {
             resValue "string", "app_name", "TestCICD Beta"
         }
     }
-
-
-
-   applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            // Calculate the output name using the project properties or defaults
-            def outputName = project.hasProperty('output.name') 
-                ? project.property('output.name') 
-                : "${variant.name}-${variant.versionName}.apk"
-            
-            // Convert outputDirectory and rootDir to File objects, then to Path objects
-            def outputDirPath = output.packageApplication.outputDirectory.asFile.toPath()
-            def rootDirPath = rootDir.toPath()
-
-            // Calculate the relative root directory
-            def relativeRootDir = outputDirPath.relativize(rootDirPath).toFile()
-
-            // Construct the new output file path
-            def newOutputFile = new File("$relativeRootDir/release", outputName)
-
-            // Set the new output file name
-            output.outputFileName = newOutputFile.name
-
-            // Set the new output file path
-            output.outputFile = newOutputFile
-        }
-    }
-
-    // Other configuration
-               
 
    
 }
