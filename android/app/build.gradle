@@ -111,15 +111,7 @@ android {
         }
     
     }
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def outputDir = project.hasProperty('output.dir') ? new File(project.property('output.dir')) : output.outputFile.parentFile
-            def outputName = project.hasProperty('output.name') ? project.property('output.name') : "${variant.name}-${variant.versionName}.apk"
-
-            output.outputFile = new File(outputDir, outputName)
-        }
-    }
-
+   
     flavorDimensions "environment"
     productFlavors {
         staging {
@@ -141,6 +133,17 @@ android {
             dimension "environment"
             applicationId "com.testcicd.beta"
             resValue "string", "app_name", "TestCICD Beta"
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputDir = project.hasProperty('output.dir') ? new File(project.property('output.dir')) : output.outputFile.parentFile
+            def outputName = project.hasProperty('output.name') ? project.property('output.name') : "${variant.name}-${variant.versionName}.apk"
+            
+            // This is the recommended way to customize the output file name
+            output.outputFileName = outputName
+            output.outputFile = new File(outputDir, outputName)
         }
     }
 
