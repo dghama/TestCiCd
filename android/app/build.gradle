@@ -79,7 +79,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName project.hasProperty("versionName") ? project.versionName : "1.0"
         resValue "string", "build_config_package", "com.testcicd"
     }
     signingConfigs {

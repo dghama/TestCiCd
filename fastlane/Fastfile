@@ -20,6 +20,12 @@ before_all do
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
   @app_name = @package['name']
+
+  # Debug: Print the loaded package information
+  puts "Loaded package: #{@package}"
+  puts "Environment: #{@environment}"
+  puts "Version Type: #{@version_type}"
+  puts "App Name: #{@app_name}"
 end
 
 def get_version_suffix
@@ -43,6 +49,9 @@ def generate_version_string(version)
   if version_str.empty?
     version_str = @package['version']
   end
+  # Debug: print the version string
+  puts "Version string: #{version_str}"
+
   # Construct the version string with the app name, version, and suffix
   "#{@app_name}-#{version_str}#{get_version_suffix}"
 end
@@ -56,14 +65,14 @@ platform :ios do
       version_number: @package['version'],
       bump_type: @version_type
     )
-    
+
     new_version_with_app_name = generate_version_string(new_version)
-    
+
     increment_version_number(
       xcodeproj: "./ios/#{@app_name}.xcodeproj",
       version_number: new_version_with_app_name
     )
-    
+
     increment_build_number(
       xcodeproj: "./ios/#{@app_name}.xcodeproj"
     )
@@ -90,31 +99,31 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    # Increment the version code
     increment_version_code(
       gradle_file_path: "./android/app/build.gradle",
     )
-    
-    new_version = increment_version_name(
-      gradle_file_path: "./android/app/build.gradle",
-      version_name: @package['version'],
-      bump_type: @version_type
-    )
-    
+
+    # Set the new version name from package.json
+    new_version = @package['version']
+    puts "Package version: #{new_version}"
+
     new_version_with_app_name = generate_version_string(new_version)
-    
-    # Use gradle action to set the new version name
+    puts "New version with app name: #{new_version_with_app_name}"
+
+    # Use the gradle task to update the versionName in build.gradle
     gradle(
-      task: 'app:properties',
+      task: 'assembleRelease',
+      project_dir: "android/",
       properties: {
-        "android.injected.version.name": new_version_with_app_name
-      },
-      project_dir: "android/"
+        "versionName": new_version_with_app_name
+      }
     )
 
     # Print the new version for verification
     puts "New Android version: #{new_version_with_app_name}"
   end
-  
+
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
@@ -129,7 +138,7 @@ platform :android do
       }
     )
   end
-  
+
   desc 'Upload the app to the MStore'
   lane :upload_app_to_mstore do
     mstore_upload_app(
