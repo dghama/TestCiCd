@@ -19,6 +19,7 @@ before_all do
   @package = load_json(json_path: "./package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
+  @app_name = @package['name']
 end
 
 def get_version_suffix
@@ -36,24 +37,28 @@ def get_version_suffix
   end
 end
 
+def generate_version_string(version)
+  "#{@app_name}-#{version}#{get_version_suffix}"
+end
+
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
     new_version = increment_version_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
+      xcodeproj: "./ios/#{@app_name}.xcodeproj",
       version_number: @package['version'],
       bump_type: @version_type
     )
     
-    new_version_with_suffix = "#{new_version}#{get_version_suffix}"
+    new_version_with_app_name = generate_version_string(new_version)
     
     increment_version_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj",
-      version_number: new_version_with_suffix
+      xcodeproj: "./ios/#{@app_name}.xcodeproj",
+      version_number: new_version_with_app_name
     )
     
     increment_build_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+      xcodeproj: "./ios/#{@app_name}.xcodeproj"
     )
   end
 
@@ -65,11 +70,11 @@ platform :ios do
       podfile: "./ios/Podfile",
     )
     build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
+      workspace: "./ios/#{@app_name}.xcworkspace",
+      scheme: @app_name,
       export_method: "app-store",
       output_directory: "./ios/build",
-      output_name: "#{@package['name']}.ipa",
+      output_name: "#{@app_name}.ipa",
       skip_codesigning: true
     )
   end
@@ -88,11 +93,11 @@ platform :android do
       bump_type: @version_type
     )
     
-    new_version_with_suffix = "#{new_version}#{get_version_suffix}"
+    new_version_with_app_name = generate_version_string(new_version)
     
     android_set_version_name(
       gradle_file: "./android/app/build.gradle",
-      version_name: new_version_with_suffix
+      version_name: new_version_with_app_name
     )
   end
   

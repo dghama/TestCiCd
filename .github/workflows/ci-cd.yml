@@ -107,6 +107,7 @@ jobs:
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      VERSION_TYPE: ${{ github.event.inputs.version_type || 'patch' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -148,7 +149,6 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
-      BUMP_TYPE: ${{ github.event.inputs.bump_type || 'patch' }}
 
     steps:
       - name: Checkout repository
