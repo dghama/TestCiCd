@@ -147,6 +147,28 @@ android {
         }
     }
 
+   applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            // Calculate the output name using the project properties or defaults
+            def outputName = project.hasProperty('output.name') 
+                ? project.property('output.name') 
+                : "${variant.name}-${variant.versionName}.apk"
+            
+            // Calculate the relative root directory
+            def relativeRootDir = output.packageApplication.outputDirectory.toPath()
+                .relativize(rootDir.toPath()).toFile()
+
+            // Construct the new output file path
+            def newOutputFile = new File("$relativeRootDir/release", outputName)
+
+            // Set the new output file name
+            output.outputFileName = newOutputFile.name
+
+            // Set the new output file path
+            output.outputFile = newOutputFile
+        }
+    }
+
    
 }
 
