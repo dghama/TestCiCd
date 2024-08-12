@@ -97,22 +97,21 @@ platform :ios do
   end
 end
 
-desc 'Android: Increment versionCode and set versionName to package.json version.'
-private_lane :inc_ver_and do
-  increment_version_code(
-    gradle_file_path: "./android/app/build.gradle",
-  )
+platform :android do
+  desc 'Android: Increment versionCode and set versionName to package.json version.'
+  private_lane :inc_ver_and do
+    increment_version_code(
+      gradle_file_path: "./android/app/build.gradle",
+    )
 
-  new_version = @package['version']
-  new_version_with_app_name = generate_version_string(new_version)
+    new_version = @package['version']
+    new_version_with_app_name = generate_version_string(new_version)
 
-  # Directly update build.gradle file
-  sh("sed -i 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' android/app/build.gradle")
+    # Directly update build.gradle file
+    sh("sed -i 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' android/app/build.gradle")
 
-  puts "New Android version: #{new_version_with_app_name}"
-end
-
-
+    puts "New Android version: #{new_version_with_app_name}"
+  end
 
   desc 'Build the Android app'
   lane :build do
@@ -139,41 +138,39 @@ end
     )
   end
 
-desc 'Print the current version'
-lane :print_version do
-  if is_ios?
-    version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
-    puts "Current iOS version: #{version}"
-  elsif is_android?
-    version = android_get_version_name(gradle_file: "./android/app/build.gradle")
-    puts "Current Android version: #{version}"
+  desc 'Print the current version'
+  lane :print_version do
+    if is_ios?
+      version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+      puts "Current iOS version: #{version}"
+    elsif is_android?
+      version = android_get_version_name(gradle_file: "./android/app/build.gradle")
+      puts "Current Android version: #{version}"
+    end
+  end
+
+  desc 'Bump build numbers, and set the version to match the package.json version.'
+  lane :commit_version_changes do
+    # Stage all changes
+    sh("git add .")
+
+    # Commit the changes with a message that includes the new version name
+    version_name = get_version_name_from_gradle
+    message = "Bump version to #{version_name}"
+    git_commit(
+      path: '.',
+      message: message
+    )
+    add_git_tag(
+      tag: @package['version']
+    )
+
+    # Push the changes to the remote repository
+    git_push
+  end
+
+  def get_version_name_from_gradle
+    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
+    return version_name
   end
 end
-
-
-desc 'Bump build numbers, and set the version to match the package.json version.'
-lane :commit_version_changes do
-  # Stage all changes
-  sh("git add .")
-
-  # Commit the changes with a message that includes the new version name
-  version_name = get_version_name_from_gradle
-  message = "Bump version to #{version_name}"
-  git_commit(
-    path: '.',
-    message: message
-  )
-  add_git_tag(
-    tag: @package['version']
-  )
-
-  # Push the changes to the remote repository
-  git_push
-end
-
-
-def get_version_name_from_gradle
-  version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
-  return version_name
-end
-
