@@ -105,9 +105,7 @@ platform :android do
       gradle_file_path: "./android/app/build.gradle"
     )
 
-    # Run the Ruby script to update versionName
-    sh("ruby ./fastlane/update_version_name.rb")
-
+    sh("ruby update_version_name.rb")
 
   end
 
