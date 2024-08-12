@@ -151,9 +151,8 @@ lane :print_version do
 end
 
 
-desc 'Bump build numbers, and set the version to match the pacakage.json version.'
-lane :commit_version_bump do
-
+desc 'Bump build numbers, and set the version to match the package.json version.'
+lane :commit_version_changes do
   # Stage all changes
   sh("git add .")
 
@@ -165,12 +164,13 @@ lane :commit_version_bump do
     message: message
   )
   add_git_tag(
-    tag: package['version']
+    tag: @package['version']
   )
 
   # Push the changes to the remote repository
   git_push
 end
+
 
 def get_version_name_from_gradle
   version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
