@@ -131,12 +131,15 @@ platform :ios do
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    # Get the current versionCode and versionName
     current_version_code = get_android_version_code
     new_version_code = current_version_code + 1
     
+    # Update the versionCode in build.gradle
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
     File.write(gradle_file, updated_gradle_file)
     
+    # Generate the new versionName based on the environment
     new_version_name = generate_version_string(@package['version'])
     updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
     File.write(gradle_file, updated_gradle_file)
@@ -149,7 +152,10 @@ platform :android do
     version_name = get_android_version_name
     version_code = get_android_version_code
     output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
-    
+
+    # Ensure the output directory exists
+    FileUtils.mkdir_p(output_dir)
+
     gradle(
       task: "clean assembleRelease",
       project_dir: android_dir.to_s,
@@ -168,39 +174,38 @@ platform :android do
 
 end
 
-  desc 'Upload the app to the MStore'
-  lane :upload_app_to_mstore do
-    mstore_upload_app(
-      authorization: ENV['AUTHORIZATION'],
-      app_dev_token: ENV['APP_DEV_TOKEN'],
-      info_file: ENV['INFO_FILE'],
-      build_file: ENV['BUILD_FILE']
-    )
-  end
+desc 'Upload the app to the MStore'
+lane :upload_app_to_mstore do
+  mstore_upload_app(
+    authorization: ENV['AUTHORIZATION'],
+    app_dev_token: ENV['APP_DEV_TOKEN'],
+    info_file: ENV['INFO_FILE'],
+    build_file: ENV['BUILD_FILE']
+  )
+end
 
-  desc 'Print the current version'
-  lane :print_version do
-    if is_ios?
-      version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
-      puts "Current iOS version: #{version}"
-    elsif is_android?
-      version = get_android_version_name
-      puts "Current Android version: #{version}"
-    end
+desc 'Print the current version'
+lane :print_version do
+  if is_ios?
+    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+    puts "Current iOS version: #{version}"
+  elsif is_android?
+    version = get_android_version_name
+    puts "Current Android version: #{version}"
   end
+end
 
-  desc 'Bump build numbers, and set the version to match the package.json version.'
-  lane :commit_version_changes do
-    sh("git add .")
-    version_name = get_android_version_name
-    message = "Bump version to #{version_name}"
-    git_commit(
-      path: '.',
-      message: message
-    )
-    add_git_tag(
-      tag: @package['version']
-    )
-    git_push
-  end
+desc 'Bump build numbers, and set the version to match the package.json version.'
+lane :commit_version_changes do
+  sh("git add .")
+  version_name = get_android_version_name
+  message = "Bump version to #{version_name}"
+  git_commit(
+    path: '.',
+    message: message
+  )
+  add_git_tag(
+    tag: @package['version']
+  )
+  git_push
 end
