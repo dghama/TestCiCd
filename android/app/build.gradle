@@ -135,21 +135,21 @@ android {
         }
     }
 
-   applicationVariants.all { variant ->
-    variant.outputs.all { output ->
-        def outputFile = output.outputFile
-        if (outputFile != null && outputFile.name.endsWith('.apk')) {
+  applicationVariants.all { variant ->
+        variant.outputs.all { output ->
             def fileName = "${rootProject.name}-${variant.versionName}.apk"
+
             if (project.hasProperty('output.dir')) {
-                outputFileName = new File(project.property('output.dir'), fileName).getPath() // Use relative path
+                def outputDir = project.property('output.dir')
+                output.outputFileName = "${outputDir}/${fileName}"
             } else {
-                outputFileName = fileName
+                output.outputFileName = fileName
             }
         }
     }
 }
 
-}
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
