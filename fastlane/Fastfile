@@ -33,6 +33,33 @@ def generate_version_string(version)
   end
 end
 
+def get_android_version_name
+  gradle_file = "./android/app/build.gradle"
+  version_name = nil
+  File.open(gradle_file, 'r') do |file|
+    file.each_line do |line|
+      if line.include? "versionName"
+        version_name = line.split('"')[1]
+        break
+      end
+    end
+  end
+  version_name
+end
+
+def get_android_version_code
+  gradle_file = "./android/app/build.gradle"
+  version_code = nil
+  File.open(gradle_file, 'r') do |file|
+    file.each_line do |line|
+      if line.include? "versionCode"
+        version_code = line.split(' ').last.to_i
+        break
+      end
+    end
+  end
+  version_code
+end
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
@@ -83,19 +110,27 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    increment_version_code(
-      gradle_file_path: "./android/app/build.gradle"
-    )
-
-    sh("ruby update_version_name.rb")
+    # Increment the versionCode
+    current_version_code = get_android_version_code
+    new_version_code = current_version_code + 1
+    
+    # Update versionCode in build.gradle
+    gradle_file = "./android/app/build.gradle"
+    updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
+    File.write(gradle_file, updated_gradle_file)
+    
+    # Update versionName
+    new_version_name = generate_version_string(@package['version'])
+    updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
+    File.write(gradle_file, updated_gradle_file)
   end
 
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
     
-    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
-    version_code = android_get_version_code(gradle_file: "./android/app/build.gradle")
+    version_name = get_android_version_name
+    version_code = get_android_version_code
     output_dir = "./android/builds/#{@environment}/#{version_name}_#{version_code}"
     
     gradle(
@@ -130,7 +165,7 @@ platform :android do
       version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
       puts "Current iOS version: #{version}"
     elsif is_android?
-      version = android_get_version_name(gradle_file: "./android/app/build.gradle")
+      version = get_android_version_name
       puts "Current Android version: #{version}"
     end
   end
@@ -138,7 +173,7 @@ platform :android do
   desc 'Bump build numbers, and set the version to match the package.json version.'
   lane :commit_version_changes do
     sh("git add .")
-    version_name = get_version_name_from_gradle
+    version_name = get_android_version_name
     message = "Bump version to #{version_name}"
     git_commit(
       path: '.',
@@ -148,9 +183,5 @@ platform :android do
       tag: @package['version']
     )
     git_push
-  end
-
-  def get_version_name_from_gradle
-    android_get_version_name(gradle_file: "./android/app/build.gradle")
   end
 end
