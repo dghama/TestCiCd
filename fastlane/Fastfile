@@ -108,7 +108,7 @@ platform :android do
     new_version_with_app_name = generate_version_string(new_version)
 
     # Directly update build.gradle file
-    sh("sed -i '' 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' android/app/build.gradle")
+    sh("sed -i '' 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' ./android/app/build.gradle")
 
     puts "New Android version: #{new_version_with_app_name}"
   end
