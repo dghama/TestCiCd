@@ -145,9 +145,12 @@ android {
                 ? project.property('output.name') 
                 : "${variant.name}-${variant.versionName}.apk"
             
+            // Convert outputDirectory and rootDir to File objects, then to Path objects
+            def outputDirPath = output.packageApplication.outputDirectory.asFile.toPath()
+            def rootDirPath = rootDir.toPath()
+
             // Calculate the relative root directory
-            def relativeRootDir = output.packageApplication.outputDirectory.toPath()
-                .relativize(rootDir.toPath()).toFile()
+            def relativeRootDir = outputDirPath.relativize(rootDirPath).toFile()
 
             // Construct the new output file path
             def newOutputFile = new File("$relativeRootDir/release", outputName)
@@ -159,6 +162,9 @@ android {
             output.outputFile = newOutputFile
         }
     }
+
+    // Other configuration
+               
 
    
 }
