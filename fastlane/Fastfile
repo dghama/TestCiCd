@@ -1,10 +1,12 @@
 # Fastfile
 
+require 'pathname'
+
 default_platform(:android)
 
 before_all do
   ensure_git_status_clean
-  @package = load_json(json_path: "./package.json")
+  @package = load_json(json_path: "package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
   @app_name = @package['name']
@@ -13,6 +15,22 @@ before_all do
   puts "Environment: #{@environment}"
   puts "Version Type: #{@version_type}"
   puts "App Name: #{@app_name}"
+end
+
+def project_dir
+  Pathname.new(File.expand_path('..', Dir.pwd))
+end
+
+def android_dir
+  project_dir.join('android')
+end
+
+def ios_dir
+  project_dir.join('ios')
+end
+
+def gradle_file
+  android_dir.join('app', 'build.gradle')
 end
 
 def generate_version_string(version)
@@ -34,7 +52,6 @@ def generate_version_string(version)
 end
 
 def get_android_version_name
-  gradle_file = "./android/app/build.gradle"
   version_name = nil
   File.open(gradle_file, 'r') do |file|
     file.each_line do |line|
@@ -48,7 +65,6 @@ def get_android_version_name
 end
 
 def get_android_version_code
-  gradle_file = "./android/app/build.gradle"
   version_code = nil
   File.open(gradle_file, 'r') do |file|
     file.each_line do |line|
@@ -60,11 +76,12 @@ def get_android_version_code
   end
   version_code
 end
+
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
     new_version = increment_version_number(
-      xcodeproj: "./ios/#{@app_name}.xcodeproj",
+      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
       version_number: @package['version'],
       bump_type: @version_type
     )
@@ -72,12 +89,12 @@ platform :ios do
     new_version_with_app_name = generate_version_string(new_version)
 
     increment_version_number(
-      xcodeproj: "./ios/#{@app_name}.xcodeproj",
+      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
       version_number: new_version_with_app_name
     )
 
     increment_build_number(
-      xcodeproj: "./ios/#{@app_name}.xcodeproj"
+      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj")
     )
   end
 
@@ -86,15 +103,15 @@ platform :ios do
     inc_ver_ios
     cocoapods(
       clean_install: true,
-      podfile: "./ios/Podfile",
+      podfile: ios_dir.join("Podfile"),
     )
     
-    version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
-    build_number = get_build_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
-    output_dir = "./ios/builds/#{@environment}/#{version}_#{build_number}"
+    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+    build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+    output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
     
     build_app(
-      workspace: "./ios/#{@app_name}.xcworkspace",
+      workspace: ios_dir.join("#{@app_name}.xcworkspace"),
       scheme: @app_name,
       export_method: "app-store",
       output_directory: output_dir,
@@ -102,24 +119,19 @@ platform :ios do
       skip_codesigning: true
     )
     
-    # Create build info file
-    File.write("#{output_dir}/build_info.txt", "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
+    File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
   end
 end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    # Increment the versionCode
     current_version_code = get_android_version_code
     new_version_code = current_version_code + 1
     
-    # Update versionCode in build.gradle
-    gradle_file = "./android/app/build.gradle"
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
     File.write(gradle_file, updated_gradle_file)
     
-    # Update versionName
     new_version_name = generate_version_string(@package['version'])
     updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
     File.write(gradle_file, updated_gradle_file)
@@ -131,11 +143,11 @@ platform :android do
     
     version_name = get_android_version_name
     version_code = get_android_version_code
-    output_dir = "./android/builds/#{@environment}/#{version_name}_#{version_code}"
+    output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
     
     gradle(
       task: "clean assembleRelease",
-      project_dir: "android/",
+      project_dir: android_dir,
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
@@ -145,8 +157,7 @@ platform :android do
       }
     )
     
-    # Create build info file
-    File.write("#{output_dir}/build_info.txt", "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
+    File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
 
   desc 'Upload the app to the MStore'
@@ -162,7 +173,7 @@ platform :android do
   desc 'Print the current version'
   lane :print_version do
     if is_ios?
-      version = get_version_number(xcodeproj: "./ios/#{@app_name}.xcodeproj")
+      version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
       puts "Current iOS version: #{version}"
     elsif is_android?
       version = get_android_version_name
