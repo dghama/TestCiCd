@@ -106,11 +106,9 @@ platform :android do
 
     new_version = @package['version']
     new_version_with_app_name = generate_version_string(new_version)
+    update_version_name(new_version_with_app_name)
 
-    # Directly update build.gradle file
-    sh("sed -i '' 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' ./android/app/build.gradle")
 
-    puts "New Android version: #{new_version_with_app_name}"
   end
 
   desc 'Build the Android app'
@@ -172,5 +170,19 @@ platform :android do
   def get_version_name_from_gradle
     version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
     return version_name
+  end
+
+  def update_version_name(new_version_with_app_name)
+    file_path = './android/app/build.gradle'
+    
+    if File.exist?(file_path)
+      file_content = File.read(file_path)
+      updated_content = file_content.gsub(/versionName ".*"/, "versionName \"#{new_version_with_app_name}\"")
+      
+      File.open(file_path, 'w') { |file| file.write(updated_content) }
+      puts "Updated versionName to #{new_version_with_app_name} in #{file_path}"
+    else
+      puts "File #{file_path} does not exist."
+    end
   end
 end
