@@ -80,7 +80,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2
         versionName project.hasProperty('versionName') ? project.VERSION_NAME : "0.0.1"
-        setProperty("archivesBaseName", rootProject.name + "_" + env + "_V_" + versionName + "." + versionCode)
+        setProperty("archivesBaseName", versionName + "." + versionCode)
         resValue "string", "build_config_package", "com.testcicd"
 
     }
