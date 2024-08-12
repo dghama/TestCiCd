@@ -43,12 +43,14 @@ def generate_version_string(version)
   if version_str.empty?
     version_str = @package['version']
   end
+  # Construct the version string with the app name, version, and suffix
   "#{@app_name}-#{version_str}#{get_version_suffix}"
 end
 
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
+    # Increment the version number and build number
     new_version = increment_version_number(
       xcodeproj: "./ios/#{@app_name}.xcodeproj",
       version_number: @package['version'],

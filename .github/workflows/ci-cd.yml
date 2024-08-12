@@ -153,10 +153,13 @@ jobs:
         run: |
           echo "Contents of the build path:"
           ls -l ${{ needs.build.outputs.build_dir }}
+
       - name: Read output-metadata.json
         run: |
           echo "Contents of output-metadata.json:"
-          cat "${{ needs.build.outputs.build_dir }}/output-metadata.json"
+          cd "${{ needs.build.outputs.build_dir }}" || exit 1
+          chmod 777 output-metadata.json
+          cat output-metadata.json
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
