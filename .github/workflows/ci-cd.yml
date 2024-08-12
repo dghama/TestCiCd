@@ -114,7 +114,7 @@ jobs:
           fetch-depth: 0
 
       - name: Restore node modules from cache
-        uses: ./.github/actions/setup/cache-restore
+        uses: ./.github/actions/cache-restore
 
       - name: Set up environment
         id: setup_env
@@ -147,7 +147,7 @@ jobs:
         platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Default to 'staging' if not provided
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
 
     steps:
       - name: Checkout repository
