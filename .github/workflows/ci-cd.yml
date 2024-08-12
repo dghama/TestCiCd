@@ -46,9 +46,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup android environment
-        uses: ./.github/actions/build-test/android-setup/android-runner
+        uses: ./.github/actions/setup/android-runner
       - name: Setup ios environment
-        uses: ./.github/actions/build-test/ios-setup/ios-runner
+        uses: ./.github/actions/setup/ios-runner
 
   install-dependencies:
     runs-on: macos-latest
@@ -59,7 +59,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install dependencies
-        uses: ./.github/actions/build-test/dependency-installation
+        uses: ./.github/actions/dependency-installation
 
   quality-checks:
     needs: install-dependencies
@@ -71,13 +71,10 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check PR codeBase
-        uses: ./.github/actions/build-test/pr-check
-
-      # - name: Perform SonarQube scan
-      #   uses: ./.github/actions/build-test/sonar-report
-      #   env:
-      #     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-      #     SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+        uses: ./.github/actions/pr-check
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   get-app-name:
     runs-on: ubuntu-latest
@@ -117,11 +114,11 @@ jobs:
           fetch-depth: 0
 
       - name: Restore node modules from cache
-        uses: ./.github/actions/cache-restore
+        uses: ./.github/actions/setup/cache-restore
 
       - name: Set up environment
         id: setup_env
-        uses: ./.github/actions/setup-build-env
+        uses: ./.github/actions/setup/setup-build-env
 
       - name: Build ${{ matrix.platform }}
         run: |
