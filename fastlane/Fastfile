@@ -100,14 +100,17 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    new_version_with_app_name = generate_version_string(new_version)
+
     increment_version_code(
       gradle_file_path: "./android/app/build.gradle",
     )
 
-    new_version = @package['version']
-    new_version_with_app_name = generate_version_string(new_version)
-    update_version_name(new_version_with_app_name)
-
+   increment_version_name(
+      gradle_file_path: "./android/app/build.gradle",
+      version_name: new_version_with_app_name,
+      bump_type: @version_type
+    )
 
   end
 
@@ -170,19 +173,5 @@ platform :android do
   def get_version_name_from_gradle
     version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
     return version_name
-  end
-
-  def update_version_name(new_version_with_app_name)
-    file_path = './android/app/build.gradle'
-    
-    if File.exist?(file_path)
-      file_content = File.read(file_path)
-      updated_content = file_content.gsub(/versionName ".*"/, "versionName \"#{new_version_with_app_name}\"")
-      
-      File.open(file_path, 'w') { |file| file.write(updated_content) }
-      puts "Updated versionName to #{new_version_with_app_name} in #{file_path}"
-    else
-      puts "File #{file_path} does not exist."
-    end
   end
 end
