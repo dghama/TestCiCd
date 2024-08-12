@@ -106,12 +106,11 @@ platform :android do
     )
 
     # Run the Ruby script to update versionName
-    sh("ruby ./fastlane/actions/update_version_name.rb")
+    sh("ruby ./fastlane/update_version_name.rb")
 
 
   end
 
-  
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
@@ -154,7 +153,7 @@ platform :android do
     sh("git add .")
 
     # Commit the changes with a message that includes the new version name
-    version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
+    version_name = get_version_name_from_gradle
     message = "Bump version to #{version_name}"
     git_commit(
       path: '.',
