@@ -135,20 +135,20 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                def fileName = "${rootProject.name}-${variant.versionName}.apk"
-                if (project.hasProperty('output.dir')) {
-                    def outputDir = new File(project.property('output.dir'))
-                    outputFileName = new File(outputDir, fileName).absolutePath
-                } else {
-                    outputFileName = fileName
-                }
+   applicationVariants.all { variant ->
+    variant.outputs.all { output ->
+        def outputFile = output.outputFile
+        if (outputFile != null && outputFile.name.endsWith('.apk')) {
+            def fileName = "${rootProject.name}-${variant.versionName}.apk"
+            if (project.hasProperty('output.dir')) {
+                outputFileName = new File(project.property('output.dir'), fileName).getPath() // Use relative path
+            } else {
+                outputFileName = fileName
             }
         }
     }
+}
+
 }
 
 dependencies {
