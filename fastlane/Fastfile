@@ -138,7 +138,6 @@ end
       build_file: ENV['BUILD_FILE']
     )
   end
-end
 
 desc 'Print the current version'
 lane :print_version do
