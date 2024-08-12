@@ -16,6 +16,7 @@
 default_platform(:android)
 
 before_all do
+  ensure_git_status_clean
   @package = load_json(json_path: "./package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
@@ -96,33 +97,22 @@ platform :ios do
   end
 end
 
-platform :android do
-  desc 'Android: Increment versionCode and set versionName to package.json version.'
-  private_lane :inc_ver_and do
-    # Increment the version code
-    increment_version_code(
-      gradle_file_path: "./android/app/build.gradle",
-    )
+desc 'Android: Increment versionCode and set versionName to package.json version.'
+private_lane :inc_ver_and do
+  increment_version_code(
+    gradle_file_path: "./android/app/build.gradle",
+  )
 
-    # Set the new version name from package.json
-    new_version = @package['version']
-    puts "Package version: #{new_version}"
+  new_version = @package['version']
+  new_version_with_app_name = generate_version_string(new_version)
 
-    new_version_with_app_name = generate_version_string(new_version)
-    puts "New version with app name: #{new_version_with_app_name}"
+  # Directly update build.gradle file
+  sh("sed -i 's/versionName .*/versionName \"#{new_version_with_app_name}\"/' android/app/build.gradle")
 
-    # Use the gradle task to update the versionName in build.gradle
-    gradle(
-      task: 'assembleRelease',
-      project_dir: "android/",
-      properties: {
-        "versionName": new_version_with_app_name
-      }
-    )
+  puts "New Android version: #{new_version_with_app_name}"
+end
 
-    # Print the new version for verification
-    puts "New Android version: #{new_version_with_app_name}"
-  end
+
 
   desc 'Build the Android app'
   lane :build do
@@ -160,3 +150,31 @@ lane :print_version do
     puts "Current Android version: #{version}"
   end
 end
+
+
+desc 'Bump build numbers, and set the version to match the pacakage.json version.'
+lane :commit_version_bump do
+
+  # Stage all changes
+  sh("git add .")
+
+  # Commit the changes with a message that includes the new version name
+  version_name = get_version_name_from_gradle
+  message = "Bump version to #{version_name}"
+  git_commit(
+    path: '.',
+    message: message
+  )
+  add_git_tag(
+    tag: package['version']
+  )
+
+  # Push the changes to the remote repository
+  git_push
+end
+
+def get_version_name_from_gradle
+  version_name = android_get_version_name(gradle_file: "./android/app/build.gradle")
+  return version_name
+end
+
