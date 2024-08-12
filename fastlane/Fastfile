@@ -102,31 +102,30 @@ platform :ios do
     )
   end
 
-  platform :ios do  
-    desc 'Build the iOS app'
-    lane :build do
-      inc_ver_ios
-      cocoapods(
-        clean_install: true,
-        podfile: ios_dir.join("Podfile").to_s,
-      )
-      
-      version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
-      build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
-      output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
-      
-      build_app(
-        workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
-        scheme: @app_name,
-        export_method: "app-store",
-        output_directory: output_dir.to_s,
-        output_name: "#{@app_name}.ipa",
-        skip_codesigning: true
-      )
-      
-      File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
-    end
+  desc 'Build the iOS app'
+  lane :build do
+    inc_ver_ios
+    cocoapods(
+      clean_install: true,
+      podfile: ios_dir.join("Podfile").to_s,
+    )
+    
+    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+    build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+    output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
+    
+    build_app(
+      workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
+      scheme: @app_name,
+      export_method: "app-store",
+      output_directory: output_dir.to_s,
+      output_name: "#{@app_name}.ipa",
+      skip_codesigning: true
+    )
+    
+    File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
   end
+end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
@@ -171,7 +170,6 @@ platform :android do
     
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
-
 end
 
 desc 'Upload the app to the MStore'
