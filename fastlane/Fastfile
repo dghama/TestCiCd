@@ -100,18 +100,16 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    new_version_with_app_name = generate_version_string(new_version)
-
+    # Increment the versionCode
     increment_version_code(
-      gradle_file_path: "./android/app/build.gradle",
+      gradle_file_path: "./android/app/build.gradle"
     )
 
-   increment_version_name(
-      gradle_file_path: "./android/app/build.gradle",
-      version_name: new_version_with_app_name,
-      bump_type: @version_type
-    )
+    # Run the Ruby script to update versionName
+    sh("ruby ./fastlane/actions/update_version_name.rb")
 
+    # Output the new version
+    puts "Updated Android versionName"
   end
 
   desc 'Build the Android app'
