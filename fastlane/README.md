@@ -27,7 +27,7 @@ Set version for a specific platform and environment
 [bundle exec] fastlane get_version
 ```
 
-Get current version for a specific platform and environment
+
 
 ### print_all_versions
 
