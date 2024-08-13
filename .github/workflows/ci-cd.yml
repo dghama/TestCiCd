@@ -114,10 +114,10 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: Commit versioning ${{ matrix.platform }}
+      - name: List files in build directory
         run: |
-          bundle exec fastlane commit_version_changes
-        shell: bash
+          echo "Listing files in ${BUILD_DIR}"
+          ls -alh ${{ env.BUILD_DIR }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
