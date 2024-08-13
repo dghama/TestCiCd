@@ -110,7 +110,7 @@ jobs:
 
       - name: Build ${{ matrix.platform }}
         run: |
-          bundle exec fastlane build
+          bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
 

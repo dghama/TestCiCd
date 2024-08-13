@@ -113,7 +113,6 @@ def increment_package_version
   package_json_path = project_dir.join('package.json')
   package_json = JSON.parse(File.read(package_json_path))
   current_version = Semantic::Version.new(package_json['version'])
-  
   case @version_type.downcase
   when 'major'
     new_version = current_version.increment!(:major)
@@ -125,9 +124,11 @@ def increment_package_version
     UI.user_error!("Invalid version type: #{@version_type}. Use 'major', 'minor', or 'patch'.")
   end
   
+  new_version = current_version.increment!(@version_type)
   package_json['version'] = new_version.to_s
   File.write(package_json_path, JSON.pretty_generate(package_json))
   UI.success("Package version incremented to #{new_version} (#{@version_type})")
+
   new_version.to_s
 end
 
@@ -135,7 +136,7 @@ platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
     new_package_version = increment_package_version
-    new_build_number = increment_version_data('ios')
+    new_build_number = increment_version_data(@platform)
 
     new_version = increment_version_number(
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
@@ -156,11 +157,38 @@ platform :ios do
 
     UI.success("iOS version updated to #{new_version_with_app_name} (#{new_build_number})")
   end
+
+  desc 'Build the iOS app'
+  lane :build do
+    inc_ver_ios
+    inc_ver_ios
+    cocoapods(
+      clean_install: true,
+      podfile: ios_dir.join("Podfile").to_s,
+    )
+    
+    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+    build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+    output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
+    
+    build_app(
+      workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
+      scheme: @app_name,
+      export_method: "app-store",
+      output_directory: output_dir.to_s,
+      output_name: "#{@app_name}.ipa",
+      skip_codesigning: true
+    )
+    
+    File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
+    
+    UI.success("iOS app built successfully. IPA location: #{output_dir}/#{@app_name}.ipa") 
+  end
 end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
-  lane :inc_ver_and do
+  private_lane :inc_ver_and do
     new_package_version = increment_package_version
     new_version_code = increment_version_data('android')
     
@@ -177,55 +205,11 @@ platform :android do
     
     UI.success("Android version updated to #{new_version_name} (#{new_version_code})")
   end
-end
 
-desc 'Build the app for the specified platform'
-lane :build do |options|
-  # Ensure a valid version type is provided
-  unless ['major', 'minor', 'patch'].include?(@version_type.downcase)
-    UI.user_error!("Invalid version type: #{@version_type}. Use 'major', 'minor', or 'patch'.")
-  end
-
-  case @platform
-  when 'ios'
-    build_ios
-  when 'android'
-    build_android
-  else
-    UI.user_error!("Invalid platform: #{@platform}. Use 'ios' or 'android'.")
-  end
-end
-
-desc 'Build iOS app'
-private_lane :build_ios do
-  inc_ver_ios
-  cocoapods(
-    clean_install: true,
-    podfile: ios_dir.join("Podfile").to_s,
-  )
-  
-  version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
-  build_number = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
-  output_dir = ios_dir.join("builds", @environment, "#{version}_#{build_number}")
-  
-  build_app(
-    workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
-    scheme: @app_name,
-    export_method: "app-store",
-    output_directory: output_dir.to_s,
-    output_name: "#{@app_name}.ipa",
-    skip_codesigning: true
-  )
-  
-  File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
-  
-  UI.success("iOS app built successfully. IPA location: #{output_dir}/#{@app_name}.ipa")
-end
-
-desc 'Build Android app'
-private_lane :build_android do
-  inc_ver_and
-  
+  desc 'Build the Android app'
+  lane :build do
+    inc_ver_and
+    
   version_name = get_android_version_name
   version_code = get_android_version_code
   
@@ -251,6 +235,7 @@ private_lane :build_android do
   File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   
   UI.success("Android app built successfully. APK location: #{output_dir}/#{@app_name}-#{version_name}.apk")
+  end
 end
 
 desc 'Set version for a specific platform and environment'
@@ -280,7 +265,7 @@ lane :get_version do |options|
   end
 
   version = get_version_data(platform, environment)
-  puts "Current platform #{platform} version for #{environment}: #{version}"
+  puts "Current #{platform} version for #{environment}: #{version}"
 end
 
 desc 'Print all version data'
@@ -317,6 +302,6 @@ lane :commit_version_changes do
   )
 
   push_git_tags
-
+  
   UI.success("Successfully committed and pushed version changes")
 end
