@@ -81,8 +81,8 @@ android {
         applicationId "com.testcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "0.0.1-rc"
+        versionCode 2
+        versionName "0.0.2-rc"
         resValue "string", "build_config_package", "com.testcicd"
 
     }
