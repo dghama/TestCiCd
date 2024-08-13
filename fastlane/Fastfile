@@ -39,15 +39,15 @@ def generate_version_string(version)
   
   case @environment
   when "prod"
-    "#{@app_name}-#{version_str}"
+    "#{version_str}"
   when "staging"
-    "#{@app_name}-#{version_str}-rc"
+    "#{version_str}-rc"
   when "dev"
-    "#{@app_name}-#{version_str}-dev"
+    "#{version_str}-dev"
   when "beta"
-    "#{@app_name}-#{version_str}-beta"
+    "#{version_str}-beta"
   else
-    "#{@app_name}-#{version_str}-#{@environment}"
+    "#{version_str}-#{@environment}"
   end
 end
 
@@ -67,14 +67,24 @@ def get_android_version_name
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
-  version_name_match ? version_name_match[1] : nil
+  if version_name_match
+    version_name_match[1]
+  else
+    UI.error("Could not find versionName in #{gradle_file_path}")
+    nil
+  end
 end
 
 def get_android_version_code
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   version_code_match = gradle_file.match(/versionCode\s+(\d+)/)
-  version_code_match ? version_code_match[1].to_i : nil
+  if version_code_match
+    version_code_match[1].to_i
+  else
+    UI.error("Could not find versionCode in #{gradle_file_path}")
+    nil
+  end
 end
 
 def save_version_data(version_data)
@@ -154,13 +164,18 @@ platform :android do
     new_version_code = increment_version_data(@platform)
     
     # Update the versionCode in build.gradle
-    updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
-    File.write(gradle_file, updated_gradle_file)
+    updated_gradle_file = File.read(gradle_file).gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
     
     # Generate the new versionName based on the environment
     new_version_name = generate_version_string(@package['version'])
-    updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
+    
+    # Update versionName in build.gradle
+    updated_gradle_file = updated_gradle_file.gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
+    
+    # Write changes back to build.gradle
     File.write(gradle_file, updated_gradle_file)
+    
+    UI.success("Updated versionCode to #{new_version_code} and versionName to #{new_version_name}")
   end
 
   desc 'Build the Android app'
@@ -169,6 +184,9 @@ platform :android do
     
     version_name = get_android_version_name
     version_code = get_android_version_code
+    
+    UI.important("Building Android app with versionName: #{version_name} and versionCode: #{version_code}")
+    
     output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
 
     FileUtils.mkdir_p(output_dir)
