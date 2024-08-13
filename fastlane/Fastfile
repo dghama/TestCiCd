@@ -238,7 +238,7 @@ lane :commit_version_changes do
   ios_build = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
   android_version = get_android_version_name
   android_code = get_android_version_code
-  
+
   # Commit all changes
   git_add(path: ".")
   commit_message = "Bump version to #{@package['version']} (iOS: #{ios_version} (#{ios_build}), Android: #{android_version} (#{android_code})) for #{@environment}"
@@ -247,11 +247,14 @@ lane :commit_version_changes do
   # Create a tag
   add_git_tag(tag: "v#{@package['version']}-#{@environment}")
 
-  # Push changes and tags
-  push_to_git_remote
+  push_to_git_remote(
+    remote: "https://x-access-token:#{ENV['GIT_TOKEN']}@github.com/dghama/TestCiCd.git",
+    local_branch: "HEAD",
+    remote_branch: ENV["GITHUB_REF"]&.sub("refs/heads/", "") || "main",
+    tags: true
+  )
+
   push_git_tags
 
   UI.success("Successfully committed and pushed version changes")
 end
-
-# You can add additional lanes here for deployment, testing, etc.

@@ -83,6 +83,8 @@ jobs:
     strategy:
       matrix:
         platform: [android]
+    permissions:
+      contents: write
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
@@ -92,6 +94,7 @@ jobs:
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       VERSION_TYPE: ${{ github.event.inputs.version_type || 'patch' }}
+      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
