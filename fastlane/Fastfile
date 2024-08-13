@@ -62,7 +62,19 @@ def load_version_data
     { 'ios' => {}, 'android' => {} }
   end
 end
+def get_android_version_name
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+  gradle_file = File.read(gradle_file_path)
+  version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
+  version_name_match ? version_name_match[1] : nil
+end
 
+def get_android_version_code
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+  gradle_file = File.read(gradle_file_path)
+  version_code_match = gradle_file.match(/versionCode\s+(\d+)/)
+  version_code_match ? version_code_match[1].to_i : nil
+end
 def save_version_data(version_data)
   File.write(version_data_file, JSON.pretty_generate(version_data))
 end
@@ -135,29 +147,27 @@ platform :ios do
 end
 
 platform :android do
+  
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
     new_version_code = increment_version_data('android')
-
+    
     # Update the versionCode in build.gradle
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
     File.write(gradle_file, updated_gradle_file)
-
+    
     # Generate the new versionName based on the environment
     new_version_name = generate_version_string(@package['version'])
     updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
     File.write(gradle_file, updated_gradle_file)
-
-    @new_version_name = new_version_name
-    @new_version_code = new_version_code
   end
 
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
-
-    version_name = @new_version_name
-    version_code = @new_version_code
+    
+    version_name = get_android_version_name
+    version_code = get_android_version_code
     output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
 
     FileUtils.mkdir_p(output_dir)
@@ -174,11 +184,10 @@ platform :android do
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
       }
     )
-
+    
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
 end
-
 
 
 
@@ -225,11 +234,11 @@ lane :commit_version_changes do
   ensure_git_branch(branch: ENV["BRANCH_NAME"] || "main")
 
   # Get the current versions
-  ios_version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
-  ios_build = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+  ios_version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
+  ios_build = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
   android_version = get_android_version_name
   android_code = get_android_version_code
-
+  
   # Commit all changes
   git_add(path: ".")
   commit_message = "Bump version to #{@package['version']} (iOS: #{ios_version} (#{ios_build}), Android: #{android_version} (#{android_code})) for #{@environment}"
