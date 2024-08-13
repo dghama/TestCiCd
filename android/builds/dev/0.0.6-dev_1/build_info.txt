@@ -1,3 +1,0 @@
-Version: 0.0.6-dev
-Build: 1
-Environment: dev

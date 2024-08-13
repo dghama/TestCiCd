@@ -2,8 +2,5 @@
   "ios": {
   },
   "android": {
-    "staging": 7,
-    "beta": 1,
-    "dev": 1
   }
 }

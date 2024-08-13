@@ -1,3 +1,0 @@
-Version: 0.0.4-beta
-Build: 1
-Environment: beta

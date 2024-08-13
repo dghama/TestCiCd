@@ -1,3 +1,0 @@
-Version: 0.0.5-rc
-Build: 7
-Environment: staging
