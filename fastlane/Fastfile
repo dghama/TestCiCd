@@ -6,7 +6,6 @@ require 'json'
 default_platform(:android)
 
 before_all do
-  ensure_git_status_clean
   @package = load_json(json_path: "package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
