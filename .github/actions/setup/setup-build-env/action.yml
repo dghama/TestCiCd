@@ -6,14 +6,14 @@ runs:
     - name: Setup build environment android dir
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}/android/builds/${{ env.ENVIRONMENT }}/" >> $GITHUB_ENV
         echo "ARTIFACT_NAME=android-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Setup build environment ios dir
       if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        echo "BUILD_DIR=${{ github.workspace }}/ios/build" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}/ios/build/${{ env.ENVIRONMENT }}/" >> $GITHUB_ENV
         echo "ARTIFACT_NAME=ios-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
 

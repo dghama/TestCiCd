@@ -1,7 +1,6 @@
-# Fastfile
-
 require 'pathname'
 require 'json'
+require 'semantic'
 
 default_platform(:android)
 
@@ -35,7 +34,6 @@ end
 
 def generate_version_string(version)
   version_str = version.to_s.strip
-  version_str = @package['version'] if version_str.empty?
   
   case @environment
   when "prod"
@@ -110,14 +108,25 @@ def increment_version_data(platform)
   new_version
 end
 
+def increment_package_version
+  package_json_path = project_dir.join('package.json')
+  package_json = JSON.parse(File.read(package_json_path))
+  current_version = Semantic::Version.new(package_json['version'])
+  new_version = current_version.increment!(@version_type)
+  package_json['version'] = new_version.to_s
+  File.write(package_json_path, JSON.pretty_generate(package_json))
+  new_version.to_s
+end
+
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
+    new_package_version = increment_package_version
     new_build_number = increment_version_data(@platform)
 
     new_version = increment_version_number(
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
-      version_number: @package['version']
+      version_number: new_package_version
     )
 
     new_version_with_app_name = generate_version_string(new_version)
@@ -131,6 +140,8 @@ platform :ios do
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
       build_number: new_build_number
     )
+
+    UI.success("iOS version updated to #{new_version_with_app_name} (#{new_build_number})")
   end
 
   desc 'Build the iOS app'
@@ -155,27 +166,29 @@ platform :ios do
     )
     
     File.write(output_dir.join("build_info.txt"), "Version: #{version}\nBuild: #{build_number}\nEnvironment: #{@environment}")
+    
+    UI.success("iOS app built successfully. IPA location: #{output_dir}/#{@app_name}.ipa")
   end
 end
 
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    new_package_version = increment_package_version
     new_version_code = increment_version_data(@platform)
     
-    # Update the versionCode in build.gradle
-    updated_gradle_file = File.read(gradle_file).gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
+    # Update the versionCode and versionName in build.gradle
+    gradle_file_path = gradle_file.to_s
+    updated_gradle_file = File.read(gradle_file_path)
+      .gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
     
-    # Generate the new versionName based on the environment
-    new_version_name = generate_version_string(@package['version'])
+    new_version_name = generate_version_string(new_package_version)
+    updated_gradle_file = updated_gradle_file
+      .gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
     
-    # Update versionName in build.gradle
-    updated_gradle_file = updated_gradle_file.gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
+    File.write(gradle_file_path, updated_gradle_file)
     
-    # Write changes back to build.gradle
-    File.write(gradle_file, updated_gradle_file)
-    
-    UI.success("Updated versionCode to #{new_version_code} and versionName to #{new_version_name}")
+    UI.success("Android version updated to #{new_version_name} (#{new_version_code})")
   end
 
   desc 'Build the Android app'
@@ -205,6 +218,8 @@ platform :android do
     )
     
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
+    
+    UI.success("Android app built successfully. APK location: #{output_dir}/#{@app_name}-#{version_name}.apk")
   end
 end
 
