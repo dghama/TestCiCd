@@ -78,7 +78,7 @@ def get_android_version_name
 end
 
 def get_android_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_sf
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   version_code_match = gradle_file.match(/versionCode\s+(\d+)/)
   if version_code_match
