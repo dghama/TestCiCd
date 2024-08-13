@@ -1,6 +1,6 @@
 {
   "name": "TestCiCd",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "android": "ENVFILE=configuration/.env.cert react-native run-android",
