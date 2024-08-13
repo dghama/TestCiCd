@@ -3,8 +3,8 @@
   },
   "android": {
     "staging": {
-      "code": 4,
-      "name": "0.1.1"
+      "code": 5,
+      "name": "0.1.2"
     }
   }
 }
