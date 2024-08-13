@@ -139,23 +139,26 @@ platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
     new_version_code = increment_version_data('android')
-    
+
     # Update the versionCode in build.gradle
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
     File.write(gradle_file, updated_gradle_file)
-    
+
     # Generate the new versionName based on the environment
     new_version_name = generate_version_string(@package['version'])
     updated_gradle_file = File.read(gradle_file).gsub(/versionName ".*"/, "versionName \"#{new_version_name}\"")
     File.write(gradle_file, updated_gradle_file)
+
+    @new_version_name = new_version_name
+    @new_version_code = new_version_code
   end
 
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
-    
-    version_name = get_android_version_name
-    version_code = get_android_version_code
+
+    version_name = @new_version_name
+    version_code = @new_version_code
     output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
 
     FileUtils.mkdir_p(output_dir)
@@ -172,10 +175,11 @@ platform :android do
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
       }
     )
-    
+
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
 end
+
 
 
 
