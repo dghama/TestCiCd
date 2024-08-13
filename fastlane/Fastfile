@@ -220,7 +220,7 @@ platform :android do
     )
     
     
-    UI.success("Android app built successfully. APK location: #{output_dir}/#{@app_name}-#{version_name}.apk")
+    UI.success("Android app built successfully. APK location: #{@app_name}-#{version_name}.apk")
   end
 end
 
