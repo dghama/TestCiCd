@@ -81,8 +81,8 @@ android {
         applicationId "com.testcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "0.0.1"
+        versionCode project.hasProperty('versionCode') ? project.property('versionCode').toInteger() : 1
+        versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0"
         resValue "string", "build_config_package", "com.testcicd"
 
     }
@@ -111,18 +111,9 @@ android {
         }
     
     }
-  applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                  
-            def fileName = project.hasProperty('output.name') 
-                ? project.property('output.name') 
-                : "${variant.name}-${variant.versionName}.apk"
-               
-                    outputFileName = fileName
-                
-            }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+        outputFileName = project.hasProperty('CUSTOM_OUTPUT_NAME') ? project.property('CUSTOM_OUTPUT_NAME') : outputFileName
         }
     }
 

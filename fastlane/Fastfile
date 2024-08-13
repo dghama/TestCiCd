@@ -1,6 +1,7 @@
 # Fastfile
 
 require 'pathname'
+require 'json'
 
 default_platform(:android)
 
@@ -29,10 +30,6 @@ def ios_dir
   project_dir.join('ios')
 end
 
-def generate_output_name(version_name)
-  "#{version_name}.apk"
-end
-
 def gradle_file
   android_dir.join('app', 'build.gradle')
 end
@@ -55,39 +52,49 @@ def generate_version_string(version)
   end
 end
 
-def get_android_version_name
-  version_name = nil
-  File.open(gradle_file, 'r') do |file|
-    file.each_line do |line|
-      if line.include? "versionName"
-        version_name = line.split('"')[1]
-        break
-      end
-    end
-  end
-  version_name
+def version_data_file
+  project_dir.join('version_data.json')
 end
 
-def get_android_version_code
-  version_code = nil
-  File.open(gradle_file, 'r') do |file|
-    file.each_line do |line|
-      if line.include? "versionCode"
-        version_code = line.split(' ').last.to_i
-        break
-      end
-    end
+def load_version_data
+  if File.exist?(version_data_file)
+    JSON.parse(File.read(version_data_file))
+  else
+    { 'ios' => {}, 'android' => {} }
   end
-  version_code
+end
+
+def save_version_data(version_data)
+  File.write(version_data_file, JSON.pretty_generate(version_data))
+end
+
+def set_version_data(platform, environment, version)
+  version_data = load_version_data
+  version_data[platform][environment] = version.to_i
+  save_version_data(version_data)
+  puts "Set #{platform} version for #{environment} to #{version}"
+end
+
+def get_version_data(platform, environment)
+  version_data = load_version_data
+  version_data.dig(platform, environment) || 0
+end
+
+def increment_version_data(platform)
+  current_version = get_version_data(platform, @environment)
+  new_version = current_version + 1
+  set_version_data(platform, @environment, new_version)
+  new_version
 end
 
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
+    new_build_number = increment_version_data('ios')
+
     new_version = increment_version_number(
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
-      version_number: @package['version'],
-      bump_type: @version_type
+      version_number: @package['version']
     )
 
     new_version_with_app_name = generate_version_string(new_version)
@@ -98,7 +105,8 @@ platform :ios do
     )
 
     increment_build_number(
-      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj")
+      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
+      build_number: new_build_number
     )
   end
 
@@ -130,9 +138,7 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    # Get the current versionCode and versionName
-    current_version_code = get_android_version_code
-    new_version_code = current_version_code + 1
+    new_version_code = increment_version_data('android')
     
     # Update the versionCode in build.gradle
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
@@ -152,7 +158,6 @@ platform :android do
     version_code = get_android_version_code
     output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
 
-    # Ensure the output directory exists
     FileUtils.mkdir_p(output_dir)
 
     gradle(
@@ -160,7 +165,7 @@ platform :android do
       project_dir: android_dir.to_s,
       properties: {
         "output.dir" => output_dir.to_s,
-        "output.name" => generate_output_name(version_name),
+        "output.name" => "#{@app_name}-#{version_name}.apk",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
@@ -172,38 +177,69 @@ platform :android do
   end
 end
 
-desc 'Upload the app to the MStore'
-lane :upload_app_to_mstore do
-  mstore_upload_app(
-    authorization: ENV['AUTHORIZATION'],
-    app_dev_token: ENV['APP_DEV_TOKEN'],
-    info_file: ENV['INFO_FILE'],
-    build_file: ENV['BUILD_FILE']
-  )
-end
 
-desc 'Print the current version'
-lane :print_version do
-  if is_ios?
-    version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
-    puts "Current iOS version: #{version}"
-  elsif is_android?
-    version = get_android_version_name
-    puts "Current Android version: #{version}"
+
+desc 'Set version for a specific platform and environment'
+lane :set_version do |options|
+  platform = options[:platform]
+  environment = options[:environment]
+  version = options[:version]
+
+  unless ['ios', 'android'].include?(platform)
+    UI.user_error!("Invalid platform. Use 'ios' or 'android'.")
   end
+
+  unless version.to_i.to_s == version.to_s
+    UI.user_error!("Version must be an integer.")
+  end
+
+  set_version_data(platform, environment, version)
 end
 
-desc 'Bump build numbers, and set the version to match the package.json version.'
-lane :commit_version_changes do
-  sh("git add .")
-  version_name = get_android_version_name
-  message = "Bump version to #{version_name}"
-  git_commit(
-    path: '.',
-    message: message
-  )
-  add_git_tag(
-    tag: @package['version']
-  )
-  git_push
+desc 'Get current version for a specific platform and environment'
+lane :get_version do |options|
+  platform = options[:platform]
+  environment = options[:environment]
+
+  unless ['ios', 'android'].include?(platform)
+    UI.user_error!("Invalid platform. Use 'ios' or 'android'.")
+  end
+
+  version = get_version_data(platform, environment)
+  puts "Current #{platform} version for #{environment}: #{version}"
 end
+
+desc 'Print all version data'
+lane :print_all_versions do
+  version_data = load_version_data
+  puts "Current version data:"
+  puts JSON.pretty_generate(version_data)
+end
+
+desc 'Commit version changes'
+lane :commit_version_changes do
+  # Ensure we're on the correct branch
+  ensure_git_branch(branch: ENV["BRANCH_NAME"] || "main")
+
+  # Get the current versions
+  ios_version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+  ios_build = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"))
+  android_version = get_android_version_name
+  android_code = get_android_version_code
+
+  # Commit all changes
+  git_add(path: ".")
+  commit_message = "Bump version to #{@package['version']} (iOS: #{ios_version} (#{ios_build}), Android: #{android_version} (#{android_code})) for #{@environment}"
+  git_commit(path: ".", message: commit_message)
+
+  # Create a tag
+  add_git_tag(tag: "v#{@package['version']}-#{@environment}")
+
+  # Push changes and tags
+  push_to_git_remote
+  push_git_tags
+
+  UI.success("Successfully committed and pushed version changes")
+end
+
+# You can add additional lanes here for deployment, testing, etc.
