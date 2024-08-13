@@ -10,7 +10,7 @@ before_all do
   @environment = ENV["ENVIRONMENT"] || "staging"
   @version_type = ENV["VERSION_TYPE"] || "patch"
   @app_name = @package['name']
-
+  @platform = ENV["PLATFORM"]
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
   puts "Version Type: #{@version_type}"
@@ -62,6 +62,7 @@ def load_version_data
     { 'ios' => {}, 'android' => {} }
   end
 end
+
 def get_android_version_name
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
@@ -75,6 +76,7 @@ def get_android_version_code
   version_code_match = gradle_file.match(/versionCode\s+(\d+)/)
   version_code_match ? version_code_match[1].to_i : nil
 end
+
 def save_version_data(version_data)
   File.write(version_data_file, JSON.pretty_generate(version_data))
 end
@@ -101,7 +103,7 @@ end
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
-    new_build_number = increment_version_data('ios')
+    new_build_number = increment_version_data(@platform)
 
     new_version = increment_version_number(
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
@@ -147,10 +149,9 @@ platform :ios do
 end
 
 platform :android do
-  
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    new_version_code = increment_version_data('android')
+    new_version_code = increment_version_data(@platform)
     
     # Update the versionCode in build.gradle
     updated_gradle_file = File.read(gradle_file).gsub(/versionCode \d+/, "versionCode #{new_version_code}")
@@ -188,8 +189,6 @@ platform :android do
     File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
   end
 end
-
-
 
 desc 'Set version for a specific platform and environment'
 lane :set_version do |options|
