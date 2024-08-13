@@ -250,19 +250,6 @@ lane :get_version do |options|
   puts "Current #{platform} version for #{environment}: code #{version['code']}, name #{version['name']}"
 end
 
-desc 'Get current version for a specific platform and environment'
-lane :get_version do |options|
-  platform = options[:platform]
-  environment = options[:environment]
-
-  unless ['ios', 'android'].include?(platform)
-    UI.user_error!("Invalid platform. Use 'ios' or 'android'.")
-  end
-
-  version = get_version_data(platform, environment)
-  puts "Current #{platform} version for #{environment}: #{version}"
-end
-
 desc 'Print all version data'
 lane :print_all_versions do
   version_data = load_version_data
