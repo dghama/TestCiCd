@@ -199,4 +199,4 @@ jobs:
         with:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          custom_message: 'New version is available on MStore'
+          custom_message: 'New version is available on MStore for Android'
