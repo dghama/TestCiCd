@@ -107,10 +107,15 @@ end
 
 def increment_version_data(platform)
   current_data = get_version_data(platform, @environment)
-  new_code = current_data['code'] + 1
   current_name = Semantic::Version.new(current_data['name'])
+
+  # Increment version based on the version type
   new_name = current_name.increment!(@version_type).to_s
+  new_code = current_data['code'] + 1
+
+  # Update version data with new values
   set_version_data(platform, @environment, new_code, new_name)
+
   {'code' => new_code, 'name' => new_name}
 end
 
@@ -118,6 +123,7 @@ def increment_package_version
   package_json_path = project_dir.join('package.json')
   package_json = JSON.parse(File.read(package_json_path))
   current_version = Semantic::Version.new(package_json['version'])
+  
   case @version_type.downcase
   when 'major'
     new_version = current_version.increment!(:major)
@@ -136,9 +142,12 @@ def increment_package_version
   new_version.to_s
 end
 
+
 platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
+    increment_package_version
+
     new_version = increment_version_data('ios')
     new_version_with_env = generate_version_string(new_version['name'])
   
@@ -182,6 +191,8 @@ end
 platform :android do
   desc 'Android: Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
+    increment_package_version
+
     new_version = increment_version_data('android')
     
     gradle_file_path = gradle_file.to_s
@@ -224,6 +235,11 @@ platform :android do
   end
 end
 
+# desc 'Increment package version'
+# lane :increment_version do
+#   new_version = increment_package_version
+#   UI.success("Package version incremented to #{new_version}")
+# end
 desc 'Set version for a specific platform and environment'
 lane :set_version do |options|
   platform = options[:platform]
