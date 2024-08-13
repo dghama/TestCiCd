@@ -13,6 +13,41 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 # Available Actions
 
+### set_version
+
+```sh
+[bundle exec] fastlane set_version
+```
+
+Set version for a specific platform and environment
+
+### get_version
+
+```sh
+[bundle exec] fastlane get_version
+```
+
+Get current version for a specific platform and environment
+
+### print_all_versions
+
+```sh
+[bundle exec] fastlane print_all_versions
+```
+
+Print all version data
+
+### commit_version_changes
+
+```sh
+[bundle exec] fastlane commit_version_changes
+```
+
+Commit version changes
+
+----
+
+
 ## iOS
 
 ### ios build
@@ -35,22 +70,6 @@ Build the iOS app
 ```
 
 Build the Android app
-
-### android upload_android_to_mstore
-
-```sh
-[bundle exec] fastlane android upload_android_to_mstore
-```
-
-Upload the Android app to the MStore
-
-### android upload_ios_to_mstore
-
-```sh
-[bundle exec] fastlane android upload_ios_to_mstore
-```
-
-Upload the iOS app to the MStore
 
 ----
 
