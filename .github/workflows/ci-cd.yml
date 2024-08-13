@@ -119,10 +119,6 @@ jobs:
           bundle exec fastlane commit_version_changes
         shell: bash
         
-      - name: List files in build directory
-        run: |
-          echo "Listing files in ${BUILD_DIR}"
-          ls -alh ${{ env.BUILD_DIR }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
