@@ -183,11 +183,6 @@ jobs:
         run: |
           echo "This step will be added in the future"
         shell: bash
-      - name: Commit version update
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: 'Bump version'
-          branch: ${{ github.head_ref }}
 
   notify-teams:
     if: github.event_name == 'push'
