@@ -175,7 +175,7 @@ platform :ios do
     )
     
     
-    UI.success("iOS app built successfully. IPA location: #{output_dir}/#{@app_name}.ipa") 
+    UI.success("iOS app built successfully. IPA location: #{@app_name}.ipa") 
   end
 end
 
