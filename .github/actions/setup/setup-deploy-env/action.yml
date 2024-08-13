@@ -6,8 +6,8 @@ runs:
     - name: Setup deploy environment for Android
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        BUILD_FILE="${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk"
-        INFO_FILE="${{ github.workspace }}/android/app/build/outputs/apk/release/output-metadata.json"
+        BUILD_FILE=$(find "${{ github.workspace }}/android/app/build/outputs/apk/release/" -name "*.apk" | head -n 1)
+        INFO_FILE=$(find "${{ github.workspace }}/android/app/build/outputs/apk/release/" -name "*.json" | head -n 1)
 
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
           echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
@@ -21,8 +21,9 @@ runs:
     - name: Setup deploy environment for iOS
       if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        BUILD_FILE="ios/build/${{ secrets.APP_NAME }}.ipa"
-        INFO_FILE="ios/build/${{ secrets.APP_NAME }}-info.plist"
+        BUILD_FILE=$(find "${{ github.workspace }}/ios/build/" -name "*.ipa" | head -n 1)
+        INFO_FILE=$(find "${{ github.workspace }}/ios/build/" -name "*.plist" | head -n 1)
+
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
           echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
           echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV

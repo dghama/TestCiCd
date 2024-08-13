@@ -3,18 +3,18 @@ description: 'Determine build directory and artifact name based on platform'
 runs:
   using: composite
   steps:
-    - name: Setup build environment android dir
+    - name: Setup build environment for Android
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        echo "BUILD_DIR=${{ github.workspace }}/android/builds/${{ env.ENVIRONMENT }}/" >> $GITHUB_ENV
-        echo "ARTIFACT_NAME=android-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release/" >> $GITHUB_ENV
+        echo "ARTIFACT_NAME=android-${{ env.ENVIRONMENT }}-${{ github.sha }}.apk" >> $GITHUB_ENV
       shell: bash
 
-    - name: Setup build environment ios dir
+    - name: Setup build environment for iOS
       if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        echo "BUILD_DIR=${{ github.workspace }}/ios/build/${{ env.ENVIRONMENT }}/" >> $GITHUB_ENV
-        echo "ARTIFACT_NAME=ios-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_ENV
+        echo "ARTIFACT_NAME=ios-${{ env.ENVIRONMENT }}-${{ github.sha }}.ipa" >> $GITHUB_ENV
       shell: bash
 
     - name: Set gradlew permissions
