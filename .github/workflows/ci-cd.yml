@@ -188,6 +188,7 @@ jobs:
         with:
           commit_message: 'Bump version'
           branch: ${{ github.head_ref }}
+
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
