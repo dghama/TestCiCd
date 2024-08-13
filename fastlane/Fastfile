@@ -38,7 +38,7 @@ def generate_version_string(version)
   
   case @environment
   when "prod"
-    "#{version_str}"
+    version_str
   when "staging"
     "#{version_str}-rc"
   when "dev"
@@ -58,7 +58,10 @@ def load_version_data
   if File.exist?(version_data_file)
     JSON.parse(File.read(version_data_file))
   else
-    { 'ios' => {}, 'android' => {} }
+    {
+      'ios' => { 'prod' => 0, 'staging' => 0, 'dev' => 0, 'beta' => 0 },
+      'android' => { 'prod' => 0, 'staging' => 0, 'dev' => 0, 'beta' => 0 }
+    }
   end
 end
 
@@ -124,7 +127,6 @@ def increment_package_version
     UI.user_error!("Invalid version type: #{@version_type}. Use 'major', 'minor', or 'patch'.")
   end
   
-  new_version = current_version.increment!(@version_type)
   package_json['version'] = new_version.to_s
   File.write(package_json_path, JSON.pretty_generate(package_json))
   UI.success("Package version incremented to #{new_version} (#{@version_type})")
@@ -136,18 +138,13 @@ platform :ios do
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
     new_package_version = increment_package_version
-    new_build_number = increment_version_data(@platform)
+    new_build_number = increment_version_data('ios')
 
-    new_version = increment_version_number(
-      xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
-      version_number: new_package_version
-    )
-
-    new_version_with_app_name = generate_version_string(new_version)
+    new_version_with_env = generate_version_string(new_package_version)
 
     increment_version_number(
       xcodeproj: ios_dir.join("#{@app_name}.xcodeproj"),
-      version_number: new_version_with_app_name
+      version_number: new_version_with_env
     )
 
     increment_build_number(
@@ -155,12 +152,11 @@ platform :ios do
       build_number: new_build_number
     )
 
-    UI.success("iOS version updated to #{new_version_with_app_name} (#{new_build_number})")
+    UI.success("iOS version updated to #{new_version_with_env} (#{new_build_number})")
   end
 
   desc 'Build the iOS app'
   lane :build do
-    inc_ver_ios
     inc_ver_ios
     cocoapods(
       clean_install: true,
@@ -192,7 +188,6 @@ platform :android do
     new_package_version = increment_package_version
     new_version_code = increment_version_data('android')
     
-    # Update the versionCode and versionName in build.gradle
     gradle_file_path = gradle_file.to_s
     updated_gradle_file = File.read(gradle_file_path)
       .gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
@@ -210,31 +205,31 @@ platform :android do
   lane :build do
     inc_ver_and
     
-  version_name = get_android_version_name
-  version_code = get_android_version_code
-  
-  UI.important("Building Android app with versionName: #{version_name} and versionCode: #{version_code}")
-  
-  output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
+    version_name = get_android_version_name
+    version_code = get_android_version_code
+    
+    UI.important("Building Android app with versionName: #{version_name} and versionCode: #{version_code}")
+    
+    output_dir = android_dir.join("builds", @environment, "#{version_name}_#{version_code}")
 
-  FileUtils.mkdir_p(output_dir)
+    FileUtils.mkdir_p(output_dir)
 
-  gradle(
-    task: "clean assembleRelease",
-    project_dir: android_dir.to_s,
-    properties: {
-      "output.dir" => output_dir.to_s,
-      "output.name" => "#{@app_name}-#{version_name}.apk",
-      "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
-      "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
-      "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-      "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
-    }
-  )
-  
-  File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
-  
-  UI.success("Android app built successfully. APK location: #{output_dir}/#{@app_name}-#{version_name}.apk")
+    gradle(
+      task: "clean assembleRelease",
+      project_dir: android_dir.to_s,
+      properties: {
+        "output.dir" => output_dir.to_s,
+        "output.name" => "#{@app_name}-#{version_name}.apk",
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+      }
+    )
+    
+    File.write(output_dir.join("build_info.txt"), "Version: #{version_name}\nBuild: #{version_code}\nEnvironment: #{@environment}")
+    
+    UI.success("Android app built successfully. APK location: #{output_dir}/#{@app_name}-#{version_name}.apk")
   end
 end
 
@@ -277,21 +272,17 @@ end
 
 desc 'Commit version changes'
 lane :commit_version_changes do
-  # Ensure we're on the correct branch
   ensure_git_branch(branch: ENV["BRANCH_NAME"] || "main")
 
-  # Get the current versions
   ios_version = get_version_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
   ios_build = get_build_number(xcodeproj: ios_dir.join("#{@app_name}.xcodeproj").to_s)
   android_version = get_android_version_name
   android_code = get_android_version_code
 
-  # Commit all changes
   git_add(path: ".")
   commit_message = "Bump version to #{@package['version']} (iOS: #{ios_version} (#{ios_build}), Android: #{android_version} (#{android_code})) for #{@environment}"
   git_commit(path: ".", message: commit_message)
 
-  # Create a tag
   add_git_tag(tag: "v#{@package['version']}-#{@environment}")
 
   push_to_git_remote(
