@@ -1,6 +1,7 @@
 {
-  "ios": {},
+  "ios": {
+  },
   "android": {
-    "staging": 1
+    "staging": 2
   }
 }
