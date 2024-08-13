@@ -280,7 +280,7 @@ lane :get_version do |options|
   end
 
   version = get_version_data(platform, environment)
-  puts "Current #{platform} version for #{environment}: #{version}"
+  puts "Current platform #{platform} version for #{environment}: #{version}"
 end
 
 desc 'Print all version data'
