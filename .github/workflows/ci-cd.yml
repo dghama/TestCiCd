@@ -114,6 +114,11 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
 
+      - name: Commit versioning ${{ matrix.platform }}
+        run: |
+          bundle exec fastlane commit_version_changes
+        shell: bash
+        
       - name: List files in build directory
         run: |
           echo "Listing files in ${BUILD_DIR}"
@@ -122,11 +127,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-            name: ${{ env.ARTIFACT_NAME }}
-            path: ${{ env.BUILD_DIR }}/*
-            if-no-files-found: error
-            compression-level: 6
-            overwrite: false
+              name: ${{ env.ARTIFACT_NAME }}
+              path: ${{ env.BUILD_DIR }}/*
+              if-no-files-found: error
+              compression-level: 6
+              overwrite: false
 
     outputs:
       build_dir: ${{ env.BUILD_DIR}}
