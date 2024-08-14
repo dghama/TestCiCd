@@ -113,16 +113,21 @@ jobs:
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
-        
+      - name: Find APK
+        if: matrix.platform == 'android'
+        run: |
+          APK_PATH=$(find ${{ github.workspace }}/android/app/build/outputs/apk/release -name "*.apk" -type f)
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-              name: ${{ env.ARTIFACT_NAME }}
-              path: ${{ env.BUILD_DIR }}/*
-              if-no-files-found: error
-              compression-level: 6
-              overwrite: false
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+          compression-level: 6
+          overwrite: false
 
     outputs:
       build_dir: ${{ env.BUILD_DIR}}
@@ -180,8 +185,7 @@ jobs:
         run: |
           echo "This step will be added in the future"
         shell: bash
-       
-        
+
       - name: Commit versioning ${{ matrix.platform }}
         run: |
           bundle exec fastlane commit_version_changes

@@ -296,6 +296,6 @@ lane :commit_version_changes do
   )
 
   push_git_tags
-  
+
   UI.success("Successfully committed and pushed version changes")
 end
