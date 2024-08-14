@@ -65,6 +65,11 @@ def increment_version_code
   # Write the updated content back to the Gradle file
   File.write(gradle_file_path, updated_gradle_file_content)
 
+  package_json_path = project_dir.join('package.json')
+  package_json = JSON.parse(File.read(package_json_path))
+  package_json['version'] = @versionName
+  File.write(package_json_path, JSON.pretty_generate(package_json))
+  
   new_version_code
 end
 
