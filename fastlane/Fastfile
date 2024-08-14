@@ -167,6 +167,8 @@ platform :ios do
   desc 'Build the iOS app'
   lane :build do
     inc_ver_ios
+    export_method = @environment == "prod" ? "app-store" : "development"
+
     cocoapods(
       clean_install: true,
       podfile: ios_dir.join("Podfile").to_s,
@@ -178,7 +180,7 @@ platform :ios do
     build_app(
       workspace: ios_dir.join("#{@app_name}.xcworkspace").to_s,
       scheme: @app_name,
-      export_method: "app-store",
+      export_method: export_method,
       output_name: "#{@app_name}.ipa",
       skip_codesigning: true
     )
@@ -220,20 +222,28 @@ platform :android do
     # Output debug information
     UI.important("Current directory: #{Dir.pwd}")
     UI.important("Android directory: #{android_dir}")
+    build_type = @environment == "prod" ? "assembleRelease" : "assembleQa"
+    # Set the signing configuration conditionally
+    android_injected = @environment == "prod" ? {
+      "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+      "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+      "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+      "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+    } : {}
 
+  # Construct the properties hash for gradle
+  gradle_properties = {
+    "output.name" => "#{@app_name}-#{version_name}.apk"
+  }.merge(android_injected)
+
+    # Run the Gradle command
     gradle(
-      task: "clean assembleRelease",
+      task: "clean #{build_type}",
       project_dir: "android/",
       print_command: true,
-      properties: {
-        "output.name" => "#{@app_name}-#{version_name}.apk",
-        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
-        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
-        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
-      }
+      properties: gradle_properties
     )
-    
+      
     # List contents of the build directory
     build_dir = File.join(android_dir, 'app', 'build')
     UI.important("Contents of build directory:")

@@ -100,7 +100,7 @@ android {
             keyPassword System.getenv("KEY_PASSWORD")
         }
     }
-    buildTypes {Ò
+    buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
@@ -109,35 +109,17 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+        qa {
+            initWith release
+            matchingFallbacks = ['release']
+            applicationIdSuffix ".qa"
+            signingConfig signingConfigs.debug
+        }
     
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
         outputFileName = project.hasProperty('output.name') ? project.property('output.name') : outputFileName
-        }
-    }
-
-    flavorDimensions "environment"
-    productFlavors {
-        staging {
-            dimension "environment"
-            applicationId "com.testcicd.staging"
-            resValue "string", "app_name", "TestCICD Staging"
-        }
-        prod {
-            dimension "environment"
-            applicationId "com.testcicd.prod"
-            resValue "string", "app_name", "TestCICD"
-        }
-        dev {
-            dimension "environment"
-            applicationId "com.testcicd.dev"
-            resValue "string", "app_name", "TestCICD Dev"
-        }
-        beta {
-            dimension "environment"
-            applicationId "com.testcicd.beta"
-            resValue "string", "app_name", "TestCICD Beta"
         }
     }
 
