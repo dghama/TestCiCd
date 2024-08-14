@@ -19,12 +19,8 @@ on:
           - beta
           - prod
 
-      ios_version_name:
-        description: 'iOS version name (e.g., 1.2.3)'
-        required: false
-        type: string
-      android_version_name:
-        description: 'Android version name (e.g., 1.2.3)'
+      version_name:
+        description: 'version name (e.g., 0.0.1)'
         required: false
         type: string
 
@@ -169,7 +165,6 @@ jobs:
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           ls -l ${{ needs.build.outputs.build_dir }}
-          bundle exec fastlane increment_version
           bundle exec fastlane upload_app_to_mstore
         shell: bash
         working-directory: ${{ github.workspace }}
