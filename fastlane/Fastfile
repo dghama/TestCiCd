@@ -117,10 +117,10 @@ platform :android do
       project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}-#{version_name}-#{version_code}.apk",
-        "android.injected.signing.store.file" => ENV["KEYSTORE_FILE_PATH"],
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
       }
     )
   end
