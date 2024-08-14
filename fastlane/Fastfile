@@ -103,9 +103,7 @@ end
 platform :android do
   desc 'Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
-    increment_version_code(
-      gradle_file_path: "./android/app/build.gradle",
-    )
+    increment_version_code
   end
 
   version_code = get_android_version_code
