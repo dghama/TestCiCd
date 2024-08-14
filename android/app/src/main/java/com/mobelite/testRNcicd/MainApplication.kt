@@ -1,4 +1,4 @@
-package com.testcicd
+package com.mobelite.testRNcicd
 
 import android.app.Application
 import com.facebook.react.PackageList
