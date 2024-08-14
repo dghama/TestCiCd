@@ -20,8 +20,8 @@ runs:
         INFO_FILE=$(find "${{ inputs.build_dir }}" -name "*.json" | head -n 1)
 
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
-          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
-          echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
+          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_OUTPUT
+          echo "INFO_FILE=$INFO_FILE" >>  $GITHUB_OUTPUT
         else
           echo "Required files not found!" >&2
           exit 1
@@ -36,8 +36,8 @@ runs:
         INFO_FILE=$(find "${{ inputs.build_dir }}" -name "*.plist" | head -n 1)
 
         if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
-          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
-          echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
+          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_OUTPUT
+          echo "INFO_FILE=$INFO_FILE" >> $GITHUB_OUTPUT
         else
           echo "Required files not found!" >&2
           exit 1
