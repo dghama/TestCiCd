@@ -8,6 +8,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Debug: Print build_dir
+      run: |
+        echo "Build directory: ${{ inputs.build_dir }}"
+      shell: bash
+
     - name: Setup deploy environment for Android
       if: ${{ env.PLATFORM == 'android' }}
       run: |
@@ -22,6 +27,7 @@ runs:
           exit 1
         fi
       shell: bash
+
 
     - name: Setup deploy environment for iOS
       if: ${{ env.PLATFORM == 'ios' }}
