@@ -103,17 +103,34 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
+      - name: Debug environment outputs
+        run: |
+          echo "BUILD_DIR: ${{ steps.setup_env.outputs.BUILD_DIR }}"
+          echo "ARTIFACT_NAME: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}"
+        shell: bash
+
+      - name: Debug environment variables
+        run: |
+          echo "PLATFORM: ${{ env.PLATFORM }}"
+          echo "ENVIRONMENT: ${{ env.ENVIRONMENT }}"
+        shell: bash
+
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
 
+      - name: List build directory contents
+        run: |
+          ls -R ${{ steps.setup_env.outputs.BUILD_DIR }}
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
-          path: ${{ steps.setup_env.outputs.BUILD_DIR }}/*
+          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
           if-no-files-found: error
           compression-level: 6
           overwrite: false
