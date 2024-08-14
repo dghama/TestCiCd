@@ -217,10 +217,14 @@ platform :android do
     
     UI.important("Building Android app with versionName: #{version_name} and versionCode: #{version_code}")
 
+    # Output debug information
+    UI.important("Current directory: #{Dir.pwd}")
+    UI.important("Android directory: #{android_dir}")
 
     gradle(
       task: "clean assembleRelease",
       project_dir: "android/",
+      print_command: true,
       properties: {
         "output.name" => "#{@app_name}-#{version_name}.apk",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
@@ -230,8 +234,20 @@ platform :android do
       }
     )
     
+    # List contents of the build directory
+    build_dir = File.join(android_dir, 'app', 'build')
+    UI.important("Contents of build directory:")
+    Dir.glob("#{build_dir}/**/*").each do |item|
+      UI.important("  #{item}")
+    end
     
-    UI.success("Android app built successfully. APK location: #{@app_name}-#{version_name}.apk")
+    # Try to find the APK
+    apk_path = Dir.glob("#{build_dir}/**/#{@app_name}-#{version_name}.apk").first
+    if apk_path
+      UI.success("APK found at: #{apk_path}")
+    else
+      UI.error("APK not found. Searched for: #{@app_name}-#{version_name}.apk")
+    end
   end
 end
 
