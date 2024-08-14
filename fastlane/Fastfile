@@ -222,28 +222,20 @@ platform :android do
     # Output debug information
     UI.important("Current directory: #{Dir.pwd}")
     UI.important("Android directory: #{android_dir}")
-    build_type = @environment == "prod" ? "assembleRelease" : "assembleQa"
-    # Set the signing configuration conditionally
-    android_injected = @environment == "prod" ? {
-      "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
-      "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
-      "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-      "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
-    } : {}
 
-    # Construct the properties hash for gradle
-    gradle_properties = {
-      "output.name" => "#{@app_name}-#{version_name}.apk"
-    }.merge(android_injected)
-
-    # Run the Gradle command
     gradle(
-      task: "clean #{build_type}",
+      task: "clean assembleRelease",
       project_dir: "android/",
       print_command: true,
-      properties: gradle_properties
+      properties: {
+        "output.name" => "#{@app_name}-#{version_name}.apk",
+        "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+      }
     )
-      
+    
     # List contents of the build directory
     build_dir = File.join(android_dir, 'app', 'build')
     UI.important("Contents of build directory:")
@@ -325,8 +317,6 @@ lane :commit_version_changes do
 
   UI.success("Successfully committed and pushed version changes")
 end
-
-
 
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do

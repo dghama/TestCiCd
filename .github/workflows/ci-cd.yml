@@ -15,10 +15,9 @@ on:
         default: 'staging'
         type: choice
         options:
-          - prod
           - staging
-          - dev
           - beta
+          - prod
 
       version_type:
         description: 'Type of version bump'
