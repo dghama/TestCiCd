@@ -6,10 +6,9 @@ runs:
     - name: Setup build environment android dir
       if: ${{ env.PLATFORM == 'android' }}
       run: |
-        echo "BUILD_DIR=$PWD/android/app/build/outputs/apk/release" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/${{ env.ENVIRONMENT == 'prod' ? 'release' : 'qa'}}" >> $GITHUB_ENV
         echo "ARTIFACT_NAME=android-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_ENV
       shell: bash
-
 
     - name: Setup build environment ios dir
       if: ${{ env.PLATFORM == 'ios' }}
