@@ -19,15 +19,14 @@ on:
           - beta
           - prod
 
-      version_type:
-        description: 'Type of version bump'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - major
-          - minor
-          - patch
+      ios_version_name:
+        description: 'iOS version name (e.g., 1.2.3)'
+        required: false
+        type: string
+      android_version_name:
+        description: 'Android version name (e.g., 1.2.3)'
+        required: false
+        type: string
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
