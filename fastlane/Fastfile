@@ -23,6 +23,8 @@ before_all do
   @environment = ENV["ENVIRONMENT"] || "staging"
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
+  @versionName = ENV["VERSION_NAME"]
+
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
   puts "Version Type: #{@version_type}"
@@ -48,13 +50,24 @@ def gradle_file
 end
 def increment_version_code
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
-  gradle_file = File.read(gradle_file_path)
-  current_version_code = gradle_file.match(/versionCode\s+(\d+)/)[1].to_i
+  gradle_file_content = File.read(gradle_file_path)
+
+  # Increment versionCode
+  current_version_code = gradle_file_content.match(/versionCode\s+(\d+)/)[1].to_i
   new_version_code = current_version_code + 1
-  updated_gradle_file = gradle_file.gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
-  File.write(gradle_file_path, updated_gradle_file)
+  updated_gradle_file_content = gradle_file_content.gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
+
+  # Update versionName if @versionName is provided
+  if @versionName
+    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{@versionName}\"")
+  end
+
+  # Write the updated content back to the Gradle file
+  File.write(gradle_file_path, updated_gradle_file_content)
+
   new_version_code
 end
+
 
 def get_android_version_code
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s

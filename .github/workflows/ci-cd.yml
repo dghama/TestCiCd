@@ -154,7 +154,6 @@ jobs:
         uses: ./.github/actions/setup/setup-deploy-env
         with:
           build_dir: ${{ needs.build.outputs.build_dir }}
-          artifact_name: ${{ needs.build.outputs.artifact_name }}
 
       - name: Check build path contents
         run: |
