@@ -16,6 +16,7 @@ on:
         type: choice
         options:
           - staging
+          - alpha
           - beta
           - prod
 
