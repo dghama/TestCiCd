@@ -1,8 +1,3 @@
-
-
-
-
-
 require 'pathname'
 require 'json'
 
@@ -45,22 +40,14 @@ def increment_version_code(gradle_file_path:)
   new_version_code
 end
 
-def get_android_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+def get_android_version_code(gradle_file_path:)
   gradle_file = File.read(gradle_file_path)
   gradle_file.match(/versionCode\s+(\d+)/)[1]
 end
 
-def get_android_version_name
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+def get_android_version_name(gradle_file_path:)
   gradle_file = File.read(gradle_file_path)
-  version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
-  if version_name_match
-    version_name_match[1]
-  else
-    UI.error("Could not find versionName in #{gradle_file_path}")
-    nil
-  end
+  gradle_file.match(/versionName\s+"(.+)"/)[1] 
 end
 
 platform :ios do
@@ -97,8 +84,8 @@ platform :android do
     )
   end
 
-  version_code = get_android_version_code
-  version_name = get_android_version_name
+  version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
+  version_name = get_android_version_name(gradle_file_path: './android/app/build.gradle')
 
   desc 'Build the Android app'
   lane :build do
@@ -107,7 +94,7 @@ platform :android do
       task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
-        "output.name" => "#{@app_name}-#{@environment}-#{version_name}-#{version_name}.apk",
+        "output.name" => "#{@app_name}-#{@environment}-#{version_name}-#{version_code}.apk",
         "android.injected.signing.store.file" => ENV["KEYSTORE_FILE_PATH"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
@@ -123,8 +110,8 @@ lane :commit_version_changes do
   current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
   ensure_git_branch(branch: current_branch)
 
-  version_code = get_android_version_code
-  version_name = get_android_version_name
+  version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
+  version_name = get_android_version_name(gradle_file_path: './android/app/build.gradle')
 
   # Stage changes
   git_add(path: ["android/app/build.gradle"])
