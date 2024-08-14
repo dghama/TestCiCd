@@ -113,11 +113,6 @@ jobs:
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
-
-      - name: Commit versioning ${{ matrix.platform }}
-        run: |
-          bundle exec fastlane commit_version_changes
-        shell: bash
         
 
       - name: Upload artifact
@@ -184,6 +179,11 @@ jobs:
         if: ${{ env.ENVIRONMENT }} == 'prod'
         run: |
           echo "This step will be added in the future"
+        shell: bash
+        
+      - name: Commit versioning ${{ matrix.platform }}
+        run: |
+          bundle exec fastlane commit_version_changes
         shell: bash
 
   notify-teams:
