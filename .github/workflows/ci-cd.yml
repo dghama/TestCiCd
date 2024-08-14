@@ -136,6 +136,8 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
 
     steps:
       - name: Checkout repository
