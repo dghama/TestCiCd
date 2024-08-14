@@ -231,10 +231,10 @@ platform :android do
       "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
     } : {}
 
-  # Construct the properties hash for gradle
-  gradle_properties = {
-    "output.name" => "#{@app_name}-#{version_name}.apk"
-  }.merge(android_injected)
+    # Construct the properties hash for gradle
+    gradle_properties = {
+      "output.name" => "#{@app_name}-#{version_name}.apk"
+    }.merge(android_injected)
 
     # Run the Gradle command
     gradle(
