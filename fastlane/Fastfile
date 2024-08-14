@@ -1,5 +1,4 @@
 require 'pathname'
-require 'json'
 
 # This file contains the fastlane.tools configuration
 # You can find the documentation at https://docs.fastlane.tools
@@ -31,7 +30,24 @@ before_all do
   puts "Platform: #{@platform}"
 end
 
-def increment_version_code(gradle_file_path:)
+
+def project_dir
+  Pathname.new(File.expand_path('..', Dir.pwd))
+end
+
+def android_dir
+  project_dir.join('android')
+end
+
+def ios_dir
+  project_dir.join('ios')
+end
+
+def gradle_file
+  android_dir.join('app', 'build.gradle')
+end
+def increment_version_code
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   current_version_code = gradle_file.match(/versionCode\s+(\d+)/)[1].to_i
   new_version_code = current_version_code + 1
@@ -40,14 +56,22 @@ def increment_version_code(gradle_file_path:)
   new_version_code
 end
 
-def get_android_version_code(gradle_file_path:)
+def get_android_version_code
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   gradle_file.match(/versionCode\s+(\d+)/)[1]
 end
 
-def get_android_version_name(gradle_file_path:)
+def get_android_version_name
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
-  gradle_file.match(/versionName\s+"(.+)"/)[1] 
+  version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
+  if version_name_match
+    version_name_match[1]
+  else
+    UI.error("Could not find versionName in #{gradle_file_path}")
+    nil
+  end
 end
 
 platform :ios do
@@ -84,8 +108,8 @@ platform :android do
     )
   end
 
-  version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
-  version_name = get_android_version_name(gradle_file_path: './android/app/build.gradle')
+  version_code = get_android_version_code
+  version_name = get_android_version_name
 
   desc 'Build the Android app'
   lane :build do
@@ -110,14 +134,14 @@ lane :commit_version_changes do
   current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
   ensure_git_branch(branch: current_branch)
 
-  version_code = get_android_version_code(gradle_file_path: './android/app/build.gradle')
-  version_name = get_android_version_name(gradle_file_path: './android/app/build.gradle')
+  version_code = get_android_version_code
+  version_name = get_android_version_name
 
   # Stage changes
   git_add(path: ["android/app/build.gradle"])
   
   # Commit changes
-  commit_message = "Bump android versionCode to #{version_code}, versionName to #{version_name}"
+  commit_message = "Bump versionCode to #{version_code}, versionName to #{version_name}"
   git_commit(message: commit_message)
   
   # Add tag with a consistent and meaningful format
