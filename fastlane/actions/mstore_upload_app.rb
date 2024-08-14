@@ -33,11 +33,11 @@ module Fastlane
                                          description: "App dev token for Mstore",
                                          is_string: true),
             FastlaneCore::ConfigItem.new(key: :info_file,
-                                         env_name: "MSTORE_INFO_FILE",
+                                         env_name: "info_file",
                                          description: "Path to the output-metadata.json file",
                                          is_string: true),
             FastlaneCore::ConfigItem.new(key: :build_file,
-                                         env_name: "MSTORE_APK_FILE",
+                                         env_name: "build_file",
                                          description: "Path to the APK file",
                                          is_string: true)
           ]
