@@ -17,7 +17,8 @@
     "android:cert": "ENVFILE=configuration/.env.cert react-native run-android",
     "lint-autofix": "eslint . -c .eslintrc.js --ext .ts,.tsx --fix",
     "prettify": "prettier --write \"ts/**/*.(ts|tsx)\"",
-    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\""
+    "prettier:check": "prettier --check \"ts/**/*.(ts|tsx)\"",
+    "clean-ios": "rm -rf ios/Pods"
   },
   "dependencies": {
     "@testing-library/jest-native": "^5.4.3",

@@ -30,6 +30,7 @@ runs:
 
     - name: 📦 Install CocoaPods dependencies
       run: |
+        yarn clean-ios
         cd ios
         pod install
       shell: bash
