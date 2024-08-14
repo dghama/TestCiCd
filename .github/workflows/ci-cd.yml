@@ -147,7 +147,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ needs.build.outputs.build_dir }}‡
+          path: ${{ needs.build.outputs.build_dir }}
 
       - name: Set up deploy environment
         id: setup_deploy_env
