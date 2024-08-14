@@ -156,11 +156,20 @@ jobs:
           chmod 777 output-metadata.json
           cat output-metadata.json
 
+      - name: Debug build_dir
+        run:  |
+          echo "Build directory: ${{ needs.build.outputs.build_dir }}"
+
+      - name: Set build_dir
+        run: echo "BUILD_DIR=${{ github.workspace }}/build" >> $GITHUB_ENV
+        
+
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: ${{ needs.build.outputs.build_dir }}
+          build_dir: ${{ env.BUILD_DIR }}
+
 
       - name: Check build path contents
         run: |
