@@ -103,41 +103,30 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
-      - name: Debug environment outputs
-        run: |
-          echo "BUILD_DIR: ${{ steps.setup_env.outputs.BUILD_DIR }}"
-          echo "ARTIFACT_NAME: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}"
-        shell: bash
-
-      - name: Debug environment variables
-        run: |
-          echo "PLATFORM: ${{ env.PLATFORM }}"
-          echo "ENVIRONMENT: ${{ env.ENVIRONMENT }}"
-        shell: bash
-
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: List build directory contents
-        run: |
-          ls -R ${{ steps.setup_env.outputs.BUILD_DIR }}
-        shell: bash
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
-          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.BUILD_DIR }}/*
           if-no-files-found: error
           compression-level: 6
           overwrite: false
+          
+      - name: Set env variables from outputs
+        run: |
+            echo "BUILD_DIR=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_ENV
+            echo "ARTIFACT_NAME=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_ENV
+        shell: bash
 
     outputs:
-      build_dir: ${{ steps.setup_env.outputs.BUILD_DIR }}
-      artifact_name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+      build_dir: ${{ env.BUILD_DIR }}
+      artifact_name: ${{ env.ARTIFACT_NAME }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -172,14 +161,12 @@ jobs:
           cd "${{ needs.build.outputs.build_dir }}" || exit 1
           chmod 777 output-metadata.json
           cat output-metadata.json
-        
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
           build_dir: ${{ needs.build.outputs.build_dir }}
-
 
       - name: Check build path contents
         run: |
