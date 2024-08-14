@@ -109,6 +109,11 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
 
+      - name: Set env variables from outputs
+        run: |
+            echo "BUILD_DIR=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_ENV
+            echo "ARTIFACT_NAME=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_ENV
+        shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -118,11 +123,7 @@ jobs:
           compression-level: 6
           overwrite: false
           
-      - name: Set env variables from outputs
-        run: |
-            echo "BUILD_DIR=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_ENV
-            echo "ARTIFACT_NAME=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_ENV
-        shell: bash
+
 
     outputs:
       build_dir: ${{ env.BUILD_DIR }}
