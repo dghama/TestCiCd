@@ -109,25 +109,18 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: Set env variables from outputs
-        run: |
-            echo "BUILD_DIR=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_ENV
-            echo "ARTIFACT_NAME=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_ENV
-        shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.BUILD_DIR }}/*
+          name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
           if-no-files-found: error
           compression-level: 6
           overwrite: false
-          
-
 
     outputs:
-      build_dir: ${{ env.BUILD_DIR }}
-      artifact_name: ${{ env.ARTIFACT_NAME }}
+      build_dir: ${{ steps.setup_env.outputs.BUILD_DIR }}
+      artifact_name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -156,18 +149,19 @@ jobs:
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ needs.build.outputs.build_dir }}
-      - name: Read output-metadata.json
-        run: |
-          echo "Contents of output-metadata.json:"
-          cd "${{ needs.build.outputs.build_dir }}" || exit 1
-          chmod 777 output-metadata.json
-          cat output-metadata.json
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
           build_dir: ${{ needs.build.outputs.build_dir }}
+
+      - name: Read output-metadata.json
+        run: |
+          echo "Contents of output-metadata.json:"
+          cd "${{ needs.build.outputs.build_dir }}" || exit 1
+          chmod 777 output-metadata.json
+          cat output-metadata.json
 
       - name: Check build path contents
         run: |
