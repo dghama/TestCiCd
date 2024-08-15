@@ -1,20 +1,34 @@
 name: 'Set up build environment'
-description: 'Determine build directory and artifact name based on platform'
+description: 'Set up the build environment and determine build directory'
+outputs:
+  BUILD_DIR:
+    description: 'Directory where build artifacts are stored'
+    value: ${{ steps.set_build_dir.outputs.BUILD_DIR }}
+  ARTIFACT_NAME:
+    description: 'Name of the artifact to be uploaded'
+    value: ${{ steps.set_artifact_name.outputs.ARTIFACT_NAME }}
+
 runs:
   using: composite
   steps:
-    - name: Setup build environment
+    - name: Set build directory
+      id: set_build_dir
       run: |
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
           echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
-          echo "ARTIFACT_NAME=android-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
           echo "BUILD_DIR=${{ github.workspace }}/ios/build" >> $GITHUB_OUTPUT
-          echo "ARTIFACT_NAME=ios-${{ env.ENVIRONMENT }}-${{ github.sha }}" >> $GITHUB_OUTPUT
         else
           echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1
         fi
+      shell: bash
+
+    - name: Set artifact name
+      id: set_artifact_name
+      run: |
+        ARTIFACT_NAME="${{ env.PLATFORM }}-${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Set gradlew permissions
