@@ -31,7 +31,7 @@ concurrency:
 
 env:
   CI: true
-
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
 jobs:
   prepare-environment:
     runs-on: macos-latest
@@ -44,6 +44,10 @@ jobs:
         uses: ./.github/actions/setup/android-runner
       - name: Setup ios environment
         uses: ./.github/actions/setup/ios-runner
+      - name: Setup environment CONFIG
+        run: |
+          # Create .env file based on the selected environment
+          echo "${{ secrets.ENV_env.ENVIRONMENT }}" > .env
 
   install-dependencies:
     runs-on: macos-latest
@@ -82,7 +86,6 @@ jobs:
       contents: write
     env:
       PLATFORM: ${{ matrix.platform }}
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
       KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -150,12 +153,6 @@ jobs:
           name: ${{ needs.build.outputs.artifact_name }}
           path: ${{ needs.build.outputs.build_dir }}
 
-      - name: Set up deploy environment
-        id: setup_deploy_env
-        uses: ./.github/actions/setup/setup-deploy-env
-        with:
-          build_dir: ${{ needs.build.outputs.build_dir }}
-
       - name: Read output-metadata.json
         run: |
           echo "Contents of output-metadata.json:"
@@ -167,6 +164,12 @@ jobs:
         run: |
           echo "Contents of the build path:"
           ls -l ${{ needs.build.outputs.build_dir }}
+
+      - name: Set up deploy environment
+        id: setup_deploy_env
+        uses: ./.github/actions/setup/setup-deploy-env
+        with:
+          build_dir: ${{ needs.build.outputs.build_dir }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
