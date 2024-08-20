@@ -104,12 +104,11 @@ jobs:
       - name: Set up environment
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
-
-      - name: Decode Provisioning Profile
+      - name: Import Provisioning Profile
         env:
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE}}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE }}
         run: |
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/RNTestProfile.mobileprovision
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode | xcrun security import -t cert -c "build" -p "" /dev/stdin
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
