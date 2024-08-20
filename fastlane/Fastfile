@@ -102,11 +102,6 @@ end
 
 
 platform :ios do
-  desc "Configure keychain for CI environment"
-  lane :configure_keychain do
-    sh("security set-key-partition-list -S apple-tool:,apple: -s -k Mobelite /Users/slaveios/Library/Keychains/login.keychain-db")
-  end
-  
   desc "Clean the project before building"
   lane :clean do
     xcclean(
@@ -124,7 +119,6 @@ platform :ios do
 
   desc 'Build the iOS app'
   lane :build do
-    configure_keychain # Add this line to configure the keychain before building
     clean
     inc_ver_ios
     cocoapods(
@@ -138,7 +132,7 @@ platform :ios do
       configuration: @environment,
       output_name: "#{@package['name']}.ipa",
       export_options: {
-        export_method: "app-store",
+        export_method: "ad-hoc", # or "enterprise"
         provisioningProfiles: {
           "com.mobelite.testRNcicd" => "RNTestProfile"
         }
