@@ -133,7 +133,7 @@ platform :ios do
       configuration: @environment,
       output_name: "#{@package['name']}.ipa",
       export_options: {
-        method: 'enterprise',
+        export_method: "app-store"
         provisioningProfiles: {
           "com.mobelite.testRNcicd" => "RNTestProfile"
         }

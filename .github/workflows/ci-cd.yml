@@ -105,11 +105,20 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
+      # - name: Decode provisioning profile
+      #   if: matrix.platform == 'ios'
+      #   run: |
+      #     echo "$PROVISIONING_PROFILE" | base64 --decode > /Users/runner/Library/MobileDevice/Provisioning\ Profiles/YourProfile.mobileprovision
+
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
