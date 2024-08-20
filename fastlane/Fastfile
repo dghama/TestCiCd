@@ -133,9 +133,8 @@ platform :ios do
       output_name: "#{@package['name']}.ipa",
       export_options: {
         export_method: "ad-hoc", # or "enterprise"
-        provisioningProfiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
-        }
+        codesigning_identity: "iPhone Distribution: Mobelite (45F3786CHA)"
+
       }
     )
   end
