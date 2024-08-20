@@ -9,6 +9,12 @@ runs:
         sudo xcodebuild -license accept
       shell: bash
 
+    - name: 🧹 Clean Gem cache
+      run: |
+        gem cleanup
+        rm -rf ~/.gem/cache
+      shell: bash
+
     - name: Install Ruby
       uses: ruby/setup-ruby@v1
       with:

@@ -11,6 +11,12 @@ inputs:
     description: 'Custom message to include in the notification'
     required: false
     default: ''
+  android_version_url:
+    description: 'URL for the Android version'
+    required: false
+  ios_version_url:
+    description: 'URL for the iOS version'
+    required: false
 
 runs:
   using: 'composite'
@@ -21,6 +27,8 @@ runs:
         STATUS: ${{ inputs.status }}
         WEBHOOK_URL: ${{ inputs.webhook_url }}
         CUSTOM_MESSAGE: ${{ inputs.custom_message }}
+        ANDROID_VERSION_URL: ${{ inputs.android_version_url }}
+        IOS_VERSION_URL: ${{ inputs.ios_version_url }}
       run: |
         if [ "$STATUS" = "success" ]; then
           COLOR="00FF00"
@@ -28,6 +36,14 @@ runs:
         else
           COLOR="FF0000"
           TITLE="Build Failed"
+        fi
+
+        VERSION_URLS=""
+        if [ -n "$ANDROID_VERSION_URL" ]; then
+          VERSION_URLS="${VERSION_URLS}\n- **Android Version**: [$ANDROID_VERSION_URL]($ANDROID_VERSION_URL)"
+        fi
+        if [ -n "$IOS_VERSION_URL" ]; then
+          VERSION_URLS="${VERSION_URLS}\n- **iOS Version**: [$IOS_VERSION_URL]($IOS_VERSION_URL)"
         fi
 
         PAYLOAD=$(cat <<EOF
@@ -54,7 +70,7 @@ runs:
                   "value": "$GITHUB_REF_NAME"
                 }
               ],
-              "text": "$CUSTOM_MESSAGE"
+              "text": "$CUSTOM_MESSAGE $VERSION_URLS"
             }
           ]
         }

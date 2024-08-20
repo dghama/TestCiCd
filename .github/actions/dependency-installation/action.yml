@@ -8,6 +8,10 @@ runs:
       with:
         node-version: '20'
 
+    - name: 🧹 Clean Node.js cache
+      run: yarn cache clean
+      shell: bash
+
     - name: Cache node_modules
       uses: actions/cache@v4
       with:
@@ -18,6 +22,10 @@ runs:
 
     - name: 📦 Install Node dependencies
       run: yarn install --frozen-lockfile
+      shell: bash
+
+    - name: 🧹 Clean CocoaPods cache
+      run: pod cache clean --all
       shell: bash
 
     - name: Cache CocoaPods

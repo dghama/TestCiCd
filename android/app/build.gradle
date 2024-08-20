@@ -81,7 +81,7 @@ android {
         applicationId "com.mobelite.testRNcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
+        versionCode 1
         versionName "0.0.1"
         resValue "string", "build_config_package", "com.mobelite.testRNcicd"
 
@@ -113,11 +113,17 @@ android {
     
     }
     applicationVariants.all { variant ->
-        variant.outputs.all {
-        outputFileName = project.hasProperty('output.name') ? project.property('output.name') : outputFileName
+        variant.outputs.all { output ->
+            // Get the base name from the project property or fallback to the default
+            def baseName = project.hasProperty('output.name') ? project.property('output.name') : output.file.name
+            
+            // Create the new file name by appending the version code
+            def newFileName = "${baseName}.${variant.versionCode}.apk"
+            
+            // Set the new file name
+            outputFileName = newFileName
         }
     }
-
 }
 
 dependencies {

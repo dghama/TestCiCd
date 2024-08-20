@@ -57,17 +57,24 @@ def increment_version_code
   new_version_code = current_version_code + 1
   updated_gradle_file_content = gradle_file_content.gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
 
-  # Update versionName if @versionName is provided
+  # Update versionName
   if @versionName
-    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{@versionName}\"")
+    # If @versionName is provided, update it with the new version code
+    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{@versionName}.#{new_version_code}\"")
+  else
+    # If @versionName is not provided, append the version code to the current versionName
+    current_version_name = gradle_file_content.match(/versionName\s+"([^"]*)"/)[1]
+    new_version_name = "#{current_version_name}.#{new_version_code}"
+    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
   end
 
   # Write the updated content back to the Gradle file
   File.write(gradle_file_path, updated_gradle_file_content)
 
+  # Update the package.json version
   package_json_path = project_dir.join('package.json')
   package_json = JSON.parse(File.read(package_json_path))
-  package_json['version'] = @versionName
+  package_json['version'] = @versionName || new_version_name
   File.write(package_json_path, JSON.pretty_generate(package_json))
   
   new_version_code
@@ -92,28 +99,45 @@ def get_android_version_name
   end
 end
 
+
+
 platform :ios do
+  # Clean the project before building
+  desc "clean ios"
+    lane :clean do
+    xcclean(
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      )
+    end
+
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
     increment_build_number(
       xcodeproj: "./ios/#{@package['name']}.xcodeproj"
     )
-
   end
 
   desc 'Build the iOS app'
   lane :build do
+    clean
     inc_ver_ios
     cocoapods(
       clean_install: true,
       podfile: "./ios/Podfile",
     )
+    
     build_app(
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
-      export_method: "app-store",
-      output_directory: "./ios/build",
-      output_name: "#{@package['name']}.ipa"
+      configuration: @environment,
+      output_name: "#{@package['name']}.ipa",
+      export_options: {
+        method: 'enterprise',
+        provisioningProfiles: {
+          "com.mobelite.testRNcicd" => ""
+        }
+      }
     )
   end
 end
@@ -123,6 +147,14 @@ platform :android do
   private_lane :inc_ver_and do
     increment_version_code
   end
+  # Clean the project before building
+    desc "clean android"
+    lane :clean do
+      gradle(
+        task: "clean",
+        project_dir: "android/"
+    )
+    end
 
   version_code = get_android_version_code
   version_name = get_android_version_name
@@ -130,11 +162,12 @@ platform :android do
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
+    clean
     gradle(
       task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
-        "output.name" => "#{@app_name}-#{@environment}-#{version_name}-#{version_code}.apk",
+        "output.name" => "#{@app_name}-#{@environment}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
@@ -143,40 +176,6 @@ platform :android do
     )
   end
 end
-
-desc 'Commit version changes'
-lane :commit_version_changes do
-  # Get the current branch name
-  current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
-  ensure_git_branch(branch: current_branch)
-
-  version_code = get_android_version_code
-  version_name = get_android_version_name
-
-  # Stage changes
-  git_add(path: ["android/app/build.gradle"])
-  
-  # Commit changes
-  commit_message = "Bump versionCode to #{version_code}, versionName to #{version_name}"
-  git_commit(message: commit_message)
-  
-  # Add tag with a consistent and meaningful format
-  tag_name = "v#{version_name}-#{version_code}-#{@environment}"
-  add_git_tag(tag: tag_name)
-
-  # Push changes and tags to the remote repository
-  push_to_git_remote(
-    remote: "https://x-access-token:#{ENV['GIT_TOKEN']}@github.com/dghama/TestCiCd.git",
-    local_branch: current_branch,  # Use the current branch name
-    tags: true
-  )
-
-  push_git_tags
-
-  UI.success("Successfully committed and pushed version changes")
-end
-
-
 
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do

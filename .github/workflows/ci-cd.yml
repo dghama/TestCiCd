@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     permissions:
       contents: write
     env:
@@ -91,7 +91,6 @@ jobs:
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      VERSION_TYPE: ${{ github.event.inputs.version_type || 'patch' }}
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
       - name: Checkout repository
@@ -131,13 +130,12 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
       APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -151,44 +149,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ needs.build.outputs.build_dir }}
-
-      - name: Read output-metadata.json
-        run: |
-          echo "Contents of output-metadata.json:"
-          cd "${{ needs.build.outputs.build_dir }}" || exit 1
-          chmod 777 output-metadata.json
-          cat output-metadata.json
-
-      - name: Check build path contents
-        run: |
-          echo "Contents of the build path:"
-          ls -l ${{ needs.build.outputs.build_dir }}
+          path: ${{ github.workspace }}/build_artifacts
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: ${{ needs.build.outputs.build_dir }}
+          build_dir: '${{ github.workspace }}/build_artifacts'
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
-          ls -l ${{ needs.build.outputs.build_dir }}
-          bundle exec fastlane upload_app_to_mstore
+          result=$(bundle exec fastlane upload_app_to_mstore)
+          echo "VERSION_URL=${result}" >> $GITHUB_ENV
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on store
-        if: ${{ env.ENVIRONMENT }} == 'prod'
-        run: |
-          echo "This step will be added in the future"
-        shell: bash
-
-      - name: Commit versioning ${{ matrix.platform }}
-        run: |
-          bundle exec fastlane commit_version_changes
-        shell: bash
+    outputs:
+      version_url: ${{ steps.setup_deploy_env.outputs.VERSION_URL }}
 
   notify-teams:
     if: github.event_name == 'push'
@@ -200,4 +178,7 @@ jobs:
         with:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          custom_message: 'New version is available on MStore for Android'
+          custom_message: |
+            New version is available on MStore.
+          android_version_url: ${{ needs.deploy.outputs.android_version_url }}
+          ios_version_url: ${{ needs.deploy.outputs.ios_version_url }}
