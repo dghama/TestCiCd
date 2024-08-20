@@ -105,10 +105,12 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
-      # - name: Decode provisioning profile
-      #   if: matrix.platform == 'ios'
-      #   run: |
-      #     echo "$PROVISIONING_PROFILE" | base64 --decode > /Users/runner/Library/MobileDevice/Provisioning\ Profiles/YourProfile.mobileprovision
+      - name: Decode provisioning profile
+        if: matrix.platform == 'ios'
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE}}
+        run: |
+          echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/RNTestProfile.mobileprovision
 
       - name: Build ${{ matrix.platform }}
         run: |
