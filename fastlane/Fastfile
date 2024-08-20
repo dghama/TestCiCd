@@ -147,14 +147,15 @@ platform :android do
   private_lane :inc_ver_and do
     increment_version_code
   end
-  # Clean the project before building
-    desc "clean android"
-    lane :clean do
-      gradle(
-        task: "clean",
-        project_dir: "android/"
+
+  desc "Clean the project before building"
+  lane :clean do
+    gradle(
+      task: "clean",
+      project_dir: "android/",
+      print_command: true
     )
-    end
+  end
 
   version_code = get_android_version_code
   version_name = get_android_version_name
@@ -164,7 +165,7 @@ platform :android do
     inc_ver_and
     clean
     gradle(
-      task: "clean assembleRelease",
+      task: "assembleRelease",
       project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
@@ -172,10 +173,12 @@ platform :android do
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
-      }
+      },
+      print_command: true
     )
   end
 end
+
 
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
