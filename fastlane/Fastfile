@@ -148,14 +148,6 @@ platform :android do
     increment_version_code
   end
 
-  desc "Clean the project before building"
-  lane :clean do
-    gradle(
-      task: "clean",
-      project_dir: "android/",
-      print_command: true
-    )
-  end
 
   version_code = get_android_version_code
   version_name = get_android_version_name
@@ -163,9 +155,8 @@ platform :android do
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
-    clean
     gradle(
-      task: "assembleRelease",
+      task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
