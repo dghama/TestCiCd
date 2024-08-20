@@ -118,27 +118,27 @@ platform :ios do
   end
 
   desc 'Build the iOS app'
-  lane :build do
-    clean
-    inc_ver_ios
-    cocoapods(
-      clean_install: true,
-      podfile: "./ios/Podfile",
-    )
-    
-    build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
-      configuration: @environment,
-      output_name: "#{@package['name']}.ipa",
-      export_options: {
-        export_method: "ad-hoc", # or "enterprise"
-        provisioningProfiles: {
-          "com.mobelite.testRNcicd" 
+lane :build do
+  clean
+  inc_ver_ios
+  cocoapods(
+    clean_install: true,
+    podfile: "./ios/Podfile",
+  )
+  
+  build_app(
+    workspace: "./ios/#{@package['name']}.xcworkspace",
+    scheme: @package['name'],
+    configuration: @environment,
+    output_name: "#{@package['name']}.ipa",
+    export_options: {
+      export_method: "ad-hoc",
+      provisioningProfiles: {
+        "com.mobelite.testRNcicd" => "/tmp/RNTestProfile.mobileprovision"
       }
     }
-    )
-  end
+  )
+end
 end
 
 
