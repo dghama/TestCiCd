@@ -135,7 +135,7 @@ platform :ios do
       export_options: {
         method: 'enterprise',
         provisioningProfiles: {
-          "com.mobelite.testRNcicd" => ""
+          "com.mobelite.testRNcicd" => "RNTestProfile"
         }
       }
     )
