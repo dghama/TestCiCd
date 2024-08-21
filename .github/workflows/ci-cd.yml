@@ -116,7 +116,7 @@ jobs:
 
       - name: Clean project and reinstall dependencies
         run: |
-          cd ios && rm -rf Pods && rm -rf build && pod install && cd ..
+          cd ios && pod deintegrate && rm -rf Pods && rm -rf build && pod install && cd ..
 
       - name: Disable Pods caching
         run: |
