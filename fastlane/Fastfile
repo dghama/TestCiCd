@@ -133,9 +133,7 @@ lane :build do
     output_name: "#{@package['name']}.ipa",
     export_options: {
       export_method: "ad-hoc",
-      provisioningProfiles: {
-        "com.mobelite.testRNcicd" => "/tmp/RNTestProfile.mobileprovision"
-      }
+      codesigning_identity: "iPhone Distribution:  (45F3786CHA)"
     }
   )
 end
