@@ -105,6 +105,13 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
+      - name: Clean DerivedData
+        run: |
+          rm -rf "${HOME}/Library/Developer/Xcode/DerivedData"
+          rm -rf "${HOME}/Library/Caches/com.apple.dt.Xcode"
+      - name: Clean project and reinstall dependencies
+        run: |
+          cd ios && rm -rf Pods && rm -rf build && pod install && cd ..
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
