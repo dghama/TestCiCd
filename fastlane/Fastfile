@@ -96,26 +96,28 @@ platform :ios do
   lane :build do
     clean
     inc_ver_ios
+  
     cocoapods(
       clean_install: true,
-      podfile: "./ios/Podfile",
+      podfile: "./ios/Podfile"
     )
-    
+  
     build_app(
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
       configuration: @environment,
       output_name: "#{@package['name']}.ipa",
       export_options: {
-        export_method: "ad-hoc",
+        export_method: "ad-hoc",  # Ensure this matches the method used for provisioning profile
         provisioning_profiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
+          "com.mobelite.testRNcicd" => "RNTestProfile"  # Ensure this matches the App ID and Profile Name
         },
-        signing_style: "manual",
-        export_team_id: "45F3786CHA"
+        signing_style: "manual",  # Use manual signing if not using automatic signing
+        export_team_id: "45F3786CHA"  # Ensure this is the correct team ID
       }
     )
   end
+  
 end
 
 platform :android do

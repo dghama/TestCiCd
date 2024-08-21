@@ -105,11 +105,17 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
-      - name: Decode Provisioning Profile
-        env:
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE }}
+      - name: Decode and Save .p12 Certificate
+        run: echo "${{ secrets.DISTRIBUTION_CERTIFICATE }}" | base64 --decode > ./certs/Certificates12Mob.p12
+
+      - name: Decode and Save Provisioning Profile
+        run: echo "${{ secrets.PROVISIONING_PROFILE }}" | base64 --decode > ./profiles/RNTestProfile.mobileprovision
+
+      - name: Import Certificate
         run: |
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > /tmp/RNTestProfile.mobileprovision
+          security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ./profiles/RNTestProfile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build ${{ matrix.platform }}
         run: |
