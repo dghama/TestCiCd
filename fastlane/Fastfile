@@ -1,10 +1,9 @@
 require 'pathname'
-require 'json'
 
 default_platform(:android)
 
 before_all do
-  @package = JSON.parse(File.read("package.json"))
+  @package = load_json(json_path: "package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
@@ -33,7 +32,7 @@ def gradle_file
 end
 
 def increment_version_code
-  gradle_file_path = gradle_file.to_s
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file_content = File.read(gradle_file_path)
 
   current_version_code = gradle_file_content.match(/versionCode\s+(\d+)/)[1].to_i
@@ -54,18 +53,18 @@ def increment_version_code
   package_json = JSON.parse(File.read(package_json_path))
   package_json['version'] = @versionName || new_version_name
   File.write(package_json_path, JSON.pretty_generate(package_json))
-
+  
   new_version_code
 end
 
 def get_android_version_code
-  gradle_file_path = gradle_file.to_s
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   gradle_file.match(/versionCode\s+(\d+)/)[1]
 end
 
 def get_android_version_name
-  gradle_file_path = gradle_file.to_s
+  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file = File.read(gradle_file_path)
   version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
   if version_name_match
@@ -141,6 +140,8 @@ platform :ios do
     end
   end
   
+
+  
 end
 
 platform :android do
@@ -149,12 +150,15 @@ platform :android do
     increment_version_code
   end
 
+  version_code = get_android_version_code
+  version_name = get_android_version_name
+
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
     gradle(
       task: "clean assembleRelease",
-      project_dir: android_dir.to_s,
+      project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
