@@ -88,42 +88,32 @@ platform :ios do
     desc 'Build the iOS app'
     lane :build do
       inc_ver_ios
-  
+    
       # Ensure directories are created
       sh 'mkdir -p ./certs'
       sh 'mkdir -p ./profiles'
-  
+    
       # Decode and save certificate and provisioning profile
       File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
       File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
+    
+      # Unlock the default keychain
+      sh "security unlock-keychain -p ${P12_PASSWORD} ~/Library/Keychains/login.keychain-db"
   
-      # Create a new keychain
-      sh "security create-keychain -p ${P12_PASSWORD} build.keychain"
-      sh "security list-keychains -d user -s build.keychain" # Debugging: List keychains
-  
-      # Set the new keychain as the default
-      sh "security default-keychain -s build.keychain"
-  
-      # Unlock the keychain
-      sh "security unlock-keychain -p ${P12_PASSWORD} build.keychain"
-  
-      # Import the certificate into the new keychain
-      sh "security import ./certs/Certificates12Mob.p12 -k build.keychain -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
-  
-      # Set keychain permissions
-      sh "security set-key-partition-list -S apple-tool:,apple: -s -k ${P12_PASSWORD} build.keychain" # Use the correct keychain name
-  
+      # Import the certificate into the existing default keychain
+      sh "security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
+    
       # Copy provisioning profile to the appropriate directory
       provisioning_profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
       sh "mkdir -p '#{provisioning_profiles_dir}'"
       sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
-  
+    
       # Install CocoaPods dependencies
       cocoapods(
         clean_install: true,
         podfile: "./ios/Podfile"
       )
-  
+    
       # Build the app
       build_app(
         workspace: "./ios/#{@package['name']}.xcworkspace",
@@ -140,6 +130,7 @@ platform :ios do
         }
       )
     end
+  
   end
   
 
