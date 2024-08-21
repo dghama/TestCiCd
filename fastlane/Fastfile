@@ -1,21 +1,5 @@
 require 'pathname'
 
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
-
 default_platform(:android)
 
 before_all do
@@ -27,11 +11,9 @@ before_all do
 
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
-  puts "Version Type: #{@version_type}"
   puts "App Name: #{@app_name}"
   puts "Platform: #{@platform}"
 end
-
 
 def project_dir
   Pathname.new(File.expand_path('..', Dir.pwd))
@@ -48,30 +30,25 @@ end
 def gradle_file
   android_dir.join('app', 'build.gradle')
 end
+
 def increment_version_code
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
   gradle_file_content = File.read(gradle_file_path)
 
-  # Increment versionCode
   current_version_code = gradle_file_content.match(/versionCode\s+(\d+)/)[1].to_i
   new_version_code = current_version_code + 1
   updated_gradle_file_content = gradle_file_content.gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
 
-  # Update versionName
   if @versionName
-    # If @versionName is provided, update it with the new version code
     updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{@versionName}.#{new_version_code}\"")
   else
-    # If @versionName is not provided, append the version code to the current versionName
     current_version_name = gradle_file_content.match(/versionName\s+"([^"]*)"/)[1]
     new_version_name = "#{current_version_name}.#{new_version_code}"
     updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
   end
 
-  # Write the updated content back to the Gradle file
   File.write(gradle_file_path, updated_gradle_file_content)
 
-  # Update the package.json version
   package_json_path = project_dir.join('package.json')
   package_json = JSON.parse(File.read(package_json_path))
   package_json['version'] = @versionName || new_version_name
@@ -79,7 +56,6 @@ def increment_version_code
   
   new_version_code
 end
-
 
 def get_android_version_code
   gradle_file_path = android_dir.join('app', 'build.gradle').to_s
@@ -99,14 +75,13 @@ def get_android_version_name
   end
 end
 
-
-
 platform :ios do
   desc "Clean the project before building"
   lane :clean do
-    xcclean(
+    xcodebuild(
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
+      clean: true
     )
   end
 
@@ -118,34 +93,36 @@ platform :ios do
   end
 
   desc 'Build the iOS app'
-lane :build do
-  clean
-  inc_ver_ios
-  cocoapods(
-    clean_install: true,
-    podfile: "./ios/Podfile",
-  )
-  
-  build_app(
-    workspace: "./ios/#{@package['name']}.xcworkspace",
-    scheme: @package['name'],
-    configuration: @environment,
-    output_name: "#{@package['name']}.ipa",
-    export_options: {
-      export_method: "ad-hoc",
-      codesigning_identity: "iPhone Distribution:  (45F3786CHA)"
-    }
-  )
+  lane :build do
+    clean
+    inc_ver_ios
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile",
+    )
+    
+    build_app(
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      configuration: @environment,
+      output_name: "#{@package['name']}.ipa",
+      export_options: {
+        export_method: "ad-hoc",
+        provisioning_profiles: {
+          "com.mobelite.testRNcicd" => "RNTestProfile"
+        },
+        signing_style: "manual",
+        export_team_id: "45F3786CHA"
+      }
+    )
+  end
 end
-end
-
 
 platform :android do
   desc 'Increment versionCode and set versionName to package.json version.'
   private_lane :inc_ver_and do
     increment_version_code
   end
-
 
   version_code = get_android_version_code
   version_name = get_android_version_name
@@ -167,7 +144,6 @@ platform :android do
     )
   end
 end
-
 
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
