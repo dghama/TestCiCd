@@ -107,7 +107,11 @@ jobs:
 
       - name: Build ${{ matrix.platform }}
         run: |
-          bundle exec fastlane ${{ matrix.platform }} build
+          bundle exec fastlane clean
+          cd ios 
+          bundle exec pod install
+          bundle exec fastlane ${{ matrix.platform }} build  -v
+
         shell: bash
         working-directory: ${{ github.workspace }}
         env:

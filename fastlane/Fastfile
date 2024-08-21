@@ -77,7 +77,6 @@ end
 
 platform :ios do
 
-
   desc 'iOS: Increment build number'
   private_lane :inc_ver_ios do
     increment_build_number(
@@ -85,7 +84,7 @@ platform :ios do
     )
   end
 
-    desc 'Build the iOS app'
+  desc 'Build the iOS app'
     lane :build do
       inc_ver_ios
     
