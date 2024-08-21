@@ -122,10 +122,8 @@ platform :ios do
         method: "ad-hoc",
         provisioningProfiles: {
           "com.mobelite.testRNcicd" => "RNTestProfile"
-
-          
-        }
-     
+        },
+        signingCertificate: "Certificates12Mob",
         signingStyle: "manual"
       }
     )
