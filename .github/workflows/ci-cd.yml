@@ -105,6 +105,11 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
+      - name: Create Directories
+        run: |
+          mkdir -p ./certs
+          mkdir -p ./profiles
+
       - name: Decode and Save .p12 Certificate
         run: echo "${{ secrets.DISTRIBUTION_CERTIFICATE }}" | base64 --decode > ./certs/Certificates12Mob.p12
 
