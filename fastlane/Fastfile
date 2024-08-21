@@ -85,8 +85,6 @@ platform :ios do
     )
   end
 
-  platform :ios do
-    platform :ios do
       desc 'Build the iOS app'
       lane :build do
         inc_ver_ios
@@ -136,11 +134,7 @@ platform :ios do
             export_team_id: "45F3786CHA"
           }
         )
-      end
     end
-  
-
-  
 end
 
 platform :android do
