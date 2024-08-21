@@ -87,11 +87,6 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -105,32 +100,13 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
-      - name: Create Directories
-        run: |
-          mkdir -p ./certs
-          mkdir -p ./profiles
-
-      - name: Decode and Save .p12 Certificate
-        run: echo "${{ secrets.DISTRIBUTION_CERTIFICATE }}" | base64 --decode > ./certs/Certificates12Mob.p12
-
-      - name: Decode and Save Provisioning Profile
-        run: echo "${{ secrets.PROVISIONING_PROFILE }}" | base64 --decode > ./profiles/RNTestProfile.mobileprovision
-
-      - name: Import Certificate
-        run: |
-          security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp ./profiles/RNTestProfile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
         env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

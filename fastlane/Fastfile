@@ -1,9 +1,10 @@
 require 'pathname'
+require 'json'
 
 default_platform(:android)
 
 before_all do
-  @package = load_json(json_path: "package.json")
+  @package = JSON.parse(File.read("package.json"))
   @environment = ENV["ENVIRONMENT"] || "staging"
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
@@ -32,7 +33,7 @@ def gradle_file
 end
 
 def increment_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+  gradle_file_path = gradle_file.to_s
   gradle_file_content = File.read(gradle_file_path)
 
   current_version_code = gradle_file_content.match(/versionCode\s+(\d+)/)[1].to_i
@@ -53,18 +54,18 @@ def increment_version_code
   package_json = JSON.parse(File.read(package_json_path))
   package_json['version'] = @versionName || new_version_name
   File.write(package_json_path, JSON.pretty_generate(package_json))
-  
+
   new_version_code
 end
 
 def get_android_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+  gradle_file_path = gradle_file.to_s
   gradle_file = File.read(gradle_file_path)
   gradle_file.match(/versionCode\s+(\d+)/)[1]
 end
 
 def get_android_version_name
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
+  gradle_file_path = gradle_file.to_s
   gradle_file = File.read(gradle_file_path)
   version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
   if version_name_match
@@ -92,30 +93,52 @@ platform :ios do
     )
   end
 
-  desc 'Build the iOS app'
-  lane :build do
-    clean
-    inc_ver_ios
+  platform :ios do
+    desc 'Build the iOS app'
+    lane :build do
+      clean
+      inc_ver_ios
   
-    cocoapods(
-      clean_install: true,
-      podfile: "./ios/Podfile"
-    )
+      # Ensure directories are created
+      sh 'mkdir -p ./certs'
+      sh 'mkdir -p ./profiles'
   
-    build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
-      configuration: @environment,
-      output_name: "#{@package['name']}.ipa",
-      export_options: {
-        export_method: "ad-hoc",  # Ensure this matches the method used for provisioning profile
-        provisioning_profiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"  # Ensure this matches the App ID and Profile Name
-        },
-        signing_style: "manual",  # Use manual signing if not using automatic signing
-        export_team_id: "45F3786CHA"  # Ensure this is the correct team ID
-      }
-    )
+      # Decode and save certificate and provisioning profile
+      File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
+      File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
+  
+      # Create a new keychain and use it
+      sh "security create-keychain -p ${P12_PASSWORD} build.keychain"
+      sh "security default-keychain -s build.keychain"
+      sh "security unlock-keychain -p ${P12_PASSWORD} build.keychain"
+  
+      # Import certificate into the new keychain
+      sh "security import ./certs/Certificates12Mob.p12 -k build.keychain -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
+  
+      # Copy provisioning profile to the appropriate directory
+      sh 'mkdir -p ~/Library/MobileDevice/Provisioning\\ Profiles'
+      sh 'cp ./profiles/RNTestProfile.mobileprovision ~/Library/MobileDevice/Provisioning\\ Profiles/'
+  
+      cocoapods(
+        clean_install: true,
+        podfile: "./ios/Podfile"
+      )
+  
+      build_app(
+        workspace: "./ios/#{@package['name']}.xcworkspace",
+        scheme: @package['name'],
+        configuration: @environment,
+        output_name: "#{@package['name']}.ipa",
+        export_options: {
+          export_method: "ad-hoc",
+          provisioning_profiles: {
+            "com.mobelite.testRNcicd" => "RNTestProfile"
+          },
+          signing_style: "manual",
+          export_team_id: "45F3786CHA"
+        }
+      )
+    end
   end
   
 end
@@ -126,15 +149,12 @@ platform :android do
     increment_version_code
   end
 
-  version_code = get_android_version_code
-  version_name = get_android_version_name
-
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
     gradle(
       task: "clean assembleRelease",
-      project_dir: "android/",
+      project_dir: android_dir.to_s,
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
