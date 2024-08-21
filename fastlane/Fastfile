@@ -108,6 +108,7 @@ platform :ios do
       sh "mkdir -p '#{provisioning_profiles_dir}'"
       sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
     
+
   
       # Install CocoaPods dependencies
       cocoapods(
@@ -122,12 +123,11 @@ platform :ios do
         configuration: @environment,
         output_name: "#{@package['name']}.ipa",
         export_options: {
-          export_method: "ad-hoc",
+          method: "ad-hoc",
           provisioning_profiles: {
             "com.mobelite.testRNcicd" => "RNTestProfile"
           },
-          signing_style: "manual",
-          export_team_id: "45F3786CHA"
+ 
         }
       )
     end
