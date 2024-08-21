@@ -108,8 +108,6 @@ platform :ios do
       sh "mkdir -p '#{provisioning_profiles_dir}'"
       sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
     
-      # Clean the build directory
-      sh "xcodebuild clean -workspace ./ios/#{@package['name']}.xcworkspace -scheme #{@package['name']} -configuration #{@environment}"
   
       # Install CocoaPods dependencies
       cocoapods(
