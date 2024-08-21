@@ -76,7 +76,6 @@ def get_android_version_name
 end
 
 platform :ios do
-
   desc 'iOS: Increment build number'
   private_lane :inc_ver_ios do
     increment_build_number(
@@ -85,53 +84,53 @@ platform :ios do
   end
 
   desc 'Build the iOS app'
-    lane :build do
-      inc_ver_ios
-    
-      # Ensure directories are created
-      sh 'mkdir -p ./certs'
-      sh 'mkdir -p ./profiles'
-    
-      # Decode and save certificate and provisioning profile
-      File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
-      File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
-    
-      # Unlock the default keychain
-      sh "security unlock-keychain -p ${P12_PASSWORD} ~/Library/Keychains/login.keychain-db"
-    
-      # Import the certificate into the existing default keychain
-      sh "security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
-    
-      # Copy provisioning profile to the appropriate directory
-      provisioning_profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
-      sh "mkdir -p '#{provisioning_profiles_dir}'"
-      sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
-    
+  lane :build do
+    inc_ver_ios
 
-  
-      # Install CocoaPods dependencies
-      cocoapods(
-        clean_install: true,
-        podfile: "./ios/Podfile"
-      )
-    
-      # Build the app
-      build_app(
-        workspace: "./ios/#{@package['name']}.xcworkspace",
-        scheme: @package['name'],
-        configuration: @environment,
-        output_name: "#{@package['name']}.ipa",
-        export_options: {
-          method: "ad-hoc",
-          provisioning_profiles: {
-            "com.mobelite.testRNcicd" => "RNTestProfile"
-          },
- 
+    # Ensure directories are created
+    sh 'mkdir -p ./certs'
+    sh 'mkdir -p ./profiles'
+
+    # Decode and save certificate and provisioning profile
+    File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
+    File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
+
+    # Unlock the default keychain
+    sh "security unlock-keychain -p ${P12_PASSWORD} ~/Library/Keychains/login.keychain-db"
+
+    # Import the certificate into the existing default keychain
+    sh "security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
+
+    # Copy provisioning profile to the appropriate directory
+    provisioning_profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    sh "mkdir -p '#{provisioning_profiles_dir}'"
+    sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
+
+    # Install CocoaPods dependencies
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile"
+    )
+
+    # Build the app
+    build_app(
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      configuration: @environment,
+      output_name: "#{@package['name']}.ipa",
+      export_options: {
+        method: "ad-hoc",
+        provisioningProfiles: {
+          "com.mobelite.testRNcicd" => "RNTestProfile"
+
+          
         }
-      )
-    end
-
+     
+        signingStyle: "manual"
+      }
+    )
   end
+end
   
 
 platform :android do
