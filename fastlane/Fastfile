@@ -83,50 +83,60 @@ platform :ios do
     )
   end
 
+  lane :decode_p12 do
+    p12_base64 = ENV["DISTRIBUTION_CERTIFICATE"]
+    p12_path = "/tmp/Certificates12Mob.p12"
+  
+    File.open(p12_path, "wb") do |file|
+      file.write(Base64.decode64(p12_base64))
+    end
+  
+    p12_path
+  end
+
+  lane :decode_provisioning_profile do
+    profile_base64 = ENV["PROVISIONING_PROFILE"]
+    profile_path = "/tmp/RNTestProfile.mobileprovision"
+  
+    File.open(profile_path, "wb") do |file|
+      file.write(Base64.decode64(profile_base64))
+    end
+  
+    profile_path
+  end
+
+  lane :import_certs do
+    p12_path = decode_p12
+    profile_path = decode_provisioning_profile
+  
+    import_certificate(
+      certificate_path: p12_path,
+      certificate_password: "${P12_PASSWORD}"
+    )
+  
+    import_provisioning_profile(
+      profile_name: "RNTestProfile",
+      profile_path: profile_path
+    )
+  end
+
   desc 'Build the iOS app'
   lane :build do
     inc_ver_ios
-
-    # Ensure directories are created
-    sh 'mkdir -p ./certs'
-    sh 'mkdir -p ./profiles'
-
-    # Decode and save certificate and provisioning profile
-    File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
-    File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
-
-    # Unlock the default keychain
-    sh "security unlock-keychain -p ${P12_PASSWORD} ~/Library/Keychains/login.keychain-db"
-
-    # Import the certificate into the existing default keychain
-    sh "security import ./certs/Certificates12Mob.p12 -k ~/Library/Keychains/login.keychain-db -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
-
-    # Copy provisioning profile to the appropriate directory
-    provisioning_profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
-    sh "mkdir -p '#{provisioning_profiles_dir}'"
-    sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
-
+    import_certs
     # Install CocoaPods dependencies
     cocoapods(
       clean_install: true,
       podfile: "./ios/Podfile"
     )
 
-    # Build the app
-    build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
+    gym(
+      project: "#{@package['name']}.xcworkspace",
       scheme: @package['name'],
-      configuration: @environment,
+      export_method: "ad-hoc",
       output_name: "#{@package['name']}.ipa",
-      export_options: {
-        method: "ad-hoc",
-        provisioningProfiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
-        },
-        signingCertificate: "Certificates12Mob",
-        signingStyle: "manual"
-      }
     )
+ 
   end
 end
   
