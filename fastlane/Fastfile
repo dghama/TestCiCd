@@ -76,14 +76,7 @@ def get_android_version_name
 end
 
 platform :ios do
-  desc "Clean the project before building"
-  lane :clean do
-    xcodebuild(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
-      clean: true
-    )
-  end
+
 
   desc 'iOS: Increment build number and set the version to package.json version.'
   private_lane :inc_ver_ios do
@@ -93,52 +86,58 @@ platform :ios do
   end
 
   platform :ios do
-    desc 'Build the iOS app'
-    lane :build do
-      clean
-      inc_ver_ios
-  
-      # Ensure directories are created
-      sh 'mkdir -p ./certs'
-      sh 'mkdir -p ./profiles'
-  
-      # Decode and save certificate and provisioning profile
-      File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
-      File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
-  
-      # Create a new keychain and use it
-      sh "security create-keychain -p ${P12_PASSWORD} build.keychain"
-      sh "security default-keychain -s build.keychain"
-      sh "security unlock-keychain -p ${P12_PASSWORD} build.keychain"
-  
-      # Import certificate into the new keychain
-      sh "security import ./certs/Certificates12Mob.p12 -k build.keychain -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
-  
-      # Copy provisioning profile to the appropriate directory
-      sh 'mkdir -p ~/Library/MobileDevice/Provisioning\\ Profiles'
-      sh 'cp ./profiles/RNTestProfile.mobileprovision ~/Library/MobileDevice/Provisioning\\ Profiles/'
-  
-      cocoapods(
-        clean_install: true,
-        podfile: "./ios/Podfile"
-      )
-  
-      build_app(
-        workspace: "./ios/#{@package['name']}.xcworkspace",
-        scheme: @package['name'],
-        configuration: @environment,
-        output_name: "#{@package['name']}.ipa",
-        export_options: {
-          export_method: "ad-hoc",
-          provisioning_profiles: {
-            "com.mobelite.testRNcicd" => "RNTestProfile"
-          },
-          signing_style: "manual",
-          export_team_id: "45F3786CHA"
-        }
-      )
+    platform :ios do
+      desc 'Build the iOS app'
+      lane :build do
+        inc_ver_ios
+      
+        # Ensure directories are created
+        sh 'mkdir -p ./certs'
+        sh 'mkdir -p ./profiles'
+      
+        # Decode and save certificate and provisioning profile
+        File.write('./certs/Certificates12Mob.p12', Base64.decode64(ENV['DISTRIBUTION_CERTIFICATE']))
+        File.write('./profiles/RNTestProfile.mobileprovision', Base64.decode64(ENV['PROVISIONING_PROFILE']))
+      
+        # Create a new keychain and use it
+        sh "security create-keychain -p ${P12_PASSWORD} build.keychain"
+        sh "security default-keychain -s build.keychain"
+        sh "security unlock-keychain -p ${P12_PASSWORD} build.keychain"
+      
+        # Import certificate into the new keychain
+        sh "security import ./certs/Certificates12Mob.p12 -k build.keychain -P \"${P12_PASSWORD}\" -T /usr/bin/codesign"
+      
+        # Copy provisioning profile to the appropriate directory
+        provisioning_profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+        sh "mkdir -p '#{provisioning_profiles_dir}'"
+        sh "cp ./profiles/RNTestProfile.mobileprovision '#{provisioning_profiles_dir}'"
+    
+        # Ensure the keychain has the correct permissions
+        sh "security set-key-partition-list -S apple-tool:,apple: -s -k ${P12_PASSWORD} /Library/Keychains/login.keychain-db"
+    
+        # Install CocoaPods dependencies
+        cocoapods(
+          clean_install: true,
+          podfile: "./ios/Podfile"
+        )
+      
+        # Build the app
+        build_app(
+          workspace: "./ios/#{@package['name']}.xcworkspace",
+          scheme: @package['name'],
+          configuration: @environment,
+          output_name: "#{@package['name']}.ipa",
+          export_options: {
+            export_method: "ad-hoc",
+            provisioning_profiles: {
+              "com.mobelite.testRNcicd" => "RNTestProfile"
+            },
+            signing_style: "manual",
+            export_team_id: "45F3786CHA"
+          }
+        )
+      end
     end
-  end
   
 
   
