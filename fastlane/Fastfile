@@ -154,10 +154,10 @@ platform :ios do
       export_options: {
         method: "ad-hoc",
         provisioningProfiles: {
-          "com.mobelite.testR,Ncicd" => "RNTestProfile"
+          "com.mobelite.testRNcicd" => "RNTestProfile"
         },
         signingStyle: "manual"
-      }
+      },
       xcargs: "-allowProvisioningUpdates",
       export_xcargs: "-allowProvisioningUpdates"
     )
