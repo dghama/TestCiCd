@@ -115,10 +115,9 @@ platform :ios do
       keychain_name: "login.keychain"
     )
   
-    import_provisioning_profile(
-      profile_name: "RNTestProfile",
-      profile_path: profile_path
-    )
+    install_provisioning_profile(
+    path: profile_path # Use the install_provisioning_profile action
+  )
   end
   
 
