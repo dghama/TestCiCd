@@ -151,17 +151,16 @@ platform :ios do
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
       output_name: "#{@package['name']}.ipa",
-      export_method: "ad-hoc-testing",
       export_options: {
+        method: "ad-hoc",
         provisioningProfiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
+          "com.mobelite.testR,Ncicd" => "RNTestProfile"
         },
         signingStyle: "manual"
-      },
+      }
       xcargs: "-allowProvisioningUpdates",
       export_xcargs: "-allowProvisioningUpdates"
     )
-    
   end
 end
 
