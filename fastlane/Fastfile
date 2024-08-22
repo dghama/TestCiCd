@@ -111,7 +111,8 @@ platform :ios do
   
     import_certificate(
       certificate_path: p12_path,
-      certificate_password: "${P12_PASSWORD}"
+      certificate_password: ENV["P12_PASSWORD"],
+      keychain_name: "login.keychain"
     )
   
     import_provisioning_profile(
@@ -119,6 +120,7 @@ platform :ios do
       profile_path: profile_path
     )
   end
+  
 
   desc 'Build the iOS app'
   lane :build do
