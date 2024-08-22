@@ -140,9 +140,12 @@ platform :ios do
   lane :build do
     inc_ver_ios
     import_certs
-    
     xcode_select("/Applications/Xcode_15.3.app")
-
+    # Install CocoaPods dependencies
+        cocoapods(
+          clean_install: true,
+          podfile: "./ios/Podfile"
+        )
     # Build the app using gym
     gym(
       workspace: "./ios/#{@package['name']}.xcworkspace",
