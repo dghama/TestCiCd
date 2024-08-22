@@ -16,7 +16,7 @@ runs:
     - name: Check build path contents
       run: |
         echo "Contents of the build path:"
-        ls -la "${{ inputs.build_dir }}"
+        ls -la "${{ inputs.build_dir }}/generated"
       shell: bash
 
     - name: Setup deploy environment for Android

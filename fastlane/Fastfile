@@ -140,27 +140,47 @@ platform :ios do
   lane :build do
     inc_ver_ios
     import_certs
-    # Install CocoaPods dependencies
-    cocoapods(
-      clean_install: true,
-      podfile: "./ios/Podfile"
-    )
 
+   # Define cache key
+   podfile_lockfile_path = "ios/Podfile.lock"
+   cache_key = "ios-pods-#{Digest::SHA256.file(podfile_lockfile_path).hexdigest}"
 
+   # Try to restore cache
+   pod_cache_hit = Actions.lane_context[SharedValues::CACHE_RESTORED_FROM_KEY] == cache_key
 
-    # Build the app
-    build_app(
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
-      output_name: "#{@package['name']}.ipa",
-      export_options: {
-        method: "ad-hoc",
-        provisioningProfiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
-        },
-        signingStyle: "manual"
-      }
-    )
+   # Install CocoaPods dependencies if cache miss
+   cocoapods(
+     clean_install: !pod_cache_hit,
+     podfile: "./ios/Podfile"
+   )
+
+   # Save cache if it was a miss
+   unless pod_cache_hit
+     cache_push(
+       path: "ios/Pods",
+       key: cache_key
+     )
+   end
+
+  # Build the app using gym
+  gym(
+    workspace: "./ios/#{@package['name']}.xcworkspace",
+    scheme: @package['name'],
+    output_name: "#{@package['name']}.ipa",
+    export_method: "ad-hoc",
+    export_options: {
+      provisioningProfiles: {
+        "com.mobelite.testRNcicd" => "RNTestProfile"
+      },
+      signingStyle: "manual"
+    },
+    clean: true,
+    silent: true,
+    suppress_xcode_output: true,
+    disable_xcpretty: true,
+    xcargs: "-allowProvisioningUpdates",
+    export_xcargs: "-allowProvisioningUpdates"
+  )
  
   end
 end

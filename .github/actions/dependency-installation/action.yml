@@ -24,23 +24,23 @@ runs:
       run: yarn install --frozen-lockfile
       shell: bash
 
-    # - name: 🧹 Clean CocoaPods cache
-    #   run: pod cache clean --all
-    #   shell: bash
+    - name: 🧹 Clean CocoaPods cache
+      run: pod cache clean --all
+      shell: bash
 
-    # - name: Cache CocoaPods
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: |
-    #       ios/Pods
-    #       ios/Podfile.lock
-    #     key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-pods-
+    - name: Cache CocoaPods
+      uses: actions/cache@v4
+      with:
+        path: |
+          ios/Pods
+          ios/Podfile.lock
+        key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
 
-    # - name: 📦 Install CocoaPods dependencies
-    #   run: |
-    #     yarn clean-ios
-    #     cd ios
-    #     pod install
-    #   shell: bash
+    - name: 📦 Install CocoaPods dependencies
+      run: |
+        yarn clean-ios
+        cd ios
+        pod install
+      shell: bash
