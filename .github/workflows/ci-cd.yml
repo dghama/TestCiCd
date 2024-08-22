@@ -81,27 +81,19 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     permissions:
       contents: write
     env:
       PLATFORM: ${{ matrix.platform }}
       ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+      # Other environment variables...
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-        # - name: Set up Xcode
-        #   run: |
-        #     sudo xcode-select --switch /Applications/Xcode_15.3.app
-        #     sudo xcodebuild -license accept
-        # shell: bash
+
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
@@ -112,7 +104,6 @@ jobs:
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
-
         shell: bash
         working-directory: ${{ github.workspace }}
         env:
@@ -123,8 +114,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
-          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
+          name: '${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
+          path: '${{ matrix.platform }}-build_artifacts'
           if-no-files-found: error
           compression-level: 6
           overwrite: false
@@ -139,7 +130,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
@@ -157,16 +148,16 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ github.workspace }}/build_artifacts
+          name: '${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}'
+          path: '${{ matrix.platform }}-build_artifacts'
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: '${{ github.workspace }}/build_artifacts'
+          build_dir: '${{ matrix.platform }}-build_artifacts'
 
-      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} the application on MStore
+      - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           result=$(bundle exec fastlane upload_app_to_mstore)
@@ -176,7 +167,6 @@ jobs:
 
     outputs:
       version_url: ${{ steps.setup_deploy_env.outputs.VERSION_URL }}
-
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
