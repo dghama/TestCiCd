@@ -114,14 +114,14 @@ jobs:
           rm -rf "${HOME}/Library/Developer/Xcode/DerivedData"
           rm -rf "${HOME}/Library/Caches/com.apple.dt.Xcode"
 
-      - name: Clean project and reinstall dependencies
-        run: |
-          cd ios && pod deintegrate && rm -rf Pods && rm -rf build && pod install && cd ..
+      # - name: Clean project and reinstall dependencies
+      #   run: |
+      #     cd ios && pod deintegrate && rm -rf Pods && rm -rf build && pod install && cd ..
 
-      - name: Disable Pods caching
-        run: |
-          rm -rf "${GITHUB_WORKSPACE}/ios/Pods"
-          rm -rf "${GITHUB_WORKSPACE}/ios/Podfile.lock"
+      # - name: Disable Pods caching
+      #   run: |
+      #     rm -rf "${GITHUB_WORKSPACE}/ios/Pods"
+      #     rm -rf "${GITHUB_WORKSPACE}/ios/Podfile.lock"
 
       - name: Build ${{ matrix.platform }}
         run: |
