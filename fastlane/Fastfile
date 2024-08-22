@@ -109,16 +109,24 @@ platform :ios do
     p12_path = decode_p12
     profile_path = decode_provisioning_profile
   
+    # Unlock the keychain if necessary
+    unlock_keychain(
+      path: "/Users/runner/Library/Keychains/login.keychain-db",
+      password: ''
+    )
+  
     import_certificate(
       certificate_path: p12_path,
       certificate_password: ENV["P12_PASSWORD"],
-      keychain_name: "login.keychain"
+      keychain_name: "login.keychain",
+      keychain_password: ''
     )
   
     install_provisioning_profile(
-    path: profile_path # Use the install_provisioning_profile action
-  )
+      path: profile_path
+    )
   end
+  
   
 
   desc 'Build the iOS app'
