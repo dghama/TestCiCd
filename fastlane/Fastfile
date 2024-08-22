@@ -151,7 +151,7 @@ platform :ios do
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
       output_name: "#{@package['name']}.ipa",
-      export_method: "ad-hoc",
+      export_method: "ad-hoc-testing",
       export_options: {
         provisioningProfiles: {
           "com.mobelite.testRNcicd" => "RNTestProfile"
@@ -161,6 +161,7 @@ platform :ios do
       xcargs: "-allowProvisioningUpdates",
       export_xcargs: "-allowProvisioningUpdates"
     )
+    
   end
 end
 
