@@ -97,22 +97,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Xcode
-        run: |
-          sudo xcode-select --switch /Applications/Xcode_15.3.app
-          sudo xcodebuild -license accept
-        shell: bash
+
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
       - name: Set up environment
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
-
-      - name: Clean DerivedData
-        run: |
-          rm -rf "${HOME}/Library/Developer/Xcode/DerivedData"
-          rm -rf "${HOME}/Library/Caches/com.apple.dt.Xcode"
 
       # - name: Clean project and reinstall dependencies
       #   run: |

@@ -140,6 +140,8 @@ platform :ios do
   lane :build do
     inc_ver_ios
     import_certs
+    
+    xcode_select("/Applications/Xcode_15.3.app")
 
     # Build the app using gym
     gym(
@@ -153,10 +155,6 @@ platform :ios do
         },
         signingStyle: "manual"
       },
-      clean: true,
-      silent: true,
-      suppress_xcode_output: true,
-      disable_xcpretty: true,
       xcargs: "-allowProvisioningUpdates",
       export_xcargs: "-allowProvisioningUpdates"
     )
