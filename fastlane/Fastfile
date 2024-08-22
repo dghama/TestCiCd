@@ -119,7 +119,6 @@ platform :ios do
       certificate_path: p12_path,
       certificate_password: ENV["P12_PASSWORD"],
       keychain_name: "login.keychain",
-      keychain_password: ''
     )
   
     install_provisioning_profile(
