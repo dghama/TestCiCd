@@ -87,7 +87,14 @@ jobs:
     env:
       PLATFORM: ${{ matrix.platform }}
       ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-      # Other environment variables...
+      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+      DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+      PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -106,10 +113,6 @@ jobs:
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
-        env:
-          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
-          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

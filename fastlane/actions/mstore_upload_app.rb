@@ -12,31 +12,39 @@ module Fastlane
         command << "-F \"applicationToken=#{params[:app_dev_token]}\""
         command << "-F \"fileInfo=@#{params[:info_file]}\""
         command << "-F \"file=@#{params[:build_file]}\""
+        command << "-s"  # Add the -s flag to suppress non-essential output
 
         result = Actions.sh(command.join(" "), log: false)
 
-        # Parse the JSON response
-        response = JSON.parse(result)
+        UI.message("Raw response from Mstore: #{result}")
 
-        if response["success"]
-          version_token = response["versionToken"]
-          version_url = "https://store.mobelite.fr/console/version/#{version_token}/download"
+        begin
+          # Parse the JSON response
+          response = JSON.parse(result)
+
+          if response["success"]
+            version_token = response["versionToken"]
+            version_url = "https://store.mobelite.fr/console/version/#{version_token}/download"
+            
+            if ENV["PLATFORM"] == "ios"
+              ENV["IOS_VERSION_TOKEN"] = version_url
+            else
+              ENV["ANDROID_VERSION_TOKEN"] = version_url
+            end
           
-          if ENV["PLATFORM"] == "ios"
-            ENV["IOS_VERSION_TOKEN"] = version_url
+            return {
+              success: true,
+              version_url: version_url
+            }
           else
-            ENV["ANDROID_VERSION_TOKEN"] = version_url
+            UI.error("Failed to upload app to Mstore: #{response['msg']}")
+            return { success: false }
           end
-        
-          return {
-            success: true,
-            version_url: version_url
-          }
-        else
-          UI.error("Failed to upload app to Mstore: #{response['msg']}")
-          return { success: false }
+        rescue JSON::ParserError => e
+          UI.error("Failed to parse JSON response: #{e.message}")
+          UI.message("Raw response: #{result}")
+          return { success: false, error: e.message }
         end
-        return result
       end
 
       def self.description
@@ -54,11 +62,11 @@ module Fastlane
                                        description: "App dev token for Mstore",
                                        is_string: true),
           FastlaneCore::ConfigItem.new(key: :info_file,
-                                       env_name: "info_file",
+                                       env_name: "INFO_FILE",
                                        description: "Path to the output-metadata.json file",
                                        is_string: true),
           FastlaneCore::ConfigItem.new(key: :build_file,
-                                       env_name: "build_file",
+                                       env_name: "BUILD_FILE",
                                        description: "Path to the APK file",
                                        is_string: true)
         ]
