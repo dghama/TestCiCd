@@ -141,31 +141,6 @@ platform :ios do
     inc_ver_ios
     import_certs
 
-    # Define cache key
-    podfile_lockfile_path = "ios/Podfile.lock"
-    cache_key = if File.exist?(podfile_lockfile_path)
-                  "ios-pods-#{Digest::SHA256.file(podfile_lockfile_path).hexdigest}"
-                else
-                  "ios-pods-initial"
-                end
-
-    # Try to restore cache
-    pod_cache_hit = Actions.lane_context[SharedValues::CACHE_RESTORED_FROM_KEY] == cache_key
-
-    # Install CocoaPods dependencies
-    cocoapods(
-      clean_install: !pod_cache_hit,
-      podfile: "./ios/Podfile"
-    )
-
-    # Save cache if it was a miss and Podfile.lock now exists
-    if !pod_cache_hit && File.exist?(podfile_lockfile_path)
-      cache_push(
-        path: "ios/Pods",
-        key: "ios-pods-#{Digest::SHA256.file(podfile_lockfile_path).hexdigest}"
-      )
-    end
-
     # Build the app using gym
     gym(
       workspace: "./ios/#{@package['name']}.xcworkspace",
