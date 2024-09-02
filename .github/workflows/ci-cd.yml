@@ -121,6 +121,8 @@ jobs:
           path: '${{ matrix.platform }}-build_artifacts/*' # Use wildcard if there are multiple files
           compression-level: 6
           overwrite: false
+          retention-days: 5  # or however long you need
+
 
     outputs:
       build_dir: ${{ steps.setup_env.outputs.BUILD_DIR }}
@@ -147,11 +149,22 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            })
+            console.log(artifacts)
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ needs.build.outputs.artifact_name }}'
+          name: '${{ matrix.platform }}-*'
           path: '${{ matrix.platform }}-build_artifacts'
+
 
       - name: Set up deploy environment
         id: setup_deploy_env
