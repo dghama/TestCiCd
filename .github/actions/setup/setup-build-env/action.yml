@@ -17,7 +17,7 @@ runs:
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
           echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
-          echo "BUILD_DIR=${{ github.workspace }}/ios/build" >> $GITHUB_OUTPUT
+         echo "BUILD_DIR=${{ github.workspace }}/ios/build/Release-iphoneos" >> $GITHUB_OUTPUT
         else
           echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1
@@ -27,7 +27,7 @@ runs:
     - name: Set artifact name
       id: set_artifact_name
       run: |
-        ARTIFACT_NAME="${{ env.PLATFORM }}-${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
+        ARTIFACT_NAME="${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
         echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
       shell: bash
 
