@@ -13,6 +13,13 @@ runs:
         echo "Build directory: ${{ inputs.build_dir }}"
       shell: bash
 
+    - name: Decompress build artifacts if Android
+      if: ${{ env.PLATFORM == 'android' }}
+      run: |
+        echo "Decompressing Android build artifacts"
+        tar -xzf "${{ inputs.build_dir }}/build_artifacts_{{ env.PLATFORM }}.tar.gz" -C "${{ inputs.build_dir }}"
+      shell: bash
+
     - name: Check build path contents
       run: |
         echo "Contents of the build path:"
