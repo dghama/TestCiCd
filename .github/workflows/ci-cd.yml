@@ -114,15 +114,11 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: List build artifacts
-        run: ls -R ${{matrix.platform}}-build_artifacts
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: '${{ matrix.platform }}-${{ github.sha }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
           path: '${{ matrix.platform }}-build_artifacts/*' # Use wildcard if there are multiple files
-          if-no-files-found: error
           compression-level: 6
           overwrite: false
 
