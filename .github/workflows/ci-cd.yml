@@ -108,25 +108,35 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
+      - name: Ensure build directory exists
+        run: mkdir -p build_artifacts/${{ matrix.platform }}
+        shell: bash
+
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: Upload artifact
-        if: success() && steps.build.outcome == 'success'
+      - name: List build directory contents for debugging
+        run: ls -alh build_artifacts/${{ matrix.platform }}
+        shell: bash
+
+      - name: Compress build artifacts
+        run: |
+          tar -czf build_artifacts_${{ matrix.platform }}.tar.gz -C build_artifacts/${{ matrix.platform }} .
+        shell: bash
+
+      - name: Upload compressed artifact
         uses: actions/upload-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
-          path: 'build_artifacts/${{ matrix.platform }}'
-          if-no-files-found: ignore
-          compression-level: 6
-          overwrite: false
+          name: '${{ matrix.platform }}-${{ github.run_id }}'
+          path: 'build_artifacts_${{ matrix.platform }}.tar.gz'
+          retention-days: 7
 
     outputs:
       build_dir: ${{ steps.setup_env.outputs.BUILD_DIR }}
-      artifact_name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+      artifact_name: ${{ matrix.platform }}-${{ github.run_id }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -152,14 +162,14 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}'
-          path: 'build_artifacts/${{ matrix.platform }}'
+          name: '${{ needs.build.outputs.artifact_name }}'
+          path: '${{ matrix.platform }}-build_artifacts'
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: 'build_artifacts/${{ matrix.platform }}'
+          build_dir: '${{ matrix.platform }}-build_artifacts'
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
