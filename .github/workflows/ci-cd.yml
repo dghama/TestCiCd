@@ -151,7 +151,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ github.sha }}-${{ needs.build.outputs.artifact_name }}'
+          name: '${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}'
           path: '${{ matrix.platform }}-build_artifacts'
 
       - name: Set up deploy environment
