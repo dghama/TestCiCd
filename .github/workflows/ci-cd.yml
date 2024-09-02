@@ -118,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: '${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
-          path: '${{ matrix.platform }}-build_artifacts'
+          path: 'build_artifacts/${{ matrix.platform }}'
           if-no-files-found: error
           compression-level: 6
           overwrite: false
@@ -152,13 +152,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: '${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}'
-          path: '${{ matrix.platform }}-build_artifacts'
+          path: 'build_artifacts/${{ matrix.platform }}'
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: '${{ matrix.platform }}-build_artifacts'
+          build_dir: 'build_artifacts/${{ matrix.platform }}'
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
@@ -170,6 +170,7 @@ jobs:
 
     outputs:
       version_url: ${{ steps.setup_deploy_env.outputs.VERSION_URL }}
+
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
