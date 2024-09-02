@@ -119,7 +119,8 @@ jobs:
         with:
           name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
           path: ${{ steps.setup_env.outputs.BUILD_DIR }}
-          if-no-files-found: error
+          compression-level: 6
+          overwrite: false
 
 
     outputs:
