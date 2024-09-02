@@ -108,35 +108,24 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
-      - name: Ensure build directory exists
-        run: mkdir -p build_artifacts/${{ matrix.platform }}
-        shell: bash
-
       - name: Build ${{ matrix.platform }}
         run: |
           bundle exec fastlane ${{ matrix.platform }} build
         shell: bash
         working-directory: ${{ github.workspace }}
 
-      - name: List build directory contents for debugging
-        run: ls -alh build_artifacts/${{ matrix.platform }}
-        shell: bash
-
-      - name: Compress build artifacts
-        run: |
-          tar -czf build_artifacts_${{ matrix.platform }}.tar.gz -C build_artifacts/${{ matrix.platform }} .
-        shell: bash
-
-      - name: Upload compressed artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ github.run_id }}'
-          path: 'build_artifacts_${{ matrix.platform }}.tar.gz'
-          retention-days: 7
+          name: '${{ matrix.platform }}-${{ github.sha }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
+          path: '${{ matrix.platform }}-build_artifacts'
+          if-no-files-found: error
+          compression-level: 6
+          overwrite: false
 
     outputs:
       build_dir: ${{ steps.setup_env.outputs.BUILD_DIR }}
-      artifact_name: ${{ matrix.platform }}-${{ github.run_id }}
+      artifact_name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
 
   deploy:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -162,7 +151,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ needs.build.outputs.artifact_name }}'
+          name: '${{ matrix.platform }}-${{ github.sha }}-${{ needs.build.outputs.artifact_name }}'
           path: '${{ matrix.platform }}-build_artifacts'
 
       - name: Set up deploy environment
