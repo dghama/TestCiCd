@@ -117,11 +117,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ github.sha }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
-          path: '${{ matrix.platform }}-build_artifacts/*' # Use wildcard if there are multiple files
-          compression-level: 6
-          overwrite: false
-          retention-days: 5  # or however long you need
+          name: ${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
+          if-no-files-found: error
 
 
     outputs:
@@ -162,8 +160,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ matrix.platform }}-*'
-          path: '${{ matrix.platform }}-build_artifacts'
+          name: ${{ needs.build.outputs.artifact_name }}
 
 
       - name: Set up deploy environment
