@@ -115,7 +115,7 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: List build artifacts
-        run: ls -R ${matrix.platform}-build_artifacts
+        run: ls -R ${{matrix.platform}}-build_artifacts
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
