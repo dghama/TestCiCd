@@ -153,14 +153,20 @@ jobs:
 
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
-
+      - name: Set Artifact Name
+        id: set_artifact_name
+        run: |
+          if [[ "${{ matrix.platform }}" == "android" ]]; then
+            echo "ARTIFACT_NAME=${{ needs.build.outputs.artifact_name_android }}" >> $GITHUB_ENV
+          elif [[ "${{ matrix.platform }}" == "ios" ]]; then
+            echo "ARTIFACT_NAME=${{ needs.build.outputs.artifact_name_ios }}" >> $GITHUB_ENV
+          fi
     
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: |
-            ${{ matrix.platform == 'android' && needs.build.outputs.artifact_name_android || needs.build.outputs.artifact_name_ios }}
-  
+          name: '${{ matrix.platform }}-${{ env.ARTIFACT_NAME }}'
+
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env

@@ -151,6 +151,7 @@ platform :ios do
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
       output_name: "#{@package['name']}.ipa",
+      output_directory: "./ios/build/Release-iphoneos", 
       export_options: {
         method: "ad-hoc",
         provisioningProfiles: {
