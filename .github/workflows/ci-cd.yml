@@ -115,11 +115,12 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Upload artifact
+        if: success() && steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: '${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
           path: 'build_artifacts/${{ matrix.platform }}'
-          if-no-files-found: error
+          if-no-files-found: ignore
           compression-level: 6
           overwrite: false
 
