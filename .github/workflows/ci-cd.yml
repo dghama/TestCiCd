@@ -148,16 +148,6 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
-      - uses: actions/github-script@v6
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            })
-            console.log(artifacts)
-
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -168,7 +158,7 @@ jobs:
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: '${{ matrix.platform }}-build_artifacts'
+          build_dir: ${{ needs.build.outputs.artifact_name }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
