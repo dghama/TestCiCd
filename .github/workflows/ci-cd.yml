@@ -80,7 +80,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android, ios]
+        platform: [android]
     permissions:
       contents: write
     env:
@@ -139,7 +139,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android, ios]
+        platform: [android]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
@@ -161,7 +161,7 @@ jobs:
           elif [[ "${{ matrix.platform }}" == "ios" ]]; then
             echo "ARTIFACT_NAME=${{ needs.build.outputs.artifact_name_ios }}" >> $GITHUB_ENV
           fi
-    
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
