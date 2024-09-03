@@ -29,9 +29,9 @@ runs:
         lcov-file: ./coverage/lcov.info
         github-token: ${{ github.token }}
 
-       - name: 🏃‍♂️ Run lint
-         run: yarn lint
-         shell: bash
+    - name: 🏃‍♂️ Run lint
+      run: yarn lint
+      shell: bash
 
     - name: Extract SonarQube Project Key
       id: extract-key
