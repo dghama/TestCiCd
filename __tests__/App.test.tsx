@@ -12,6 +12,6 @@ describe('App', () => {
     expect(getByText('Step One')).toBeTruthy();
     expect(getByText('See Your Changes')).toBeTruthy();
     expect(getByText('Debug')).toBeTruthy();
-    expect(getByText('Learn More')).toBeGreaterThanOrEqual(0);
+    expect(getByText('Learn More')).toBeTruthy();
   });
 });
