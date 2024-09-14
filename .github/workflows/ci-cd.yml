@@ -175,11 +175,9 @@ jobs:
         run: ls -R ${{ github.workspace }}
         shell: bash
 
-      # - name: Set up deploy environment
-      #   id: setup_deploy_env
-      #   uses: ./.github/actions/setup/setup-deploy-env
-      #   with:
-      #     artifact_name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
+      - name: Set up deploy environment
+        id: setup_deploy_env
+        uses: ./.github/actions/setup/setup-deploy-env
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT != 'prod' }}
