@@ -108,30 +108,41 @@ platform :ios do
   desc 'Build the iOS app'
   lane :build do
     inc_ver_ios
-    import_certs
-    xcode_select("/Applications/Xcode_15.3.app")
-    cocoapods(
-      clean_install: true,
-      podfile: "./ios/Podfile"
-    )
-    gym(
-      configuration: ENV["ENVIRONMENT"],
-      workspace: "./ios/#{@package['name']}.xcworkspace",
-      scheme: @package['name'],
-      output_name: @package['name'],
-      output_directory: "./ios/build",
-      export_options: {
-        method: "ad-hoc",
-        provisioningProfiles: {
-          "com.mobelite.testRNcicd" => "RNTestProfile"
+
+      import_certs
+  
+  
+      cocoapods(
+        clean_install: true,
+        podfile: "./ios/Podfile"
+      )
+  
+      gym(
+        configuration: ENV["ENVIRONMENT"],
+        workspace: "./ios/#{@package['name']}.xcworkspace",
+        scheme: @package['name'],
+        output_name: @package['name'],
+        output_directory: "./ios/build",
+        export_options: {
+          method: "ad-hoc",  # or "enterprise" or "app-store"
+          provisioningProfiles: {
+            "com.mobelite.testRNcicd" => "RNTestProfile"
+          },
+          signingStyle: "manual",
+          uploadSymbols: false, # This might be needed depending on your setup
+          compileBitcode: false # Adjust as needed
         },
-        signingStyle: "manual"
-      },
-      xcargs: "-allowProvisioningUpdates",
-      export_xcargs: "-allowProvisioningUpdates"
-    )
+        xcargs: "-allowProvisioningUpdates",
+        export_xcargs: "-allowProvisioningUpdates"
+      )
+  
+      # Check for the generated .plist file
+      plist_path = "./ios/build/#{@package['name']}.plist"
+      unless File.exist?(plist_path)
+        UI.error("The .plist file was not generated. Please check the export options and ensure they are set correctly.")
+      end
+    end
   end
-end
 
 
 platform :android do

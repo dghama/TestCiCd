@@ -2,63 +2,25 @@ name: 'Set up deploy environment'
 description: 'Determine deploy env build and info based on platform'
 
 inputs:
-  build_dir:
-    description: 'The build directory from the previous job'
-    required: true
-
-outputs:
-  BUILD_DIR:
-    description: 'Directory where the build artifacts are located'
-    value: ${{ steps.set-build-dir.outputs.BUILD_DIR }}
   ARTIFACT_NAME:
-    description: 'Name of the artifact to be uploaded'
-    value: ${{ steps.set-artifact-name.outputs.ARTIFACT_NAME }}
-  VERSION_URL:
-    description: 'URL of the uploaded version'
-    value: ${{ steps.set-version-url.outputs.VERSION_URL }}
+    description: 'The artifact name directory from the previous job'
+    required: true
 
 runs:
   using: composite
   steps:
-    - name: Set BUILD_DIR
-      id: set-build-dir
-      shell: bash
-      run: |
-        if [ "${{ env.PLATFORM }}" == "android" ]; then
-          echo "BUILD_DIR=${{ inputs.build_dir }}" >> $GITHUB_OUTPUT
-        elif [ "${{ env.PLATFORM }}" == "ios" ]; then
-          echo "BUILD_DIR=${{ inputs.build_dir }}" >> $GITHUB_OUTPUT
-        else
-          echo "Unsupported platform: ${{ env.PLATFORM }}"
-          exit 1
-        fi
-
-    - name: Set ARTIFACT_NAME
-      id: set-artifact-name
-      shell: bash
-      run: |
-        VERSION=$(node -p "require('./package.json').version")
-        COMMIT_SHA=$(git rev-parse --short HEAD)
-        if [ "${{ env.PLATFORM }}" == "android" ]; then
-          echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.apk" >> $GITHUB_OUTPUT
-        elif [ "${{ env.PLATFORM }}" == "ios" ]; then
-          echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.ipa" >> $GITHUB_OUTPUT
-        else
-          echo "Unsupported platform: ${{ env.PLATFORM }}"
-          exit 1
-        fi
     # Step to get info_file and build_file paths dynamically
     - name: Set up deploy environment
       id: setup_deploy_env
       run: |
         if [ "${{ matrix.platform }}" == "android" ]; then
           # Find .apk or .json file inside the artifact directory
-          INFO_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.json" | head -n 1)
-          BUILD_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.apk" | head -n 1)
+          INFO_FILE=$(find ./${{ inputs.artifact_name }} -type f -name "*.json" | head -n 1)
+          BUILD_FILE=$(find ./${{ inputs.artifact_name }} -type f -name "*.apk" | head -n 1)
         elif [ "${{ matrix.platform }}" == "ios" ]; then
           # Find .plist, .ipa, or .json file inside the artifact directory
-          INFO_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.plist" | head -n 1)
-          BUILD_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.ipa" | head -n 1)
+          INFO_FILE=$(find ./${{ inputs.artifact_name }} -type f -name "*.plist" | head -n 1)
+          BUILD_FILE=$(find ./${{ inputs.artifact_name }} -type f -name "*.ipa" | head -n 1)
         fi
 
         # Ensure the files are found

@@ -175,7 +175,7 @@ jobs:
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: ${{ needs.build.outputs.build_dir }}
+          artifact_name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
