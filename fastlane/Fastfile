@@ -117,26 +117,39 @@ platform :ios do
         podfile: "./ios/Podfile"
       )
   
-      build_app(
-        configuration: ENV["ENVIRONMENT"],
-        workspace: "./ios/#{@package['name']}.xcworkspace",
-        scheme: @package['name'],
-        output_name: @package['name'],
-        output_directory: "./ios/build",
-        export_method: "ad-hoc",  # Explicitly specify the export method
-        export_options: {
-          method: "ad-hoc",  # or "enterprise" or "app-store"
-          provisioningProfiles: {
-            "com.mobelite.testRNcicd" => "RNTestProfile"
-          },
-          signingStyle: "manual",
-          generateAppStoreInformation: true,  # This should generate the needed plist file
+      # Get the current build number
+    build_number = get_build_number(xcodeproj: "./ios/#{@package['name']}.xcodeproj")
+    
+    # Define custom file names
+    ipa_name = "#{@app_name}_#{@environment}_#{@versionName || get_version_number(xcodeproj: "./ios/#{@package['name']}.xcodeproj")}_#{build_number}.ipa"
+    plist_name = "#{@app_name}_#{@environment}_#{@versionName || get_version_number(xcodeproj: "./ios/#{@package['name']}.xcodeproj")}_#{build_number}.plist"
+
+    build_app(
+      configuration: ENV["ENVIRONMENT"],
+      workspace: "./ios/#{@package['name']}.xcworkspace",
+      scheme: @package['name'],
+      output_name: ipa_name,
+      output_directory: "./ios/build",
+      export_method: "ad-hoc",
+      export_options: {
+        method: "ad-hoc",
+        provisioningProfiles: {
+          "com.mobelite.testRNcicd" => "RNTestProfile"
         },
-        xcargs: "-allowProvisioningUpdates",
-        export_xcargs: "-allowProvisioningUpdates"
-      )
+        signingStyle: "manual",
+        generateAppStoreInformation: true,
+      },
+      xcargs: "-allowProvisioningUpdates",
+      export_xcargs: "-allowProvisioningUpdates"
+    )
   
-   
+     # Rename the generated plist file
+     default_plist_path = "./ios/build/#{@package['name']}.plist"
+     custom_plist_path = "./ios/build/#{plist_name}"
+     File.rename(default_plist_path, custom_plist_path) if File.exist?(default_plist_path)
+ 
+     UI.success "Generated IPA: #{ipa_name}"
+     UI.success "Generated Plist: #{plist_name}"
     end
   end
 
@@ -149,7 +162,9 @@ platform :android do
 
   version_code = get_android_version_code
   version_name = get_android_version_name
-
+    # Define custom file names
+    apk_name = "#{@app_name}_#{@environment}_#{version_name}_#{version_code}.apk"
+    json_name = "#{@app_name}_#{@environment}_#{version_name}_#{version_code}.json"
   desc 'Build the Android app'
   lane :build do
     inc_ver_and
@@ -165,15 +180,47 @@ platform :android do
       },
       print_command: true
     )
+      # Rename the generated APK
+      default_apk_path = "./android/app/build/outputs/apk/release/app-release.apk"
+      custom_apk_path = "./android/app/build/outputs/apk/release/#{apk_name}"
+      File.rename(default_apk_path, custom_apk_path) if File.exist?(default_apk_path)
+  
+      # Generate and save metadata JSON
+      metadata = {
+        appName: @app_name,
+        environment: @environment,
+        versionName: version_name,
+        versionCode: version_code,
+        buildTime: Time.now.utc.iso8601
+      }
+      File.write("./android/app/build/outputs/apk/release/#{json_name}", JSON.pretty_generate(metadata))
+  
+      UI.success "Generated APK: #{apk_name}"
+      UI.success "Generated Metadata JSON: #{json_name}"
   end
 end
 
+# Update the upload lane to use the new file names
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
+  if @platform == 'ios'
+    build_number = get_build_number(xcodeproj: "./ios/#{@package['name']}.xcodeproj")
+    version = @versionName || get_version_number(xcodeproj: "./ios/#{@package['name']}.xcodeproj")
+    build_file = "#{@app_name}_#{@environment}_#{version}_#{build_number}.ipa"
+    info_file = "#{@app_name}_#{@environment}_#{version}_#{build_number}.plist"
+  elsif @platform == 'android'
+    version_code = get_android_version_code
+    version_name = get_android_version_name
+    build_file = "#{@app_name}_#{@environment}_#{version_name}_#{version_code}.apk"
+    info_file = "#{@app_name}_#{@environment}_#{version_name}_#{version_code}.json"
+  else
+    UI.user_error!("Invalid platform. Use 'ios' or 'android'.")
+  end
+
   mstore_upload_app(
     authorization: ENV['AUTHORIZATION'],
     app_dev_token: ENV['APP_DEV_TOKEN'],
-    info_file: ENV['INFO_FILE'],
-    build_file: ENV['BUILD_FILE']
+    info_file: info_file,
+    build_file: build_file
   )
 end

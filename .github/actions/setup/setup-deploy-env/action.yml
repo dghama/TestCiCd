@@ -20,12 +20,12 @@ runs:
       run: |
         if [ "${{ matrix.platform }}" == "android" ]; then
           # Find .apk or .json file inside the artifact directory
-          INFO_FILE=$(find ${{ github.workspace }}/${{ inputs.artifact_name }} -type f -name "*.json" | head -n 1)
-          BUILD_FILE=$(find ${{ github.workspace }}/${{ inputs.artifact_name }} -type f -name "*.apk" | head -n 1)
+          INFO_FILE=$(find ${{ github.workspace }} -type f -name "*.json" | head -n 1)
+          BUILD_FILE=$(find ${{ github.workspace }} -type f -name "*.apk" | head -n 1)
         elif [ "${{ matrix.platform }}" == "ios" ]; then
           # Find .plist, .ipa, or .json file inside the artifact directory
-          INFO_FILE=$(find ${{ github.workspace }}/${{ inputs.artifact_name }} -type f -name "*.plist" | head -n 1)
-          BUILD_FILE=$(find ${{ github.workspace }}/${{ inputs.artifact_name }} -type f -name "*.ipa" | head -n 1)
+          INFO_FILE=$(find ${{ github.workspace }} -type f -name "*.plist" | head -n 1)
+          BUILD_FILE=$(find ${{ github.workspace }} -type f -name "*.ipa" | head -n 1)
         fi
 
         # Ensure the files are found
