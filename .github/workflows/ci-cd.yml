@@ -179,6 +179,15 @@ jobs:
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
 
+      - name: Set up APP_DEV_TOKEN for ${{ matrix.platform }} platform
+        run: |
+          if [ "${{ matrix.platform }}" == "android" ]; then
+            echo "APP_DEV_TOKEN=${{ secrets.APP_DEV_TOKEN }}" >> $GITHUB_ENV
+          elif [ "${{ matrix.platform }}" == "ios" ]; then
+            echo "APP_DEV_TOKEN=${{ secrets.IOS_APP_DEV_TOKEN }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT != 'prod' }}
         env:

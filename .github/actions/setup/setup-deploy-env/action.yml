@@ -12,12 +12,10 @@ runs:
         APP_NAME=$(jq -r '.name' ${{ github.workspace }}/package.json)
 
         if [ "${{ matrix.platform }}" == "android" ]; then
-          echo "APP_DEV_TOKEN=${{ secrets.APP_DEV_TOKEN }}" >> $GITHUB_ENV
           # Set up the file paths for Android
           INFO_FILE="${{ github.workspace }}/output-metadata.json"
           BUILD_FILE="${{ github.workspace }}/${APP_NAME}-${{ env.ENVIRONMENT }}.apk"
         elif [ "${{ matrix.platform }}" == "ios" ]; then
-          echo "APP_DEV_TOKEN=${{ secrets.IOS_APP_DEV_TOKEN }}" >> $GITHUB_ENV
           # Set up the file paths for iOS
           INFO_FILE="${{ github.workspace }}/ios/${APP_NAME}/info.plist"
           BUILD_FILE="${{ github.workspace }}/${APP_NAME}.ipa"
