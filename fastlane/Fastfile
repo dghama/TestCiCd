@@ -130,11 +130,11 @@ platform :ios do
             "com.mobelite.testRNcicd" => "RNTestProfile"
           },
           signingStyle: "manual",
+          generateAppStoreInformation: true,  # This should generate the needed plist file
         },
-        export_plist: "./ios/build/#{@package['name']}.plist", 
         xcargs: "-allowProvisioningUpdates",
         export_xcargs: "-allowProvisioningUpdates"
-  )
+      )
   
    
     end
