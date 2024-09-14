@@ -74,6 +74,7 @@ jobs:
         env:
           SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+
   build:
     needs: quality-checks
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -85,15 +86,7 @@ jobs:
       contents: write
     env:
       PLATFORM: ${{ matrix.platform }}
-      ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
-      KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
-      DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
-      PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
-      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,20 +96,39 @@ jobs:
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
+      - name: Set up Android-specific secrets
+        if: matrix.platform == 'android'
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+        shell: bash
+
+      - name: Set up iOS-specific secrets
+        if: matrix.platform == 'ios'
+        env:
+          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          echo "complete IOS setUp secrets"
+        shell: bash
+
       - name: Set up environment
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
 
       - name: Build ${{ matrix.platform }}
-        run: |
-          bundle exec fastlane ${{ matrix.platform }} build
-        shell: bash
-        working-directory: ${{ github.workspace }}
+        run: bundle exec fastlane ${{ matrix.platform }} build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}'
+          name: ${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}
           path: ${{ steps.setup_env.outputs.BUILD_DIR }}
           compression-level: 6
           overwrite: false
@@ -124,55 +136,39 @@ jobs:
       - name: Set build outputs
         id: set_build_outputs
         run: |
-          echo "build_dir_${{ matrix.platform }}=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_OUTPUT
-          echo "artifact_name_${{ matrix.platform }}=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_OUTPUT
+          echo "build_dir=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_OUTPUT
+          echo "artifact_name=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_OUTPUT
+        shell: bash
 
     outputs:
-      build_dir_android: ${{ steps.set_build_outputs.outputs.build_dir_android }}
-      build_dir_ios: ${{ steps.set_build_outputs.outputs.build_dir_ios }}
-      artifact_name_android: ${{ steps.set_build_outputs.outputs.artifact_name_android }}
-      artifact_name_ios: ${{ steps.set_build_outputs.outputs.artifact_name_ios }}
+      build_dir: ${{ steps.set_build_outputs.outputs.build_dir }}
+      artifact_name: ${{ steps.set_build_outputs.outputs.artifact_name }}
 
   deploy:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     env:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
-      AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
-      APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Restore node modules from cache
+      - name: Restore cache
         uses: ./.github/actions/cache-restore
-      - name: Set Artifact Name
-        id: set_artifact_name
-        run: |
-          if [[ "${{ matrix.platform }}" == "android" ]]; then
-            echo "ARTIFACT_NAME=${{ needs.build.outputs.artifact_name_android }}" >> $GITHUB_ENV
-          elif [[ "${{ matrix.platform }}" == "ios" ]]; then
-            echo "ARTIFACT_NAME=${{ needs.build.outputs.artifact_name_ios }}" >> $GITHUB_ENV
-          fi
 
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: '${{ matrix.platform }}-${{ env.ARTIFACT_NAME }}'
+          name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
         with:
-          build_dir: |
-            ${{ matrix.platform == 'android' && needs.build.outputs.build_dir_android || needs.build.outputs.build_dir_ios }}
+          build_dir: ${{ needs.build.outputs.build_dir }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'

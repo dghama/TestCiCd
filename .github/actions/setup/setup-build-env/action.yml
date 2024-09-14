@@ -35,9 +35,3 @@ runs:
       if: ${{ env.PLATFORM == 'android' }}
       run: chmod +x android/gradlew
       shell: bash
-
-    - name: Setup keystore file
-      if: ${{ env.PLATFORM == 'android' }}
-      run: |
-        echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
-      shell: bash

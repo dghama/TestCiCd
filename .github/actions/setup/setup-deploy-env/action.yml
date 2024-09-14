@@ -1,62 +1,40 @@
 name: 'Set up deploy environment'
 description: 'Determine deploy env build and info based on platform'
-inputs:
-  build_dir:
-    description: 'Directory where the build artifacts are stored'
-    required: true
 
+outputs:
+  BUILD_DIR:
+    description: 'Directory where the build artifacts are located'
+    value: ${{ steps.set-build-dir.outputs.BUILD_DIR }}
+  ARTIFACT_NAME:
+    description: 'Name of the artifact to be uploaded'
+    value: ${{ steps.set-artifact-name.outputs.ARTIFACT_NAME }}
 runs:
   using: composite
   steps:
-    - name: Print build_dir
-      run: |
-        echo "Build directory: ${{ inputs.build_dir }}"
+   - name: Set BUILD_DIR
+      id: set-build-dir
       shell: bash
-
-    - name: Check build path contents
       run: |
-        echo "Contents of the build path:"
-        ls -la "${{ inputs.build_dir }}"
-      shell: bash
-
-    - name: Setup deploy environment for Android
-      if: ${{ env.PLATFORM == 'android' }}
-      run: |
-        echo "Searching for APK and JSON files in ${{ inputs.build_dir }}"
-
-        BUILD_FILE=$(find "${{ inputs.build_dir }}" -name "*.apk" | head -n 1)
-        INFO_FILE=$(find "${{ inputs.build_dir }}" -name "*.json" | head -n 1)
-
-        if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
-          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
-          echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
-          echo "Found BUILD_FILE: $BUILD_FILE"
-          echo "Found INFO_FILE: $INFO_FILE"
+        if [ "$PLATFORM" == "android" ]; then
+          echo "BUILD_DIR=android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
+        elif [ "$PLATFORM" == "ios" ]; then
+          echo "BUILD_DIR=ios/build" >> $GITHUB_OUTPUT
         else
-          echo "Required files not found in ${{ inputs.build_dir }}!" >&2
-          echo "Contents of ${{ inputs.build_dir }}:"
-          find "${{ inputs.build_dir }}" -type f
+          echo "Unsupported platform: $PLATFORM"
           exit 1
         fi
+
+    - name: Set ARTIFACT_NAME
+      id: set-artifact-name
       shell: bash
-
-    - name: Setup deploy environment for iOS
-      if: ${{ env.PLATFORM == 'ios' }}
       run: |
-        echo "Searching for IPA and PLIST files in ${{ inputs.build_dir }}"
-
-        BUILD_FILE=$(find "${{ inputs.build_dir }}" -name "*.ipa" | head -n 1)
-        INFO_FILE=$(find "${{ inputs.build_dir }}" -name "*.plist" | head -n 1)
-
-        if [[ -f "$BUILD_FILE" && -f "$INFO_FILE" ]]; then
-          echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
-          echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
-          echo "Found BUILD_FILE: $BUILD_FILE"
-          echo "Found INFO_FILE: $INFO_FILE"
+        VERSION=$(node -p "require('./package.json').version")
+        COMMIT_SHA=$(git rev-parse --short HEAD)
+        if [ "$PLATFORM" == "android" ]; then
+          echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.apk" >> $GITHUB_OUTPUT
+        elif [ "$PLATFORM" == "ios" ]; then
+          echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.ipa" >> $GITHUB_OUTPUT
         else
-          echo "Required files not found in ${{ inputs.build_dir }}!" >&2
-          echo "Contents of ${{ inputs.build_dir }}:"
-          find "${{ inputs.build_dir }}" -type f
+          echo "Unsupported platform: $PLATFORM"
           exit 1
         fi
-      shell: bash
