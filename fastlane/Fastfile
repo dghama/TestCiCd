@@ -169,6 +169,8 @@ end
 
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
+  UI.important("Listing all files in the current directory:")
+  Dir.glob("*").each { |file| UI.message("Found file: #{file}") }
   # Determine the platform and select the appropriate file
   if ENV['PLATFORM'] == 'ios'
     info_file = Dir.glob("*.plist").first
