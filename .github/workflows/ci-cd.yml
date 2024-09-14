@@ -181,12 +181,13 @@ jobs:
         if: ${{ env.ENVIRONMENT }} != 'prod'
         run: |
           result=$(bundle exec fastlane upload_app_to_mstore)
-          echo "VERSION_URL=${result}" >> $GITHUB_ENV
+          echo "VERSION_URL_${{ matrix.platform }}=${result}" >> $GITHUB_ENV
         shell: bash
         working-directory: ${{ github.workspace }}
 
     outputs:
-      version_url: ${{ steps.setup_deploy_env.outputs.VERSION_URL }}
+      version_url_android: ${{ steps.setup_deploy_env.outputs.VERSION_URL_android }}
+      version_url_ios: ${{ steps.setup_deploy_env.outputs.VERSION_URL_ios }}
 
   notify-teams:
     if: github.event_name == 'push'
@@ -200,5 +201,5 @@ jobs:
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: |
             New version is available on MStore.
-          android_version_url: ${{ needs.deploy.outputs.android_version_url }}
-          ios_version_url: ${{ needs.deploy.outputs.ios_version_url }}
+          android_version_url: ${{ needs.deploy.outputs.version_url_android }}
+          ios_version_url: ${{ needs.deploy.outputs.version_url_ios }}

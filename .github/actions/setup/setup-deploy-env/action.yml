@@ -1,6 +1,11 @@
 name: 'Set up deploy environment'
 description: 'Determine deploy env build and info based on platform'
 
+inputs:
+  build_dir:
+    description: 'The build directory from the previous job'
+    required: true
+
 outputs:
   BUILD_DIR:
     description: 'Directory where the build artifacts are located'
@@ -8,19 +13,23 @@ outputs:
   ARTIFACT_NAME:
     description: 'Name of the artifact to be uploaded'
     value: ${{ steps.set-artifact-name.outputs.ARTIFACT_NAME }}
+  VERSION_URL:
+    description: 'URL of the uploaded version'
+    value: ${{ steps.set-version-url.outputs.VERSION_URL }}
+
 runs:
   using: composite
   steps:
-   - name: Set BUILD_DIR
+    - name: Set BUILD_DIR
       id: set-build-dir
       shell: bash
       run: |
-        if [ "$PLATFORM" == "android" ]; then
-          echo "BUILD_DIR=android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
-        elif [ "$PLATFORM" == "ios" ]; then
-          echo "BUILD_DIR=ios/build" >> $GITHUB_OUTPUT
+        if [ "${{ env.PLATFORM }}" == "android" ]; then
+          echo "BUILD_DIR=${{ inputs.build_dir }}" >> $GITHUB_OUTPUT
+        elif [ "${{ env.PLATFORM }}" == "ios" ]; then
+          echo "BUILD_DIR=${{ inputs.build_dir }}" >> $GITHUB_OUTPUT
         else
-          echo "Unsupported platform: $PLATFORM"
+          echo "Unsupported platform: ${{ env.PLATFORM }}"
           exit 1
         fi
 
@@ -30,11 +39,11 @@ runs:
       run: |
         VERSION=$(node -p "require('./package.json').version")
         COMMIT_SHA=$(git rev-parse --short HEAD)
-        if [ "$PLATFORM" == "android" ]; then
+        if [ "${{ env.PLATFORM }}" == "android" ]; then
           echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.apk" >> $GITHUB_OUTPUT
-        elif [ "$PLATFORM" == "ios" ]; then
+        elif [ "${{ env.PLATFORM }}" == "ios" ]; then
           echo "ARTIFACT_NAME=app-release-${VERSION}-${COMMIT_SHA}.ipa" >> $GITHUB_OUTPUT
         else
-          echo "Unsupported platform: $PLATFORM"
+          echo "Unsupported platform: ${{ env.PLATFORM }}"
           exit 1
         fi
