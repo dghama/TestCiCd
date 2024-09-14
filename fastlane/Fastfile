@@ -115,10 +115,11 @@ platform :ios do
       podfile: "./ios/Podfile"
     )
     gym(
+      buildConfiguration: ENV["ENVIRONMENT"],
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
-      output_name: "#{@package['name']}.ipa",
-      output_directory: "./ios/build/Release-iphoneos", 
+      output_name: @package['name'],
+      output_directory: "./ios/build",
       export_options: {
         method: "ad-hoc",
         provisioningProfiles: {

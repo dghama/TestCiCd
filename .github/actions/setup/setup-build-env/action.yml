@@ -17,7 +17,7 @@ runs:
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
           echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
-         echo "BUILD_DIR=${{ github.workspace }}/ios/build/Release-iphoneos" >> $GITHUB_OUTPUT
+         echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
         else
           echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1

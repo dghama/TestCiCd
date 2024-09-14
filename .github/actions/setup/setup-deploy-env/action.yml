@@ -47,3 +47,26 @@ runs:
           echo "Unsupported platform: ${{ env.PLATFORM }}"
           exit 1
         fi
+    # Step to get info_file and build_file paths dynamically
+    - name: Set up deploy environment
+      id: setup_deploy_env
+      run: |
+        if [ "${{ matrix.platform }}" == "android" ]; then
+          # Find .apk or .json file inside the artifact directory
+          INFO_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.json" | head -n 1)
+          BUILD_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.apk" | head -n 1)
+        elif [ "${{ matrix.platform }}" == "ios" ]; then
+          # Find .plist, .ipa, or .json file inside the artifact directory
+          INFO_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.plist" | head -n 1)
+          BUILD_FILE=$(find ./artifact-${{ matrix.platform }} -type f -name "*.ipa" | head -n 1)
+        fi
+
+        # Ensure the files are found
+        if [ -z "$INFO_FILE" ] || [ -z "$BUILD_FILE" ]; then
+          echo "Error: Required files not found!"
+          exit 1
+        fi
+
+        echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
+        echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
+      shell: bash
