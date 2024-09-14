@@ -13,6 +13,7 @@ runs:
       run: |
         echo "Artifact directory: ${{ github.workspace }}/${{ inputs.artifact_name }}"
         ls -R ${{ github.workspace }}/${{ inputs.artifact_name }}
+      shell: bash
 
     - name: Set up deploy environment
       id: setup_deploy_env
