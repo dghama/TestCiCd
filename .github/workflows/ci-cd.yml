@@ -182,19 +182,20 @@ jobs:
       #     artifact_name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
-        if: ${{ env.ENVIRONMENT }} != 'prod'
+        if: ${{ env.ENVIRONMENT != 'prod' }}
         env:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
         run: |
-          result=$(bundle exec fastlane upload_app_to_mstore)
-          echo "VERSION_URL_${{ matrix.platform }}=${result}" >> $GITHUB_ENV
+          cd ${{ github.workspace }}
+          bundle exec fastlane upload_app_to_mstore
         shell: bash
-        working-directory: ${{ github.workspace }}
 
-    outputs:
-      version_url_android: ${{ steps.setup_deploy_env.outputs.VERSION_URL_android }}
-      version_url_ios: ${{ steps.setup_deploy_env.outputs.VERSION_URL_ios }}
+      - name: Set output
+        run: |
+          echo "ANDROID_VERSION_TOKEN=${{ env.ANDROID_VERSION_TOKEN }}" >> $GITHUB_OUTPUT
+          echo "IOS_VERSION_TOKEN=${{ env.IOS_VERSION_TOKEN }}" >> $GITHUB_OUTPUT
+        shell: bash
 
   notify-teams:
     if: github.event_name == 'push'
@@ -208,5 +209,5 @@ jobs:
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: |
             New version is available on MStore.
-          android_version_url: ${{ needs.deploy.outputs.version_url_android }}
-          ios_version_url: ${{ needs.deploy.outputs.version_url_ios }}
+          android_version_url: ${{ needs.deploy.outputs.ANDROID_VERSION_TOKEN }}
+          ios_version_url: ${{ needs.deploy.outputs.IOS_VERSION_TOKEN }}

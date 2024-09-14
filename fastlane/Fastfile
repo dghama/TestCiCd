@@ -170,18 +170,38 @@ end
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
   # Determine the platform and select the appropriate file
-  info_file = (ENV['PLATFORM'] == 'ios') ? 'info.plist' : 'output-metadata.json'
-  build_file = if ENV['PLATFORM'] == 'ios'
-                 "#{ENV['PACKAGE_NAME']}.ipa"  # Reference the package name variable for iOS IPA
-               else
-                 "#{ENV['PACKAGE_NAME']}-#{get_android_version_name}.apk"  # Reference Android version name and package
-               end
+  if ENV['PLATFORM'] == 'ios'
+    info_file = Dir.glob("*.plist").first
+    build_file = Dir.glob("*.ipa").first
+  else
+    info_file = Dir.glob("*.json").first
+    build_file = Dir.glob("*.apk").first
+  end
+
+  UI.important("Info file: #{info_file}")
+  UI.important("Build file: #{build_file}")
+
+  if info_file.nil? || build_file.nil?
+    UI.user_error!("Could not find required files. Info file: #{info_file}, Build file: #{build_file}")
+  end
 
   # Upload the app to MStore
-  mstore_upload_app(
+  result = mstore_upload_app(
     authorization: ENV['AUTHORIZATION'],
     app_dev_token: ENV['APP_DEV_TOKEN'],
     info_file: info_file,
     build_file: build_file
   )
+
+  if result[:success]
+    UI.success("Successfully uploaded to MStore. Version URL: #{result[:version_url]}")
+    # Set the version URL as an output
+    if ENV['PLATFORM'] == 'ios'
+      ENV['IOS_VERSION_TOKEN'] = result[:version_url]
+    else
+      ENV['ANDROID_VERSION_TOKEN'] = result[:version_url]
+    end
+  else
+    UI.user_error!("Failed to upload to MStore: #{result[:error]}")
+  end
 end
