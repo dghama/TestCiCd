@@ -170,6 +170,8 @@ desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
   # Use the GITHUB_WORKSPACE environment variable, or fallback to the current directory
   workspace = ENV['WORKSPACE'] || Dir.pwd
+  version_code = get_android_version_code
+
   Dir.chdir(workspace) do
     UI.important("Working directory set to: #{Dir.pwd}")
 
@@ -179,17 +181,21 @@ lane :upload_app_to_mstore do
 
     # Determine the platform and select the appropriate file
     if ENV['PLATFORM'] == 'ios'
-      info_file = Dir.glob("/ios/#{@package['name']}/*.plist").first
-      build_file = Dir.glob("*.ipa").first
+      # Directly specify the file names
+      info_file = "ios/#{@package['name']}/info.plist"
+      build_file = "#{@package['name']}.ipa"
+      UI.important("iOS Build file: #{build_file}")
     else
-      info_file = Dir.glob("*.json").first
-      build_file = Dir.glob("*.apk").first
+      info_file = "output-metadata.json"
+      build_file = "#{@package['name']}-#{@environment}-#{version_code}.apk"
+      UI.important("Android Build file: #{build_file}")
     end
 
     UI.important("Info file: #{info_file}")
     UI.important("Build file: #{build_file}")
 
-    if info_file.nil? || build_file.nil?
+    # Check if the files exist
+    unless File.exist?(info_file) && File.exist?(build_file)
       UI.user_error!("Could not find required files. Info file: #{info_file}, Build file: #{build_file}")
     end
 
@@ -214,3 +220,4 @@ lane :upload_app_to_mstore do
     end
   end
 end
+
