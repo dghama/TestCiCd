@@ -115,7 +115,7 @@ platform :ios do
       podfile: "./ios/Podfile"
     )
     gym(
-      buildConfiguration: ENV["ENVIRONMENT"],
+      configuration: ENV["ENVIRONMENT"],
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
       output_name: @package['name'],
