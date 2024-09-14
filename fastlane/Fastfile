@@ -8,7 +8,7 @@ before_all do
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
   @versionName = ENV["VERSION_NAME"]
-  @workspace = ENV['WORKSPACE']
+  workspace = ENV['WORKSPACE']
 
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
