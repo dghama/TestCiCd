@@ -8,6 +8,7 @@ before_all do
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
   @versionName = ENV["VERSION_NAME"]
+  @workspace = ENV['WORKSPACE']
 
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
@@ -119,10 +120,10 @@ platform :ios do
   
       gym(
         configuration: ENV["ENVIRONMENT"],
-        workspace: "./ios/#{@package['name']}.xcworkspace",
+        workspace: "#{workspace}/ios/#{@package['name']}.xcworkspace",
         scheme: @package['name'],
         output_name: @package['name'],
-        output_directory: "./ios/build",
+        output_directory: "#{workspace}/ios/build",
         export_method: "ad-hoc",  # Explicitly specify the export method
         export_options: {
           method: "ad-hoc",  # or "enterprise" or "app-store"
@@ -166,44 +167,51 @@ platform :android do
     )
   end
 end
-
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
-  UI.important("Listing all files in the current directory:")
-  Dir.glob("*").each { |file| UI.message("Found file: #{file}") }
-  # Determine the platform and select the appropriate file
-  if ENV['PLATFORM'] == 'ios'
-    info_file = Dir.glob("*.plist").first
-    build_file = Dir.glob("*.ipa").first
-  else
-    info_file = Dir.glob("*.json").first
-    build_file = Dir.glob("*.apk").first
-  end
+  # Use the GITHUB_WORKSPACE environment variable, or fallback to the current directory
+  workspace = ENV['WORKSPACE'] || Dir.pwd
+  Dir.chdir(workspace) do
+    UI.important("Working directory set to: #{Dir.pwd}")
 
-  UI.important("Info file: #{info_file}")
-  UI.important("Build file: #{build_file}")
+    # Log the content of the current directory
+    UI.important("Listing all files in the current directory:")
+    Dir.glob("*").each { |file| UI.message("Found file: #{file}") }
 
-  if info_file.nil? || build_file.nil?
-    UI.user_error!("Could not find required files. Info file: #{info_file}, Build file: #{build_file}")
-  end
-
-  # Upload the app to MStore
-  result = mstore_upload_app(
-    authorization: ENV['AUTHORIZATION'],
-    app_dev_token: ENV['APP_DEV_TOKEN'],
-    info_file: info_file,
-    build_file: build_file
-  )
-
-  if result[:success]
-    UI.success("Successfully uploaded to MStore. Version URL: #{result[:version_url]}")
-    # Set the version URL as an output
+    # Determine the platform and select the appropriate file
     if ENV['PLATFORM'] == 'ios'
-      ENV['IOS_VERSION_TOKEN'] = result[:version_url]
+      info_file = Dir.glob("*.plist").first
+      build_file = Dir.glob("*.ipa").first
     else
-      ENV['ANDROID_VERSION_TOKEN'] = result[:version_url]
+      info_file = Dir.glob("*.json").first
+      build_file = Dir.glob("*.apk").first
     end
-  else
-    UI.user_error!("Failed to upload to MStore: #{result[:error]}")
+
+    UI.important("Info file: #{info_file}")
+    UI.important("Build file: #{build_file}")
+
+    if info_file.nil? || build_file.nil?
+      UI.user_error!("Could not find required files. Info file: #{info_file}, Build file: #{build_file}")
+    end
+
+    # Upload the app to MStore
+    result = mstore_upload_app(
+      authorization: ENV['AUTHORIZATION'],
+      app_dev_token: ENV['APP_DEV_TOKEN'],
+      info_file: info_file,
+      build_file: build_file
+    )
+
+    if result[:success]
+      UI.success("Successfully uploaded to MStore. Version URL: #{result[:version_url]}")
+      # Set the version URL as an output
+      if ENV['PLATFORM'] == 'ios'
+        ENV['IOS_VERSION_TOKEN'] = result[:version_url]
+      else
+        ENV['ANDROID_VERSION_TOKEN'] = result[:version_url]
+      end
+    else
+      UI.user_error!("Failed to upload to MStore: #{result[:error]}")
+    end
   end
 end

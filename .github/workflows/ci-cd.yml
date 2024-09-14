@@ -186,8 +186,8 @@ jobs:
         env:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
-          cd ${{ github.workspace }}
           bundle exec fastlane upload_app_to_mstore
         shell: bash
 
