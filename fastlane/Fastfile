@@ -123,24 +123,20 @@ platform :ios do
         scheme: @package['name'],
         output_name: @package['name'],
         output_directory: "./ios/build",
+        export_method: "ad-hoc",  # Explicitly specify the export method
         export_options: {
           method: "ad-hoc",  # or "enterprise" or "app-store"
           provisioningProfiles: {
             "com.mobelite.testRNcicd" => "RNTestProfile"
           },
           signingStyle: "manual",
-          uploadSymbols: false, # This might be needed depending on your setup
-          compileBitcode: false # Adjust as needed
         },
+        export_plist: "./ios/build/ExportOptions.plist", 
         xcargs: "-allowProvisioningUpdates",
         export_xcargs: "-allowProvisioningUpdates"
-      )
+  )
   
-      # Check for the generated .plist file
-      plist_path = "./ios/build/#{@package['name']}.plist"
-      unless File.exist?(plist_path)
-        UI.error("The .plist file was not generated. Please check the export options and ensure they are set correctly.")
-      end
+   
     end
   end
 
