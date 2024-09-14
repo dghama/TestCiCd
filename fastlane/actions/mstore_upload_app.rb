@@ -12,7 +12,7 @@ module Fastlane
         command << "-F \"applicationToken=#{params[:app_dev_token]}\""
         command << "-F \"fileInfo=@#{params[:info_file]}\""
         command << "-F \"file=@#{params[:build_file]}\""
-        command << "-v"  # Use verbose output for debugging
+        command << "-v"  # Verbose output for debugging
 
         begin
           UI.message("Executing command: #{command.join(" ")}")
@@ -56,7 +56,34 @@ module Fastlane
         end
       end
 
-      # ... (rest of the action code remains the same)
+      def self.description
+        "Upload the app to the Mstore"
+      end
+
+      def self.available_options
+        [
+          FastlaneCore::ConfigItem.new(key: :authorization,
+                                       description: "Authorization token for Mstore API",
+                                       optional: false,
+                                       type: String),
+          FastlaneCore::ConfigItem.new(key: :app_dev_token,
+                                       description: "App development token",
+                                       optional: false,
+                                       type: String),
+          FastlaneCore::ConfigItem.new(key: :info_file,
+                                       description: "The info file to upload (.plist for iOS or .json for Android)",
+                                       optional: false,
+                                       type: String),
+          FastlaneCore::ConfigItem.new(key: :build_file,
+                                       description: "The build file to upload (.ipa for iOS or .apk for Android)",
+                                       optional: false,
+                                       type: String)
+        ]
+      end
+
+      def self.is_supported?(platform)
+        [:ios, :android].include?(platform)
+      end
     end
   end
 end

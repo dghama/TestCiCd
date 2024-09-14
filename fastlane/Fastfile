@@ -179,7 +179,7 @@ lane :upload_app_to_mstore do
 
     # Determine the platform and select the appropriate file
     if ENV['PLATFORM'] == 'ios'
-      info_file = Dir.glob("*.plist").first
+      info_file = Dir.glob("/ios/#{@package['name']}/*.plist").first
       build_file = Dir.glob("*.ipa").first
     else
       info_file = Dir.glob("*.json").first
