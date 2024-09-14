@@ -131,7 +131,6 @@ platform :ios do
           },
           signingStyle: "manual",
         },
-        export_plist: "./ios/build/#{@package['name']}.plist", 
         xcargs: "-allowProvisioningUpdates",
         export_xcargs: "-allowProvisioningUpdates"
   )
