@@ -179,6 +179,9 @@ jobs:
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
         if: ${{ env.ENVIRONMENT }} != 'prod'
+        env:
+          AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          APP_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
         run: |
           result=$(bundle exec fastlane upload_app_to_mstore)
           echo "VERSION_URL_${{ matrix.platform }}=${result}" >> $GITHUB_ENV
