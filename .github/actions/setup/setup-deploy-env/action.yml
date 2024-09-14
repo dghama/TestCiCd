@@ -1,35 +1,27 @@
 name: 'Set up deploy environment'
 description: 'Determine deploy env build and info based on platform'
 
-inputs:
-  ARTIFACT_NAME:
-    description: 'The artifact name directory from the previous job'
-    required: true
-
 runs:
   using: composite
   steps:
-    - name: Debug artifact location
-      run: |
-        echo "Artifact directory: ${{ github.workspace }}/${{ inputs.artifact_name }}"
-        ls -R ${{ github.workspace }}/${{ inputs.artifact_name }}
-      shell: bash
-
     - name: Set up deploy environment
       id: setup_deploy_env
       run: |
+        # Extract the app name from the package.json file
+        APP_NAME=$(jq -r '.name' ${{ github.workspace }}/package.json)
+
         if [ "${{ matrix.platform }}" == "android" ]; then
-          # Find .apk or .json file inside the artifact directory
-          INFO_FILE=$(find ${{ github.workspace }} -type f -name "*.json" | head -n 1)
-          BUILD_FILE=$(find ${{ github.workspace }} -type f -name "*.apk" | head -n 1)
+          # Set up the file paths for Android
+          INFO_FILE="${{ github.workspace }}/output-metadata.json"
+          BUILD_FILE="${{ github.workspace }}/${APP_NAME}-${{ env.ENVIRONMENT }}.apk"
         elif [ "${{ matrix.platform }}" == "ios" ]; then
-          # Find .plist, .ipa, or .json file inside the artifact directory
-          INFO_FILE=$(find ${{ github.workspace }} -type f -name "*.plist" | head -n 1)
-          BUILD_FILE=$(find ${{ github.workspace }} -type f -name "*.ipa" | head -n 1)
+          # Set up the file paths for iOS
+          INFO_FILE="${{ github.workspace }}/ios/${APP_NAME}/info.plist"
+          BUILD_FILE="${{ github.workspace }}/${APP_NAME}.ipa"
         fi
 
         # Ensure the files are found
-        if [ -z "$INFO_FILE" ] || [ -z "$BUILD_FILE" ]; then
+        if [ ! -f "$INFO_FILE" ] || [ ! -f "$BUILD_FILE" ]; then
           echo "Error: Required files not found!"
           exit 1
         fi

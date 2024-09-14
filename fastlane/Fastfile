@@ -168,56 +168,12 @@ platform :android do
 end
 desc 'Upload the app to the MStore'
 lane :upload_app_to_mstore do
-  # Use the GITHUB_WORKSPACE environment variable, or fallback to the current directory
-  workspace = ENV['WORKSPACE'] || Dir.pwd
-  version_code = get_android_version_code
-
-  Dir.chdir(workspace) do
-    UI.important("Working directory set to: #{Dir.pwd}")
-
-    # Log the content of the current directory
-    UI.important("Listing all files in the current directory:")
-    Dir.glob("*").each { |file| UI.message("Found file: #{file}") }
-
-    # Determine the platform and select the appropriate file
-    if ENV['PLATFORM'] == 'ios'
-      # Directly specify the file names
-      info_file = "ios/#{@package['name']}/info.plist"
-      build_file = "#{@package['name']}.ipa"
-      UI.important("iOS Build file: #{build_file}")
-    else
-      info_file = "output-metadata.json"
-      build_file = "#{@package['name']}-#{@environment}-#{version_code}.apk"
-      UI.important("Android Build file: #{build_file}")
-    end
-
-    UI.important("Info file: #{info_file}")
-    UI.important("Build file: #{build_file}")
-
-    # Check if the files exist
-    unless File.exist?(info_file) && File.exist?(build_file)
-      UI.user_error!("Could not find required files. Info file: #{info_file}, Build file: #{build_file}")
-    end
 
     # Upload the app to MStore
     result = mstore_upload_app(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
-      info_file: info_file,
-      build_file: build_file
+      info_file: ENV['INFO_FILE'],
+      build_file: ENV['BUILD_FILE']
     )
-
-    if result[:success]
-      UI.success("Successfully uploaded to MStore. Version URL: #{result[:version_url]}")
-      # Set the version URL as an output
-      if ENV['PLATFORM'] == 'ios'
-        ENV['IOS_VERSION_TOKEN'] = result[:version_url]
-      else
-        ENV['ANDROID_VERSION_TOKEN'] = result[:version_url]
-      end
-    else
-      UI.user_error!("Failed to upload to MStore: #{result[:error]}")
-    end
-  end
 end
-

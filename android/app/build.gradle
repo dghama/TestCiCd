@@ -118,7 +118,7 @@ android {
             def baseName = project.hasProperty('output.name') ? project.property('output.name') : output.file.name
             
             // Create the new file name by appending the version code
-            def newFileName = "${baseName}-${variant.versionCode}.apk"
+            def newFileName = "${baseName}.apk"
             
             // Set the new file name
             outputFileName = newFileName
