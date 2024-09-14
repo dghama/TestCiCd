@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        platform: [android]
+        platform: [android, ios]
     permissions:
       contents: write
     env:
@@ -105,7 +105,11 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "${{ env.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+          echo "ANDROID_KEYSTORE_FILE=${{ env.ANDROID_KEYSTORE_FILE }}" >> $GITHUB_ENV
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Set up iOS-specific secrets
@@ -115,7 +119,10 @@ jobs:
           PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
         run: |
-          echo "complete IOS setUp secrets"
+          echo "$DISTRIBUTION_CERTIFICATE" | base64 --decode > distribution.p12
+          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+          echo "P12_PASSWORD=${{ secrets.P12_PASSWORD }}" >> $GITHUB_ENV
+
         shell: bash
 
       - name: Set up environment

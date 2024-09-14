@@ -83,34 +83,7 @@ platform :ios do
     )
   end
 
-  lane :decode_p12 do
-    p12_base64 = ENV["DISTRIBUTION_CERTIFICATE"]
-    p12_path = "/tmp/Certificates12Mob.p12"
-  
-    File.open(p12_path, "wb") do |file|
-      file.write(Base64.decode64(p12_base64))
-    end
-  
-    p12_path
-  end
-
-  lane :decode_provisioning_profile do
-    profile_base64 = ENV["PROVISIONING_PROFILE"]
-    profile_path = "/tmp/RNTestProfile.mobileprovision"
-  
-    File.open(profile_path, "wb") do |file|
-      file.write(Base64.decode64(profile_base64))
-    end
-  
-    profile_path
-  end
-
   lane :import_certs do
-    p12_path = decode_p12
-    profile_path = decode_provisioning_profile
-  
-
-
     create_keychain(
       name: "build.keychain",
       password: "temporary_password",
@@ -121,32 +94,26 @@ platform :ios do
     )
 
     import_certificate(
-      certificate_path: p12_path,
+      certificate_path: "distribution.p12",
       certificate_password: ENV["P12_PASSWORD"],
       keychain_name: "build.keychain",
       keychain_password: "temporary_password"
     )
 
-  
-  
     install_provisioning_profile(
-      path: profile_path
+      path: "profile.mobileprovision"
     )
   end
-  
-  
 
   desc 'Build the iOS app'
   lane :build do
     inc_ver_ios
     import_certs
     xcode_select("/Applications/Xcode_15.3.app")
-    # Install CocoaPods dependencies
-        cocoapods(
-          clean_install: true,
-          podfile: "./ios/Podfile"
-        )
-    # Build the app using gym
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile"
+    )
     gym(
       workspace: "./ios/#{@package['name']}.xcworkspace",
       scheme: @package['name'],
@@ -164,6 +131,7 @@ platform :ios do
     )
   end
 end
+
 
 platform :android do
   desc 'Increment versionCode and set versionName to package.json version.'
