@@ -1,4 +1,5 @@
 require 'pathname'
+workspace = ENV['WORKSPACE']
 
 default_platform(:android)
 
@@ -8,7 +9,6 @@ before_all do
   @app_name = @package['name']
   @platform = ENV["PLATFORM"]
   @versionName = ENV["VERSION_NAME"]
-  workspace = ENV['WORKSPACE']
 
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
