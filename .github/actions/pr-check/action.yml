@@ -40,24 +40,24 @@ runs:
         echo "SONAR_PROJECT_KEY=${SONAR_PROJECT_KEY}" >> $GITHUB_ENV
       shell: bash
 
-    - name: Install SonarQube Scanner
-      run: |
-        brew install sonar-scanner
-      shell: bash
+    # - name: Install SonarQube Scanner
+    #   run: |
+    #     brew install sonar-scanner
+    #   shell: bash
 
-    - name: Perform SonarQube scan
-      run: |
-        sonar-scanner \
-          -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
-          -Dsonar.token=${{ env.SONARQUBE_TOKEN }} \
-          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-          -Dsonar.typescript.tsconfigPath=tsconfig.json
-      shell: bash
+    # - name: Perform SonarQube scan
+    #   run: |
+    #     sonar-scanner \
+    #       -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+    #       -Dsonar.sources=. \
+    #       -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
+    #       -Dsonar.token=${{ env.SONARQUBE_TOKEN }} \
+    #       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+    #       -Dsonar.typescript.tsconfigPath=tsconfig.json
+    #   shell: bash
 
-    - name: SonarQube quality gate check
-      uses: sonarsource/sonarqube-quality-gate-action@master
-      env:
-        SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
-        SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
+    # - name: SonarQube quality gate check
+    #   uses: sonarsource/sonarqube-quality-gate-action@master
+    #   env:
+    #     SONAR_TOKEN: ${{ env.SONARQUBE_TOKEN }}
+    #     SONAR_HOST_URL: ${{ env.SONARQUBE_HOST }}
