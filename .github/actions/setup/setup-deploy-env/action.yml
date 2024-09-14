@@ -9,7 +9,11 @@ inputs:
 runs:
   using: composite
   steps:
-    # Step to get info_file and build_file paths dynamically
+    - name: Debug artifact location
+      run: |
+        echo "Artifact directory: ${{ github.workspace }}/${{ inputs.artifact_name }}"
+        ls -R ${{ github.workspace }}/${{ inputs.artifact_name }}
+
     - name: Set up deploy environment
       id: setup_deploy_env
       run: |

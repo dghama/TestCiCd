@@ -171,6 +171,10 @@ jobs:
         with:
           name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
+      - name: List downloaded artifact directory
+        run: ls -R ${{ github.workspace }}
+        shell: bash
+
       - name: Set up deploy environment
         id: setup_deploy_env
         uses: ./.github/actions/setup/setup-deploy-env
