@@ -1,5 +1,4 @@
 require 'pathname'
-workspace = ENV['WORKSPACE']
 
 default_platform(:android)
 
@@ -120,10 +119,10 @@ platform :ios do
   
       gym(
         configuration: ENV["ENVIRONMENT"],
-        workspace: "#{workspace}/ios/#{@package['name']}.xcworkspace",
+        workspace: "./ios/#{@package['name']}.xcworkspace",
         scheme: @package['name'],
         output_name: @package['name'],
-        output_directory: "#{workspace}/ios/build",
+        output_directory: "./ios/build",
         export_method: "ad-hoc",  # Explicitly specify the export method
         export_options: {
           method: "ad-hoc",  # or "enterprise" or "app-store"
