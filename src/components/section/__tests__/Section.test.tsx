@@ -8,7 +8,7 @@ describe('Section', () => {
       <Section title="Test Title">Test Children</Section>
     );
 
-    expect(getByText('Test Title')).toBeTruthy();
+    expect(getByText('Test Title - ')).toBeTruthy();
     expect(getByText('Test Children')).toBeTruthy();
   });
 
@@ -18,7 +18,7 @@ describe('Section', () => {
     );
 
     // Add assertions for styles based on color scheme
-    expect(getByText('Test Title').props.style).toMatchObject([
+    expect(getByText('Test Title - ').props.style).toMatchObject([
       { fontSize: 24, fontWeight: '600' },
       { color: '#000' }
     ]);
