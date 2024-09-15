@@ -86,6 +86,7 @@ jobs:
       contents: write
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+
       PLATFORM: ${{ matrix.platform }}
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
