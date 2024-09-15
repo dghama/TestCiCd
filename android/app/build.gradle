@@ -112,18 +112,19 @@ android {
         }
     
     }
-    applicationVariants.all { variant ->
+    android.applicationVariants.all { variant ->
         variant.outputs.all { output ->
             // Get the base name from the project property or fallback to the default
-            def baseName = project.hasProperty('output.name') ? project.property('output.name') : output.file.name
-            
+            def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
+
             // Create the new file name by appending the version code
-            def newFileName = "${baseName}.apk"
-            
+            def newFileName = "${baseName}-${variant.versionCode}.apk"
+
             // Set the new file name
-            outputFileName = newFileName
+            output.outputFileName = newFileName
         }
     }
+
 }
 
 dependencies {
@@ -139,3 +140,6 @@ dependencies {
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+project.ext.envConfigFiles = [
+    release: ".env",
+]

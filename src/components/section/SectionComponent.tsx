@@ -1,6 +1,7 @@
 import { View, Text, useColorScheme, StyleSheet } from 'react-native';
 import React, { PropsWithChildren } from 'react';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+import Config from 'react-native-config';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -20,7 +21,7 @@ function SectionComponent({
             color: isDarkMode ? Colors.white : Colors.black
           }
         ]}>
-        {title}
+        {title} - {Config.ENV}
       </Text>
       <Text
         style={[

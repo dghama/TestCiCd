@@ -35,3 +35,26 @@ runs:
       if: ${{ env.PLATFORM == 'android' }}
       run: chmod +x android/gradlew
       shell: bash
+
+    - name: Create .env file
+      run: |
+        if [ "${{ env.ENVIRONMENT }}" == "prod" ]; then
+          echo "${{ secrets.ENV_PROD }}" > .env
+        elif [ "${{ matrix.environment }}" == "staging" ]; then
+          echo "${{ secrets.ENV_STAGING }}" > .env
+        elif [ "${{ matrix.environment }}" == "beta" ]; then
+          echo "${{ secrets.ENV_BETA }}" > .env
+        fi
+
+    - name: Verify .env file content (safely)
+      run: |
+        if [ -f .env ]; then
+          echo ".env file exists"
+          # Print number of lines in .env file without showing content
+          wc -l .env
+          # Optionally, print names of environment variables without values
+          grep -v '^#' .env | cut -d '=' -f1
+        else
+          echo ".env file does not exist"
+          exit 1
+        fi
