@@ -6,7 +6,7 @@ runs:
     - name: 📦 Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18'
 
     - name: 🧹 Clean Node.js cache
       run: yarn cache clean
