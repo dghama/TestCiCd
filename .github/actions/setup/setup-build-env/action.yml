@@ -7,6 +7,13 @@ outputs:
   ARTIFACT_NAME:
     description: 'Name of the artifact to be uploaded'
     value: ${{ steps.set_artifact_name.outputs.ARTIFACT_NAME }}
+inputs:
+  ENV_PROD:
+    description: 'Environment variable for production'
+  ENV_STAGING:
+    description: 'Environment variable for staging'
+  ENV_BETA:
+    description: 'Environment variable for beta'
 
 runs:
   using: composite
@@ -15,9 +22,9 @@ runs:
       id: set_build_dir
       run: |
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
-          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_ENV
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
-         echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_ENV
         else
           echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1
@@ -28,7 +35,7 @@ runs:
       id: set_artifact_name
       run: |
         ARTIFACT_NAME="${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
-        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
       shell: bash
 
     - name: Set gradlew permissions
@@ -38,13 +45,22 @@ runs:
 
     - name: Create .env file
       run: |
-        if [ "${{ env.ENVIRONMENT }}" == "prod" ]; then
-          echo "${{ secrets.ENV_PROD }}" > .env
-        elif [ "${{ matrix.environment }}" == "staging" ]; then
-          echo "${{ secrets.ENV_STAGING }}" > .env
-        elif [ "${{ matrix.environment }}" == "beta" ]; then
-          echo "${{ secrets.ENV_BETA }}" > .env
-        fi
+        case "${{ env.ENVIRONMENT }}" in
+          prod)
+            echo "${{ inputs.ENV_PROD }}" > .env
+            ;;
+          staging)
+            echo "${{ inputs.ENV_STAGING }}" > .env
+            ;;
+          beta)
+            echo "${{ inputs.ENV_BETA }}" > .env
+            ;;
+          *)
+            echo "Unsupported environment: ${{ env.ENVIRONMENT }}" >&2
+            exit 1
+            ;;
+        esac
+      shell: bash
 
     - name: Verify .env file content (safely)
       run: |
@@ -58,3 +74,4 @@ runs:
           echo ".env file does not exist"
           exit 1
         fi
+      shell: bash
