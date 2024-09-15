@@ -98,6 +98,12 @@ jobs:
 
       - name: Set up Android-specific secrets
         if: matrix.platform == 'android'
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
           echo "ANDROID_KEYSTORE_FILE=${{ env.ANDROID_KEYSTORE_FILE }}" >> $GITHUB_ENV
@@ -108,10 +114,15 @@ jobs:
 
       - name: Set up iOS-specific secrets
         if: matrix.platform == 'ios'
+        env:
+          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
         run: |
           echo "$DISTRIBUTION_CERTIFICATE" | base64 --decode > distribution.p12
           echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
           echo "P12_PASSWORD=${{ secrets.P12_PASSWORD }}" >> $GITHUB_ENV
+
         shell: bash
 
       - name: Set up environment
