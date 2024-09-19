@@ -19,26 +19,48 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Create .env file
-      shell: bash
-      run: |
-        ENVIRONMENT="${{ env.ENVIRONMENT }}"
+- name: Create .env file
+  shell: bash
+  run: |
+    ENVIRONMENT="${{ env.ENVIRONMENT }}"
 
-        if [[ "$ENVIRONMENT" == "production" ]]; then
-          ENV_CONTENT="${{ inputs.ENV_PROD }}"
-        elif [[ "$ENVIRONMENT" == "staging" ]]; then
-          ENV_CONTENT="${{ inputs.ENV_STAGING }}"
-        elif [[ "$ENVIRONMENT" == "development" ]]; then
-          ENV_CONTENT="${{ inputs.ENV_DEV }}"
-        elif [[ "$ENVIRONMENT" == "beta" ]]; then
-          ENV_CONTENT="${{ inputs.ENV_BETA }}"
-        else
-          echo "Unknown environment: $ENVIRONMENT" >&2
-          exit 1
-        fi
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+      ENV_CONTENT="${{ inputs.ENV_PROD }}"
+    elif [[ "$ENVIRONMENT" == "staging" ]]; then
+      ENV_CONTENT="${{ inputs.ENV_STAGING }}"
+    elif [[ "$ENVIRONMENT" == "development" ]]; then
+      ENV_CONTENT="${{ inputs.ENV_DEV }}"
+    elif [[ "$ENVIRONMENT" == "beta" ]]; then
+      ENV_CONTENT="${{ inputs.ENV_BETA }}"
+    else
+      echo "Unknown environment: $ENVIRONMENT" >&2
+      exit 1
+    fi
 
-        echo "$ENV_CONTENT" > ${{ github.workspace }}/configuration/.env.$ENVIRONMENT
-        echo "ENVFILE= ${{ github.workspace }}/configuration/.env.$ENVIRONMENT" >> $GITHUB_ENV
+    # Create the .env file
+    ENV_FILE="${{ github.workspace }}/configuration/.env.$ENVIRONMENT"
+    echo "$ENV_CONTENT" > "$ENV_FILE"
+    echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
+
+    # Check if the .env file was created
+    if [[ -f "$ENV_FILE" ]]; then
+      echo ".env file created successfully: $ENV_FILE"
+      
+      # Verify the content of the .env file
+      FILE_CONTENT=$(<"$ENV_FILE")
+      if [[ "$FILE_CONTENT" == "$ENV_CONTENT" ]]; then
+        echo "The .env file has the correct content."
+        echo "Content of the .env file:"
+        echo "$FILE_CONTENT"  # Show the content of the .env file
+      else
+        echo "The .env file does not have the expected content." >&2
+        exit 1
+      fi
+    else
+      echo "Failed to create .env file: $ENV_FILE" >&2
+      exit 1
+    fi
+
 
     - name: Set build directory
       id: set_build_dir
