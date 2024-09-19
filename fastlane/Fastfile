@@ -173,7 +173,7 @@ platform :android do
       },
       system_properties: {
         "ENVFILE": ENV["ENVFILE"]
-      }
+      },
       print_command: true
     )
     sh "ls -R #{project_dir}/android/app/build/outputs/apk"
