@@ -127,6 +127,10 @@ android {
             dimension "environment"
             applicationIdSuffix ".beta"
         }
+       developpement {
+            dimension "environment"
+            applicationIdSuffix ".developpement"
+        }
     }
     android.applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -155,20 +159,16 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
-def getEnvFile = {
-    def environment = System.getProperty("org.gradle.project.envFile")
-    if (environment == null) {
-        environment = ".env.staging" // Default to staging if not specified
-    }
-    return environment
+def getEnvFile() {
+    def environmentFile = System.getProperty("org.gradle.project.envFile")
+    return environmentFile ?: ".env.staging" // Fallback to default if not set
 }
 
 project.ext.envConfigFiles = [
     debug: getEnvFile(),
     release: getEnvFile(),
-    staging: ".env.staging",
-    production: ".env.production",
-    beta: ".env.beta"
+    staging: getEnvFile(),
+    production:  getEnvFile(),
+    beta:  getEnvFile(),
 ]
-
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"

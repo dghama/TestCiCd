@@ -16,8 +16,7 @@ inputs:
     description: 'Environment variable for beta'
   ENV_DEV:
     description: 'Environment variable for development'
-  ENVIRONMENT:
-    description: 'Environment to build for'
+
 runs:
   using: composite
   steps:

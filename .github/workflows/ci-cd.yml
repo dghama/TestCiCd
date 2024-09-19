@@ -127,7 +127,6 @@ jobs:
         id: setup_env
         uses: ./.github/actions/setup/setup-build-env
         with:
-          ENVIRONMENT: ${{ env.ENVIRONMENT }}
           ENV_PROD: ${{ secrets.ENV_PROD }}
           ENV_STAGING: ${{ secrets.ENV_STAGING }}
           ENV_BETA: ${{ secrets.ENV_BETA }}
