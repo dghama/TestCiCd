@@ -14,15 +14,37 @@ inputs:
     description: 'Environment variable for staging'
   ENV_BETA:
     description: 'Environment variable for beta'
-
+  ENV_DEV:
+    description: 'Environment variable for DEVS'
 runs:
   using: composite
   steps:
+    - name: Create .env file
+      shell: bash
+      run: |
+        ENVIRONMENT="${{ env.ENVIRONMENT }}"
+        
+        if [[ "$ENVIRONMENT" == "production" ]]; then
+          ENV_CONTENT="${{ inputs.ENV_PROD }}"
+        elif [[ "$ENVIRONMENT" == "staging" ]]; then
+          ENV_CONTENT="${{ inputs.ENV_STAGING }}"
+        elif [[ "$ENVIRONMENT" == "development" ]]; then
+          ENV_CONTENT="${{ inputs.ENV_DEV }}"
+        elif [[ "$ENVIRONMENT" == "beta" ]]; then
+          ENV_CONTENT="${{ inputs.ENV_BETA }}"
+        else
+          echo "Unknown environment: $ENVIRONMENT" >&2
+          exit 1
+        fi
+
+        echo "$ENV_CONTENT" > ./configuration/.env.$ENVIRONMENT
+        echo "ENVFILE=./configuration/.env.$ENVIRONMENT" >> $GITHUB_ENV
+
     - name: Set build directory
       id: set_build_dir
       run: |
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
-          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/release" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/${{ env.ENVIRONMENT }}" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
          echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
         else
@@ -41,37 +63,4 @@ runs:
     - name: Set gradlew permissions
       if: ${{ env.PLATFORM == 'android' }}
       run: chmod +x android/gradlew
-      shell: bash
-
-    - name: Create .env file
-      run: |
-        case "${{ env.ENVIRONMENT }}" in
-          prod)
-            echo "${{ inputs.ENV_PROD }}" > .env
-            ;;
-          staging)
-            echo "${{ inputs.ENV_STAGING }}" > .env
-            ;;
-          beta)
-            echo "${{ inputs.ENV_BETA }}" > .env
-            ;;
-          *)
-            echo "Unsupported environment: ${{ env.ENVIRONMENT }}" >&2
-            exit 1
-            ;;
-        esac
-      shell: bash
-
-    - name: Verify .env file content (safely)
-      run: |
-        if [ -f .env ]; then
-          echo ".env file exists"
-          # Print number of lines in .env file without showing content
-          wc -l .env
-          # Optionally, print names of environment variables without values
-          grep -v '^#' .env | cut -d '=' -f1
-        else
-          echo ".env file does not exist"
-          exit 1
-        fi
       shell: bash

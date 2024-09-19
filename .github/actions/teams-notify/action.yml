@@ -46,7 +46,7 @@ runs:
           VERSION_URLS="${VERSION_URLS}\n- **iOS Version**: [$IOS_VERSION_URL]($IOS_VERSION_URL)"
         fi
 
-        PAYLOAD=$(cat <<EOF
+        PAYLOAD=$(cat << EOF
         {
           "@type": "MessageCard",
           "@context": "http://schema.org/extensions",
@@ -58,19 +58,11 @@ runs:
               "activitySubtitle": "GitHub Actions",
               "facts": [
                 {
-                  "name": "Repository:",
-                  "value": "$GITHUB_REPOSITORY"
-                },
-                {
-                  "name": "Workflow:",
-                  "value": "$GITHUB_WORKFLOW"
-                },
-                {
-                  "name": "Branch:",
-                  "value": "$GITHUB_REF_NAME"
+                  "name": "Status",
+                  "value": "$STATUS"
                 }
               ],
-              "text": "$CUSTOM_MESSAGE $VERSION_URLS"
+              "text": "$CUSTOM_MESSAGE$VERSION_URLS"
             }
           ]
         }

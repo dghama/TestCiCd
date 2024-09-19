@@ -15,10 +15,10 @@ on:
         default: 'staging'
         type: choice
         options:
+          - development
           - staging
-          - alpha
           - beta
-          - prod
+          - production
 
       version_name:
         description: 'version name (e.g., 0.0.1)'
@@ -44,10 +44,6 @@ jobs:
         uses: ./.github/actions/setup/android-runner
       - name: Setup ios environment
         uses: ./.github/actions/setup/ios-runner
-      - name: Setup environment CONFIG
-        run: |
-          # Create .env file based on the selected environment
-          echo "${{ secrets.ENV_env.ENVIRONMENT }}" > .env
 
   install-dependencies:
     runs-on: macos-latest
@@ -134,6 +130,7 @@ jobs:
           ENV_PROD: ${{ secrets.ENV_PROD }}
           ENV_STAGING: ${{ secrets.ENV_STAGING }}
           ENV_BETA: ${{ secrets.ENV_BETA }}
+          ENV_DEV: ${{ secrets.ENV_DEV }}
 
       - name: Build ${{ matrix.platform }}
         run: bundle exec fastlane ${{ matrix.platform }} build
@@ -195,7 +192,7 @@ jobs:
         shell: bash
 
       - name: Upload ${{ matrix.platform }} - ${{ env.ENVIRONMENT }} application to MStore
-        if: ${{ env.ENVIRONMENT != 'prod' }}
+        if: ${{ env.ENVIRONMENT != 'production' }}
         env:
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           WORKSPACE: ${{ github.workspace }}
@@ -214,12 +211,14 @@ jobs:
     needs: deploy
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Notify teams
         uses: ./.github/actions/teams-notify
         with:
           status: ${{ job.status }}
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
           custom_message: |
-            New version is available on MStore.
+            New version is available on MStore :
           android_version_url: ${{ needs.deploy.outputs.ANDROID_VERSION_TOKEN }}
           ios_version_url: ${{ needs.deploy.outputs.IOS_VERSION_TOKEN }}

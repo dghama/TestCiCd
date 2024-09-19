@@ -56,7 +56,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -70,6 +70,16 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
+
+// Add this at the top of your file, after the initial imports and before the android {} block
+def getEnvFile = {
+    def environment = System.getProperty("org.gradle.project.envFile")
+    if (environment == null) {
+        environment = ".env.staging" // Default to staging if not specified
+    }
+    return environment
+}
+
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -112,6 +122,23 @@ android {
         }
     
     }
+    flavorDimensions "environment"
+    productFlavors {
+        staging {
+            dimension "environment"
+            applicationIdSuffix ".staging"
+            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
+        }
+        production {
+            dimension "environment"
+            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
+        }
+        beta {
+            dimension "environment"
+            applicationIdSuffix ".beta"
+            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
+        }
+    }
     android.applicationVariants.all { variant ->
         variant.outputs.all { output ->
             // Get the base name from the project property or fallback to the default
@@ -139,7 +166,12 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 project.ext.envConfigFiles = [
-    release: ".env",
+    debug: getEnvFile(),
+    release: getEnvFile(),
+    staging: ".env.staging",
+    production: ".env.production",
+    beta: ".env.beta"
 ]
+
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"

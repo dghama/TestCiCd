@@ -13,6 +13,12 @@ before_all do
   puts "Environment: #{@environment}"
   puts "App Name: #{@app_name}"
   puts "Platform: #{@platform}"
+
+  # The .env file is already created by the GitHub Action
+  # We just need to ensure ENVFILE is set correctly
+  unless ENV["ENVFILE"]
+    ENV["ENVFILE"] = "./configuration/.env.#{@environment}"
+  end
 end
 
 def project_dir
@@ -153,17 +159,20 @@ platform :android do
   lane :build do
     inc_ver_and
     gradle(
-      task: "clean assembleRelease",
+      task: "clean assemble#{@environment}Release",
       project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
-        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
+        "org.gradle.project.envFile" => "./configuration/.env.#{@environment}",
       },
       print_command: true
     )
+    sh "ls -R #{project_dir}/android/app/build/outputs/apk"
+
   end
 end
 desc 'Upload the app to the MStore'

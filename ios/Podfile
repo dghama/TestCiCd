@@ -26,6 +26,8 @@ target 'rncicdtemplate' do
   target 'rncicdtemplateTests' do
     inherit! :complete
     # Pods for testing
+    pod 'react-native-config', :path => '../node_modules/react-native-config'
+
   end
 
   post_install do |installer|
