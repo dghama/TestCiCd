@@ -157,7 +157,7 @@ platform :android do
      if File.exist?(env_file)
        sh "cat #{env_file}"
      else
-       puts "Environment file #{env_file} does not exist."
+       puts "Fastlane Error: Environment file #{env_file} does not exist."
      end
  
     inc_ver_and
