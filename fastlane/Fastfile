@@ -124,9 +124,9 @@ platform :ios do
         scheme: @package['name'],
         output_name: @package['name'],
         output_directory: "./ios/build",
-        export_method: "ad-hoc",  # Explicitly specify the export method
+        export_method: "ad-hoc",
         export_options: {
-          method: "ad-hoc",  # or "enterprise" or "app-store"
+          method: "ad-hoc",
           provisioningProfiles: {
             "com.mobelite.testRNcicd" => "RNTestProfile"
           },

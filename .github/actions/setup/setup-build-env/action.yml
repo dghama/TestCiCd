@@ -37,8 +37,8 @@ runs:
           exit 1
         fi
 
-        echo "$ENV_CONTENT" > ./configuration/.env.$ENVIRONMENT
-        echo "ENVFILE=./configuration/.env.$ENVIRONMENT" >> $GITHUB_ENV
+        echo "$ENV_CONTENT" > ${{ github.workspace }}/configuration/.env.$ENVIRONMENT
+        echo "ENVFILE= ${{ github.workspace }}/configuration/.env.$ENVIRONMENT" >> $GITHUB_ENV
 
     - name: Set build directory
       id: set_build_dir
