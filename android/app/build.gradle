@@ -160,7 +160,7 @@ dependencies {
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 def getEnvFile() {
-    def environmentFile = System.getProperty("org.gradle.project.envFile") ? System.getProperty("org.gradle.project.envFile") : ".env.staging" // Fallback to default if not set
+    def environmentFile = System.getProperty("org.gradle.project.envFile") ? : ".env.staging" // Fallback to default if not set
 
     // Read and print the contents of the environment file
     def envFile = file(environmentFile)
@@ -176,6 +176,7 @@ def getEnvFile() {
 
     return environmentFile
 }
+
 
 project.ext.envConfigFiles = [
     debug: getEnvFile(),
