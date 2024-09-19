@@ -170,8 +170,10 @@ platform :android do
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "org.gradle.project.envFile" => ENV["ENVFILE"],
       },
+      system_properties: {
+        "ENVFILE": ENV["ENVFILE"]
+      }
       print_command: true
     )
     sh "ls -R #{project_dir}/android/app/build/outputs/apk"
