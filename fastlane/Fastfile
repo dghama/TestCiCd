@@ -14,11 +14,8 @@ before_all do
   puts "App Name: #{@app_name}"
   puts "Platform: #{@platform}"
 
-  # The .env file is already created by the GitHub Action
-  # We just need to ensure ENVFILE is set correctly
-  unless ENV["ENVFILE"]
-    ENV["ENVFILE"] = "./configuration/.env.#{@environment}"
-  end
+  ENV["ENVFILE"] = "./configuration/.env.#{@environment}"
+
 end
 
 def project_dir
@@ -167,7 +164,7 @@ platform :android do
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "org.gradle.project.envFile" => "./configuration/.env.#{@environment}",
+        "org.gradle.project.envFile" => ENV["ENVFILE"],
       },
       print_command: true
     )

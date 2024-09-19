@@ -23,7 +23,7 @@ runs:
       shell: bash
       run: |
         ENVIRONMENT="${{ env.ENVIRONMENT }}"
-        
+
         if [[ "$ENVIRONMENT" == "production" ]]; then
           ENV_CONTENT="${{ inputs.ENV_PROD }}"
         elif [[ "$ENVIRONMENT" == "staging" ]]; then

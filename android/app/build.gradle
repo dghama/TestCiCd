@@ -71,14 +71,6 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-// Add this at the top of your file, after the initial imports and before the android {} block
-def getEnvFile = {
-    def environment = System.getProperty("org.gradle.project.envFile")
-    if (environment == null) {
-        environment = ".env.staging" // Default to staging if not specified
-    }
-    return environment
-}
 
 
 android {
@@ -127,16 +119,13 @@ android {
         staging {
             dimension "environment"
             applicationIdSuffix ".staging"
-            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
         }
         production {
             dimension "environment"
-            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
         }
         beta {
             dimension "environment"
             applicationIdSuffix ".beta"
-            resValue "string", "app_name", project.hasProperty("APP_NAME") ? project.env.get("APP_NAME") : "MyApp"
         }
     }
     android.applicationVariants.all { variant ->
@@ -166,6 +155,14 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+def getEnvFile = {
+    def environment = System.getProperty("org.gradle.project.envFile")
+    if (environment == null) {
+        environment = ".env.staging" // Default to staging if not specified
+    }
+    return environment
+}
+
 project.ext.envConfigFiles = [
     debug: getEnvFile(),
     release: getEnvFile(),
