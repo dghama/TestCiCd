@@ -160,15 +160,29 @@ dependencies {
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 def getEnvFile() {
-    def environmentFile = System.getProperty("org.gradle.project.envFile")
-    return environmentFile ?: ".env.staging" // Fallback to default if not set
+    def environmentFile = System.getProperty("org.gradle.project.envFile") ?: ".env.staging" // Fallback to default if not set
+
+    // Read and print the contents of the environment file
+    def envFile = file(environmentFile)
+    if (envFile.exists()) {
+        println "Using environment file: ${environmentFile}"
+        println "Contents of ${environmentFile}:"
+        envFile.eachLine { line ->
+            println line
+        }
+    } else {
+        println "Environment file ${environmentFile} does not exist."
+    }
+
+    return environmentFile
 }
 
 project.ext.envConfigFiles = [
     debug: getEnvFile(),
     release: getEnvFile(),
     staging: getEnvFile(),
-    production:  getEnvFile(),
-    beta:  getEnvFile(),
+    production: getEnvFile(),
+    beta: getEnvFile(),
 ]
+
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
