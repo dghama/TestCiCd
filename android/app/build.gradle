@@ -137,7 +137,8 @@ android {
     android.applicationVariants.all { variant ->
 
         variant.buildConfigField "String", "ENV_FILE", "\"${getEnvFile(variant)}\""
-
+        // Load the .env file
+        project.apply from: project.file(getEnvFile(variant))
         variant.outputs.all { output ->
             // Get the base name from the project property or fallback to the default
             def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
@@ -164,39 +165,15 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
-// def getEnvFile() {
-//     def environmentFile = System.getenv("ENVFILE") ?: ".env.staging"
 
-
-//     // Read and print the contents of the environment file
-//     def envFile = file(environmentFile)
-//     if (envFile.exists()) {
-//         println "Using environment file: ${environmentFile}"
-//         println "Contents of ${environmentFile}:"
-//         envFile.eachLine { line ->
-//             println line
-//         }
-//     } else {
-//         println "Environment file ${environmentFile} does not exist."
-//     }
-
-//     return environmentFile
-// }
 def getEnvFile(variant) {
     def envFile = System.getenv("ENVFILE")
     if (envFile == null || envFile.isEmpty()) {
         envFile = "configuration/.env.${variant.flavorName}"
     }
+    println "Using env file: ${envFile}"
+    println "File exists: ${new File(envFile).exists()}"
     return envFile
 }
-
-
-// project.ext.envConfigFiles = [
-//     debug: getEnvFile(),
-//     release: getEnvFile(),
-//     staging: getEnvFile(),
-//     production: getEnvFile(),
-//     beta: getEnvFile(),
-// ]
 
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
