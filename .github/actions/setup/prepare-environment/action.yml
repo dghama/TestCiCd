@@ -1,5 +1,5 @@
-name: 'Environment Setup'
-description: 'Sets up Java and Android SDK for the build environment'
+name: 'Prepare build environment'
+description: 'Sets up Java and ruby version for the build environment'
 
 runs:
   using: 'composite'

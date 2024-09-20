@@ -47,8 +47,17 @@ jobs:
     runs-on: macos-latest
     needs: checkout
     steps:
-      - name: Setup android environment
-        uses: ./.github/actions/setup/prepare-environment
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.6.10'
+          bundler-cache: false
 
   install-dependencies:
     runs-on: macos-latest
