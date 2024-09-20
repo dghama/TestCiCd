@@ -4,7 +4,9 @@ outputs:
   ARTIFACT_NAME:
     description: 'Name of the artifact to be uploaded'
     value: ${{ steps.set_artifact_name.outputs.ARTIFACT_NAME }}
-
+  BUILD_DIR:
+  description: 'Directory where build artifacts are stored'
+  value: ${{ steps.set_build_dir.outputs.BUILD_DIR }}
 inputs:
   ENV_PROD:
     description: 'Environment variable for production'
