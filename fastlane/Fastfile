@@ -162,7 +162,7 @@ platform :android do
  
     inc_ver_and
     gradle(
-      task: "clean assemble#{@environment}Release",
+      task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
         "output.name" => "#{@app_name}-#{@environment}",
