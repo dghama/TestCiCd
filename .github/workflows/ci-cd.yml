@@ -146,7 +146,7 @@ jobs:
 
         shell: bash
 
-      - name: Set up environment
+      - name: Set up  for different environments
         id: setup_env
         uses: ./.github/actions/build-environment
         with:
