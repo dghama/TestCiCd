@@ -95,6 +95,10 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check PR codeBase
         uses: ./.github/actions/pr-check
         env:
