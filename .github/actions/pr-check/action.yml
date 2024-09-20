@@ -8,12 +8,15 @@ runs:
 
     - name: Run type check
       run: yarn typecheck
+      shell: bash
 
     - name: Run lint
       run: yarn lint
+      shell: bash
 
     - name: Run tests with coverage
       run: yarn jest --coverage --runInBand --detectOpenHandles --forceExit
+      shell: bash
 
     - name: Comment coverage report
       uses: romeovs/lcov-reporter-action@v0.3.1
