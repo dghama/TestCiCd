@@ -114,38 +114,10 @@ android {
         }
     
     }
-    flavorDimensions "environment"
-    productFlavors {
-        staging {
-            dimension "environment"
-            applicationIdSuffix ".staging"
-        }
-        production {
-            dimension "environment"
-        }
-        beta {
-            dimension "environment"
-            applicationIdSuffix ".beta"
-            
-        }
-       developpement {
-            dimension "environment"
-            applicationIdSuffix ".developpement"
-
-        }
-    }
-    android.applicationVariants.all { variant ->
-
-        def envFile = getEnvFile(variant)
-        variant.buildConfigField "String", "ENV_FILE", "\"${envFile}\""
-        
-        try {
-            project.apply from: project.file(envFile)
-            println "Successfully loaded env file: ${envFile}"
-        } catch (Exception e) {
-            println "Warning: Could not load env file: ${envFile}"
-            println "Error: ${e.message}"
-        }
+   
+    
+    android.applicationVariants.all { variant ->        
+   
         variant.outputs.all { output ->
             // Get the base name from the project property or fallback to the default
             def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
@@ -173,13 +145,5 @@ dependencies {
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 
-def getEnvFile(variant) {
-    def envFile = System.getenv("ENVFILE")
-    if (envFile == null || envFile.isEmpty()) {
-        envFile = "${project.rootDir}/../configuration/.env.${variant.flavorName}"
-    }
-    println "Looking for env file: ${envFile}"
-    println "File exists: ${new File(envFile).exists()}"
-    return envFile
-}
+
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
