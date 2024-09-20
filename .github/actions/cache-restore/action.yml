@@ -13,17 +13,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-node-modules-
 
-    # - name: Restore CocoaPods cache
-    #   if: ${{ env.PLATFORM == 'ios' }}
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: |
-    #       ios/Pods
-    #       ios/Podfile.lock
-    #     key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-pods-
-
     - name: Set bundle config path
       run: bundle config set --local path 'vendor/bundle'
       shell: bash
@@ -36,15 +25,3 @@ runs:
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-gems-
-
-    - name: Install Ruby dependencies
-      run: |
-        if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
-          echo "Cache miss. Installing gems..."
-          bundle install --jobs 4 --retry 3
-
-        else
-          echo "Using cached gems"
-          bundle install --local
-        fi
-      shell: bash

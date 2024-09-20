@@ -57,17 +57,38 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.6.10'
-          bundler-cache: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
   install-dependencies:
     runs-on: macos-latest
     needs: prepare-environment
     steps:
-      - name: Install dependencies
-        uses: ./.github/actions/dependency-installation
+      - name: Cache node_modules
+        uses: actions/cache@v4
         with:
-          # You can pass in paths or other variables if needed
-          repo-path: ${{ github.workspace }}
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install Node dependencies
+        run: yarn install --frozen-lockfile
+        shell: bash
+      # - name: Install Ruby dependencies
+      #   run: |
+      #     if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
+      #       echo "Cache miss. Installing gems..."
+      #       bundle install --jobs 4 --retry 3
+
+      #     else
+      #       echo "Using cached gems"
+      #       bundle install --local
+      #     fi
+      #   shell: bash
 
   quality-checks:
     needs: install-dependencies
