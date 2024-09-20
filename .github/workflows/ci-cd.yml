@@ -33,13 +33,20 @@ env:
   CI: true
   ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
 jobs:
-  prepare-environment:
+  checkout:
     runs-on: macos-latest
+    outputs:
+      checkout_dir: ${{ github.workspace }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+  prepare-environment:
+    runs-on: macos-latest
+    needs: checkout
+    steps:
       - name: Setup android environment
         uses: ./.github/actions/setup/android-runner
       - name: Setup ios environment
@@ -49,10 +56,6 @@ jobs:
     runs-on: macos-latest
     needs: prepare-environment
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Install dependencies
         uses: ./.github/actions/dependency-installation
 
@@ -61,10 +64,6 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Check PR codeBase
         uses: ./.github/actions/pr-check
         env:
@@ -86,11 +85,6 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 
@@ -166,8 +160,6 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
     steps:
-      - uses: actions/checkout@v4
-
       - name: Restore cache
         uses: ./.github/actions/cache-restore
 
@@ -213,8 +205,6 @@ jobs:
     needs: deploy
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Notify teams
         uses: ./.github/actions/teams-notify
         with:
