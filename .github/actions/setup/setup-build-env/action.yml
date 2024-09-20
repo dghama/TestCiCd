@@ -21,45 +21,49 @@ runs:
   using: composite
   steps:
     - name: Create .env file
-    shell: bash
-    run: |
-      ENVIRONMENT="${{ env.ENVIRONMENT }}"
-      
-      if [[ "$ENVIRONMENT" ]]; then
-        # Assuming inputs.ENV_env is a map or similar structure
-        ENV_CONTENT="${{ inputs.ENV_env[ENVIRONMENT] }}"
-        
-        if [[ -z "$ENV_CONTENT" ]]; then
-          echo "No content found for environment: $ENVIRONMENT" >&2
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        # Retrieve the environment variable
+        ENVIRONMENT="${{ env.ENVIRONMENT }}"
+
+        # Check if the environment is specified
+        if [[ "$ENVIRONMENT" ]]; then
+          # Get the content for the specified environment
+          ENV_CONTENT="${{ inputs.ENV_env[ENVIRONMENT] }}"
+          
+          # Validate that content was found
+          if [[ -z "$ENV_CONTENT" ]]; then
+            echo "No content found for environment: $ENVIRONMENT" >&2
+            exit 1
+          fi
+        else
+          echo "Unknown environment: $ENVIRONMENT" >&2
           exit 1
         fi
-      else
-        echo "Unknown environment: $ENVIRONMENT" >&2
-        exit 1
-      fi
 
-      # Create the configuration directory if it doesn't exist
-      CONFIG_DIR="configuration"
-      if [[ ! -d "$CONFIG_DIR" ]]; then
-        mkdir -p "$CONFIG_DIR"
-        echo "Created directory: $CONFIG_DIR"
-      fi
+        # Create the configuration directory if it doesn't exist
+        CONFIG_DIR="configuration"
+        if [[ ! -d "$CONFIG_DIR" ]]; then
+          mkdir -p "$CONFIG_DIR"
+          echo "Created directory: $CONFIG_DIR"
+        fi
 
-      # Create the .env file
-      ENV_FILE="$CONFIG_DIR/.env.$ENVIRONMENT"
-      echo "$ENV_CONTENT" > "$ENV_FILE"
-      
-      # Set the ENVFILE path in the GitHub environment
-      echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
+        # Create the .env file based on the environment
+        ENV_FILE="$CONFIG_DIR/.env.$ENVIRONMENT"
+        echo "$ENV_CONTENT" > "$ENV_FILE"
 
+        # Set the ENVFILE path in the GitHub environment for future steps
+        echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
 
     - name: Set build directory
       id: set_build_dir
       run: |
+        # Determine the build directory based on the platform
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
           echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
-         echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
         else
           echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1
@@ -70,10 +74,13 @@ runs:
       id: set_artifact_name
       shell: bash
       run: |
+        # Create a unique artifact name using the environment and commit SHA
         ARTIFACT_NAME="${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
         echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
 
     - name: Set gradlew permissions
       if: ${{ env.PLATFORM == 'android' }}
-      run: chmod +x android/gradlew
+      run: |
+        # Change permissions for the gradlew script to make it executable
+        chmod +x android/gradlew
       shell: bash
