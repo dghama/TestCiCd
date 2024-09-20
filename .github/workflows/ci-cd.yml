@@ -120,6 +120,11 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Restore node modules from cache
         uses: ./.github/actions/cache-restore
 

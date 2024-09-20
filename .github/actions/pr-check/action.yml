@@ -3,35 +3,24 @@ name: 'PR Check codeBase'
 runs:
   using: 'composite'
   steps:
-    - name: 📦 Restore node modules from cache
+    - name: Restore node modules from cache
       uses: ./.github/actions/cache-restore
 
-    - name: 🚑 Run type check
+    - name: Run type check
       run: yarn typecheck
-      shell: bash
 
-    - name: 🏃‍♂️ Run tests with coverage
-      run: yarn test --coverage --coverageReporters="text" --coverageReporters="lcov"
-      shell: bash
+    - name: Run lint
+      run: yarn lint
 
-    - name: 📦 Upload coverage report
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-${{ github.sha }}
-        path: ./coverage
-        if-no-files-found: error
-        retention-days: 1
+    - name: Run tests with coverage
+      run: yarn jest --coverage --runInBand --detectOpenHandles --forceExit
 
-    - name: 💯 Comment coverage report
+    - name: Comment coverage report
       uses: romeovs/lcov-reporter-action@v0.3.1
       if: github.event_name == 'pull_request'
       with:
         lcov-file: ./coverage/lcov.info
         github-token: ${{ github.token }}
-
-    - name: 🏃‍♂️ Run lint
-      run: yarn lint
-      shell: bash
 
     - name: Extract SonarQube Project Key
       id: extract-key
@@ -43,7 +32,6 @@ runs:
     # - name: Install SonarQube Scanner
     #   run: |
     #     brew install sonar-scanner
-    #   shell: bash
 
     # - name: Perform SonarQube scan
     #   run: |
@@ -54,7 +42,6 @@ runs:
     #       -Dsonar.token=${{ env.SONARQUBE_TOKEN }} \
     #       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
     #       -Dsonar.typescript.tsconfigPath=tsconfig.json
-    #   shell: bash
 
     # - name: SonarQube quality gate check
     #   uses: sonarsource/sonarqube-quality-gate-action@master
