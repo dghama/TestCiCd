@@ -24,30 +24,29 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
+        # Define a mapping for environment variables
+        declare -A env_map=(
+          ["production"]="${{ inputs.ENV_PROD }}"
+          ["staging"]="${{ inputs.ENV_STAGING }}"
+          ["beta"]="${{ inputs.ENV_BETA }}"
+          ["development"]="${{ inputs.ENV_DEV }}"
+        )
+
         # Retrieve the environment variable
         ENVIRONMENT="${{ env.ENVIRONMENT }}"
 
-        # Check if the environment is specified
-        if [[ "$ENVIRONMENT" ]]; then
-          # Get the content for the specified environment
-          ENV_CONTENT="${{ inputs.ENV_env[ENVIRONMENT] }}"
-          
-          # Validate that content was found
-          if [[ -z "$ENV_CONTENT" ]]; then
-            echo "No content found for environment: $ENVIRONMENT" >&2
-            exit 1
-          fi
-        else
-          echo "Unknown environment: $ENVIRONMENT" >&2
+        # Check if the environment is specified and get the corresponding content
+        ENV_CONTENT="${env_map[$ENVIRONMENT]}"
+
+        if [[ -z "$ENV_CONTENT" ]]; then
+          echo "Unknown environment or no content found for: $ENVIRONMENT" >&2
           exit 1
         fi
 
         # Create the configuration directory if it doesn't exist
         CONFIG_DIR="configuration"
-        if [[ ! -d "$CONFIG_DIR" ]]; then
-          mkdir -p "$CONFIG_DIR"
-          echo "Created directory: $CONFIG_DIR"
-        fi
+        mkdir -p "$CONFIG_DIR"
+        echo "Created directory: $CONFIG_DIR"
 
         # Create the .env file based on the environment
         ENV_FILE="$CONFIG_DIR/.env.$ENVIRONMENT"
