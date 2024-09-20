@@ -20,40 +20,55 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Create .env file
-      shell: bash # Ensure the shell is explicitly set to Bash
-      working-directory: ${{ github.workspace }}
-      run: |
-        # Define a mapping for environment variables
-        declare -A env_map=(
-          ["production"]="${{ inputs.ENV_PROD }}"
-          ["staging"]="${{ inputs.ENV_STAGING }}"
-          ["beta"]="${{ inputs.ENV_BETA }}"
-          ["development"]="${{ inputs.ENV_DEV }}"
-        )
+  - name: Create .env file
+    shell: bash
+    working-directory: ${{ github.workspace }}
+    run: |
+      # Function to get env content based on environment
+      get_env_content() {
+        case "$1" in
+          "production")
+            echo "${{ inputs.ENV_PROD }}"
+            ;;
+          "staging")
+            echo "${{ inputs.ENV_STAGING }}"
+            ;;
+          "beta")
+            echo "${{ inputs.ENV_BETA }}"
+            ;;
+          "development")
+            echo "${{ inputs.ENV_DEV }}"
+            ;;
+          *)
+            echo ""
+            ;;
+        esac
+      }
 
-        # Retrieve the environment variable
-        ENVIRONMENT="${{ env.ENVIRONMENT }}"
+      # Retrieve the environment variable
+      ENVIRONMENT="${{ env.ENVIRONMENT }}"
 
-        # Check if the environment is specified and get the corresponding content
-        ENV_CONTENT="${env_map[$ENVIRONMENT]}"
+      # Get the corresponding content
+      ENV_CONTENT=$(get_env_content "$ENVIRONMENT")
 
-        if [[ -z "$ENV_CONTENT" ]]; then
-          echo "Unknown environment or no content found for: $ENVIRONMENT" >&2
-          exit 1
-        fi
+      if [ -z "$ENV_CONTENT" ]; then
+        echo "Unknown environment or no content found for: $ENVIRONMENT" >&2
+        exit 1
+      fi
 
-        # Create the configuration directory if it doesn't exist
-        CONFIG_DIR="configuration"
-        mkdir -p "$CONFIG_DIR"
-        echo "Created directory: $CONFIG_DIR"
+      # Create the configuration directory if it doesn't exist
+      CONFIG_DIR="configuration"
+      mkdir -p "$CONFIG_DIR"
+      echo "Created directory: $CONFIG_DIR"
 
-        # Create the .env file based on the environment
-        ENV_FILE="$CONFIG_DIR/.env.$ENVIRONMENT"
-        echo "$ENV_CONTENT" > "$ENV_FILE"
+      # Create the .env file based on the environment
+      ENV_FILE="$CONFIG_DIR/.env.$ENVIRONMENT"
+      echo "$ENV_CONTENT" > "$ENV_FILE"
 
-        # Set the ENVFILE path in the GitHub environment for future steps
-        echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
+      # Set the ENVFILE path in the GitHub environment for future steps
+      echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
+
+      echo ".env file created at $ENV_FILE"
 
     - name: Set build directory
       id: set_build_dir
