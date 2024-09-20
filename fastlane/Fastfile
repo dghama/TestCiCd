@@ -152,14 +152,7 @@ platform :android do
 
   desc 'Build the Android app'
   lane :build do
-     # Display content of the specified environment file
-     env_file = ENV["ENVFILE"]
-     if File.exist?(env_file)
-       sh "cat #{env_file}"
-     else
-       puts "Fastlane Error: Environment file #{env_file} does not exist."
-     end
- 
+
     inc_ver_and
     gradle(
       task: "clean assembleRelease",

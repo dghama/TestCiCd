@@ -39,7 +39,7 @@ runs:
         fi
 
         # Create the .env file
-        ENV_FILE="${{ github.workspace }}/configuration/.env.$ENVIRONMENT"
+        ENV_FILE="configuration/.env.$ENVIRONMENT"
         ROOT_ENV_FILE="${{ github.workspace }}/.env"
         echo "$ENV_CONTENT" > "$ENV_FILE"
         echo "$ENV_CONTENT" > "$ROOT_ENV_FILE"
