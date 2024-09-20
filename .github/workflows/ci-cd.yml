@@ -200,9 +200,6 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
     steps:
-      - name: Restore cache
-        uses: ./.github/actions/cache-restore
-
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
