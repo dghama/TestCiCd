@@ -69,7 +69,7 @@ runs:
       id: set_build_dir
       run: |
         if [[ "${{ env.PLATFORM }}" == "android" ]]; then
-          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk/${{ env.ENVIRONMENT }}" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk" >> $GITHUB_OUTPUT
         elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
          echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
         else
