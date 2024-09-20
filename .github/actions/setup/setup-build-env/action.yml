@@ -40,8 +40,10 @@ runs:
 
         # Create the .env file
         ENV_FILE="${{ github.workspace }}/configuration/.env.$ENVIRONMENT"
+        ROOT_ENV_FILE="${{ github.workspace }}/.env"
         echo "$ENV_CONTENT" > "$ENV_FILE"
-        ENV_FILE_PATH="../../configuration/.env.$ENVIRONMENT"
+        echo "$ENV_CONTENT" > "$ROOT_ENV_FILE"
+        ENV_FILE_PATH="configuration/.env.$ENVIRONMENT"
         echo "ENVFILE=$ENV_FILE_PATH" >> $GITHUB_ENV
 
         # Check if the .env file was created
