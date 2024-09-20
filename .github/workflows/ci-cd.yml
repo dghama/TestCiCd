@@ -148,7 +148,7 @@ jobs:
 
       - name: Set up environment
         id: setup_env
-        uses: ./.github/actions/setup/build-environment
+        uses: ./.github/actions/build-environment
         with:
           ENV_PROD: ${{ secrets.ENV_PROD }}
           ENV_STAGING: ${{ secrets.ENV_STAGING }}
@@ -201,7 +201,7 @@ jobs:
 
       - name: Set up deploy environment
         id: setup_deploy_env
-        uses: ./.github/actions/setup/deploy-environment
+        uses: ./.github/actions/deploy-environment
 
       - name: Set up APP_DEV_TOKEN for ${{ matrix.platform }} platform
         run: |
