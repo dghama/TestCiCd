@@ -15,10 +15,10 @@ on:
         default: 'staging'
         type: choice
         options:
-          - development
-          - staging
-          - beta
-          - production
+          - DEV
+          - STAGING
+          - BETA
+          - PROD
 
       version_name:
         description: 'version name (e.g., 0.0.1)'
