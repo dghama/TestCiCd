@@ -48,9 +48,7 @@ jobs:
     needs: checkout
     steps:
       - name: Setup android environment
-        uses: ./.github/actions/setup/android-runner
-      - name: Setup ios environment
-        uses: ./.github/actions/setup/ios-runner
+        uses: ./.github/actions/setup/prepare-environment
 
   install-dependencies:
     runs-on: macos-latest

@@ -1,0 +1,17 @@
+name: 'Environment Setup'
+description: 'Sets up Java and Android SDK for the build environment'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '2.6.10'
+        bundler-cache: false
