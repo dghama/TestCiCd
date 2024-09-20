@@ -68,6 +68,20 @@ runs:
 
         echo ".env file created at $ENV_FILE"
 
+    - name: Set build directory
+      id: set_build_dir
+      shell: bash
+      run: |
+        # Determine the build directory based on the platform
+        if [[ "${{ env.PLATFORM }}" == "android" ]]; then
+          echo "BUILD_DIR=${{ github.workspace }}/android/app/build/outputs/apk" >> $GITHUB_OUTPUT
+        elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
+          echo "BUILD_DIR=${{ github.workspace }}/ios/build/" >> $GITHUB_OUTPUT
+        else
+          echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
+          exit 1
+        fi
+
     - name: Set artifact name
       id: set_artifact_name
       shell: bash

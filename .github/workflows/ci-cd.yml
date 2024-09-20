@@ -163,13 +163,13 @@ jobs:
       - name: BUILD List downloaded artifact directory
         run: ls -R ${{ github.workspace }}
         shell: bash
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}
-      #     path: ${{ steps.setup_env.outputs.BUILD_DIR }}
-      #     compression-level: 6
-      #     overwrite: false
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
+          compression-level: 6
+          overwrite: false
 
     outputs:
       artifact_name: ${{ steps.setup_env.outputs.artifact_name }}
@@ -184,23 +184,13 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
     steps:
-      - name: List downloaded artifact directory
-        run: ls -R ${{ github.workspace }}
-        shell: bash
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: DEPLOY List downloaded artifact directory
-        run: ls -R ${{ github.workspace }}
-        shell: bash
       - name: Restore cache
         uses: ./.github/actions/cache-restore
 
-      # - name: Download artifact
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
       - name: Set up deploy environment
         id: setup_deploy_env
