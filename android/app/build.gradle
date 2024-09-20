@@ -138,7 +138,7 @@ android {
 
         variant.buildConfigField "String", "ENV_FILE", "\"${getEnvFile(variant)}\""
         // Load the .env file
-        project.apply from: project.file(getEnvFile(variant))
+        // project.apply from: project.file(getEnvFile(variant))
         variant.outputs.all { output ->
             // Get the base name from the project property or fallback to the default
             def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
