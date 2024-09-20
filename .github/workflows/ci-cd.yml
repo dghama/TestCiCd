@@ -163,13 +163,13 @@ jobs:
       - name: BUILD List downloaded artifact directory
         run: ls -R ${{ github.workspace }}
         shell: bash
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}
-          path: ${{ steps.setup_env.outputs.BUILD_DIR }}
-          compression-level: 6
-          overwrite: false
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ matrix.platform }}-${{ steps.setup_env.outputs.ARTIFACT_NAME }}
+      #     path: ${{ steps.setup_env.outputs.BUILD_DIR }}
+      #     compression-level: 6
+      #     overwrite: false
 
     outputs:
       artifact_name: ${{ steps.setup_env.outputs.artifact_name }}
@@ -190,10 +190,10 @@ jobs:
       - name: Restore cache
         uses: ./.github/actions/cache-restore
 
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
+      # - name: Download artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
 
       - name: List downloaded artifact directory
         run: ls -R ${{ github.workspace }}
