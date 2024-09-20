@@ -78,17 +78,6 @@ jobs:
       - name: Install Node dependencies
         run: yarn install --frozen-lockfile
         shell: bash
-      # - name: Install Ruby dependencies
-      #   run: |
-      #     if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then
-      #       echo "Cache miss. Installing gems..."
-      #       bundle install --jobs 4 --retry 3
-
-      #     else
-      #       echo "Using cached gems"
-      #       bundle install --local
-      #     fi
-      #   shell: bash
 
   quality-checks:
     needs: install-dependencies
@@ -159,7 +148,7 @@ jobs:
 
       - name: Set up environment
         id: setup_env
-        uses: ./.github/actions/setup/setup-build-env
+        uses: ./.github/actions/setup/build-environment
         with:
           ENV_PROD: ${{ secrets.ENV_PROD }}
           ENV_STAGING: ${{ secrets.ENV_STAGING }}
@@ -171,6 +160,9 @@ jobs:
         env:
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
           ENVFILE: ${{ env.ENVFILE }}
+      - name: BUILD List downloaded artifact directory
+        run: ls -R ${{ github.workspace }}
+        shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -179,16 +171,8 @@ jobs:
           compression-level: 6
           overwrite: false
 
-      - name: Set build outputs
-        id: set_build_outputs
-        run: |
-          echo "build_dir=${{ steps.setup_env.outputs.BUILD_DIR }}" >> $GITHUB_OUTPUT
-          echo "artifact_name=${{ steps.setup_env.outputs.ARTIFACT_NAME }}" >> $GITHUB_OUTPUT
-        shell: bash
-
     outputs:
-      build_dir: ${{ steps.set_build_outputs.outputs.build_dir }}
-      artifact_name: ${{ steps.set_build_outputs.outputs.artifact_name }}
+      artifact_name: ${{ steps.setup_env.outputs.artifact_name }}
 
   deploy:
     needs: build
@@ -200,6 +184,12 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
     steps:
+      - name: DEPLOY List downloaded artifact directory
+        run: ls -R ${{ github.workspace }}
+        shell: bash
+      - name: Restore cache
+        uses: ./.github/actions/cache-restore
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -211,7 +201,7 @@ jobs:
 
       - name: Set up deploy environment
         id: setup_deploy_env
-        uses: ./.github/actions/setup/setup-deploy-env
+        uses: ./.github/actions/setup/deploy-environment
 
       - name: Set up APP_DEV_TOKEN for ${{ matrix.platform }} platform
         run: |
