@@ -184,6 +184,13 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
     steps:
+      - name: List downloaded artifact directory
+        run: ls -R ${{ github.workspace }}
+        shell: bash
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: DEPLOY List downloaded artifact directory
         run: ls -R ${{ github.workspace }}
         shell: bash
@@ -194,10 +201,6 @@ jobs:
       #   uses: actions/download-artifact@v4
       #   with:
       #     name: ${{ matrix.platform }}-${{ needs.build.outputs.artifact_name }}
-
-      - name: List downloaded artifact directory
-        run: ls -R ${{ github.workspace }}
-        shell: bash
 
       - name: Set up deploy environment
         id: setup_deploy_env
