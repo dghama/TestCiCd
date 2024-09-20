@@ -65,6 +65,9 @@ jobs:
     steps:
       - name: Install dependencies
         uses: ./.github/actions/dependency-installation
+      with:
+          # You can pass in paths or other variables if needed
+          repo-path: ${{ github.workspace }}
 
   quality-checks:
     needs: install-dependencies
