@@ -34,7 +34,7 @@ env:
   ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
 jobs:
   checkout:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     outputs:
       checkout_dir: ${{ github.workspace }}
     steps:
@@ -44,7 +44,7 @@ jobs:
           fetch-depth: 0
 
   prepare-environment:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     needs: checkout
     steps:
       - name: Set up Java
@@ -58,7 +58,7 @@ jobs:
           node-version: '18'
 
   install-dependencies:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     needs: prepare-environment
     steps:
       - name: Install Yarn
@@ -77,7 +77,7 @@ jobs:
 
   quality-checks:
     needs: install-dependencies
-    runs-on: engagement-runner
+    runs-on: macos-latest
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -93,7 +93,7 @@ jobs:
   build:
     needs: quality-checks
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: engagement-runner
+    runs-on: macos-latest
     strategy:
       matrix:
         platform: [android, ios]
@@ -172,7 +172,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: engagement-runner
+    runs-on: macos-latest
     strategy:
       matrix:
         platform: [android, ios]
@@ -224,7 +224,7 @@ jobs:
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
-    runs-on: engagement-runner
+    runs-on: macos-latest
     steps:
       - name: Notify teams
         uses: ./.github/actions/teams-notify

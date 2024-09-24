@@ -7,7 +7,7 @@ on:
 
 jobs:
   label-and-assign:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     permissions:
       contents: read
       pull-requests: write
