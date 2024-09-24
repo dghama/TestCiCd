@@ -34,7 +34,7 @@ env:
   ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
 jobs:
   checkout:
-    runs-on: macos-latest
+    runs-on: engagement-runner
     outputs:
       checkout_dir: ${{ github.workspace }}
     steps:
@@ -44,7 +44,7 @@ jobs:
           fetch-depth: 0
 
   prepare-environment:
-    runs-on: macos-latest
+    runs-on: engagement-runner
     needs: checkout
     steps:
       - name: Set up Java
@@ -52,21 +52,17 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Install Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '2.6.10'
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
   install-dependencies:
-    runs-on: macos-latest
+    runs-on: engagement-runner
     needs: prepare-environment
     steps:
+      - name: Install Yarn
+        run: npm install --global yarn
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
@@ -81,7 +77,7 @@ jobs:
 
   quality-checks:
     needs: install-dependencies
-    runs-on: macos-latest
+    runs-on: engagement-runner
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -97,7 +93,7 @@ jobs:
   build:
     needs: quality-checks
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-latest
+    runs-on: engagement-runner
     strategy:
       matrix:
         platform: [android, ios]
@@ -176,7 +172,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: macos-latest
+    runs-on: engagement-runner
     strategy:
       matrix:
         platform: [android, ios]
@@ -228,7 +224,7 @@ jobs:
   notify-teams:
     if: github.event_name == 'push'
     needs: deploy
-    runs-on: macos-latest
+    runs-on: engagement-runner
     steps:
       - name: Notify teams
         uses: ./.github/actions/teams-notify
