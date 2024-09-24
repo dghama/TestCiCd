@@ -57,12 +57,13 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install Yarn globally
+        run: corepack enable && corepack prepare yarn@stable --activate
+
   install-dependencies:
     runs-on: macos-latest
     needs: prepare-environment
     steps:
-      - name: Install Yarn
-        run: npm install --global yarn
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
