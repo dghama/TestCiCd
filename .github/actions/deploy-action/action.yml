@@ -1,0 +1,86 @@
+# File: .github/actions/deploy-action/action.yml
+
+name: 'Deploy to MStore'
+description: 'Deploys iOS and Android apps to MStore'
+
+inputs:
+  PLATFORM:
+    description: 'The platform to deploy (ios or android)'
+    required: true
+  ENVIRONMENT:
+    description: 'The deployment environment (e.g., staging, production)'
+    required: true
+  ARTIFACT_NAME:
+    description: 'The name of the artifact to download'
+    required: true
+  AUTHORIZATION:
+    description: 'Authorization token for MStore'
+    required: true
+  ANDROID_DEV_TOKEN:
+    description: 'Developer token for Android deployments'
+    required: false
+  IOS_DEV_TOKEN:
+    description: 'Developer token for iOS deployments'
+    required: false
+
+outputs:
+  ANDROID_VERSION_TOKEN:
+    description: 'Version token for Android deployment'
+    value: ${{ steps.upload.outputs.ANDROID_VERSION_TOKEN }}
+  IOS_VERSION_TOKEN:
+    description: 'Version token for iOS deployment'
+    value: ${{ steps.upload.outputs.IOS_VERSION_TOKEN }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.ARTIFACT_NAME }}
+
+    - name: Set up deploy environment
+      id: setup_deploy_env
+      run: |
+        # Run the shell script to extract app name
+        chmod +x .github/scripts/extract-app-name.sh
+        APP_NAME=$(.github/scripts/extract-app-name.sh)
+
+        if [ "${{ inputs.PLATFORM }}" == "android" ]; then
+          # Set up the file paths for Android
+          INFO_FILE="${{ github.workspace }}/release/output-metadata.json"
+          BUILD_FILE="${{ github.workspace }}/release/${APP_NAME}-${{ inputs.ENVIRONMENT }}.apk"
+          echo "APP_DEV_TOKEN=${{ inputs.ANDROID_DEV_TOKEN }}" >> $GITHUB_ENV
+        elif [ "${{ inputs.PLATFORM }}" == "ios" ]; then
+          # Set up the file paths for iOS
+          INFO_FILE="${{ github.workspace }}/info.plist"
+          BUILD_FILE="${{ github.workspace }}/${APP_NAME}.ipa"
+          echo "APP_DEV_TOKEN=${{ inputs.IOS_DEV_TOKEN }}" >> $GITHUB_ENV
+        else
+          echo "Error: Unknown platform ${{ inputs.PLATFORM }}"
+          exit 1
+        fi
+
+        # Ensure the files are found
+        if [ ! -f "$INFO_FILE" ]; then
+          echo "Error: Info file not found!"
+          exit 1
+        fi
+        if [ ! -f "$BUILD_FILE" ]; then
+          echo "Error: Build file not found!"
+          exit 1
+        fi
+
+        echo "INFO_FILE=$INFO_FILE" >> $GITHUB_ENV
+        echo "BUILD_FILE=$BUILD_FILE" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Upload ${{ inputs.PLATFORM }} - ${{ inputs.ENVIRONMENT }} application to MStore
+      id: upload
+      env:
+        AUTHORIZATION: ${{ inputs.AUTHORIZATION }}
+        PLATFORM: ${{ inputs.PLATFORM }}
+        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      run: |
+        bundle exec fastlane upload_app_to_mstore
+      shell: bash

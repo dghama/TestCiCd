@@ -1,0 +1,29 @@
+name: Prepare Environment
+description: Set up the build environment for Android and Java applications
+
+runs:
+  using: composite
+  steps:
+    # Step 1: Set up Java Development Kit (JDK)
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin' # Use the Temurin distribution of OpenJDK
+        java-version: '17' # Specify Java version 17
+
+    # Step 4: Configure locale settings
+    - name: Set the locale for the environment
+      run: |
+        # Set the system locale to US English with UTF-8 encoding
+        # This ensures consistent behavior across different environments
+        export LC_ALL=en_US.UTF-8
+        export LANG=en_US.UTF-8
+      shell: bash
+
+    # Step 5: Set up necessary permissions
+    - name: Set up permissions
+      shell: bash
+      run: |
+        # Make the Android Gradle wrapper executable
+        # This is necessary for running Gradle commands in the Android project
+        chmod +x android/gradlew

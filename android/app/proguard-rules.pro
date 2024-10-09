@@ -8,5 +8,3 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
--keep class com.mobelite.testRNcicd.BuildConfig { *; }
--keep class com.mobelite.testRNcicd.ReactNativeConfig { *; }

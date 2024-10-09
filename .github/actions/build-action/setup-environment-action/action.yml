@@ -1,0 +1,122 @@
+name: Setup Environment Keys
+description: This action is dedicated to setup environment keys for different platforms
+
+inputs:
+  ENVIRONMENT:
+    description: 'The deployment environment (e.g., staging, production)'
+    required: true
+  PLATFORM:
+    description: 'The platform to set up (android or ios)'
+    required: true
+  ANDROID_KEYSTORE_FILE:
+    description: 'Base64 encoded Android keystore file'
+    required: false
+  KEYSTORE_PASSWORD:
+    description: 'Android keystore password'
+    required: false
+  KEY_ALIAS:
+    description: 'Android key alias'
+    required: false
+  KEY_PASSWORD:
+    description: 'Android key password'
+    required: false
+  DISTRIBUTION_CERTIFICATE:
+    description: 'Base64 encoded iOS distribution certificate'
+    required: false
+  PROVISIONING_PROFILE:
+    description: 'Base64 encoded iOS provisioning profile'
+    required: false
+  P12_PASSWORD:
+    description: 'iOS P12 certificate password'
+    required: false
+  ENV_PROD:
+    description: 'Production environment variables'
+    required: false
+  ENV_STAGING:
+    description: 'Staging environment variables'
+    required: false
+  ENV_BETA:
+    description: 'Beta environment variables'
+    required: false
+  ENV_DEV:
+    description: 'Development environment variables'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Android-specific secrets
+      if: inputs.PLATFORM == 'android'
+      env:
+        ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
+      run: |
+        # Decode the base64 Android keystore file and save it to the android/app directory
+        echo "${{ inputs.ANDROID_KEYSTORE_FILE }}" | base64 --decode > ${{ env.ANDROID_KEYSTORE_FILE }}
+        # Export the environment variables for the keystore file and passwords
+        echo "ANDROID_KEYSTORE_FILE=${{ env.ANDROID_KEYSTORE_FILE }}" >> $GITHUB_ENV
+        echo "KEYSTORE_PASSWORD=${{ inputs.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+        echo "KEY_ALIAS=${{ inputs.KEY_ALIAS }}" >> $GITHUB_ENV
+        echo "KEY_PASSWORD=${{ inputs.KEY_PASSWORD }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Set up iOS-specific secrets
+      if: inputs.PLATFORM == 'ios'
+      run: |
+        # Decode the base64 iOS distribution certificate and provisioning profile, and save them to the runner's temporary directory
+        echo "${{ inputs.DISTRIBUTION_CERTIFICATE }}" | base64 --decode > $RUNNER_TEMP/distribution.p12
+        echo "${{ inputs.PROVISIONING_PROFILE }}" | base64 --decode > $RUNNER_TEMP/profile.mobileprovision
+        # Export the environment variable for the P12 password
+        echo "P12_PASSWORD=${{ inputs.P12_PASSWORD }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+
+    - name: Create .env file
+      shell: bash
+      run: |
+        # Function to get env content based on environment
+        get_env_content() {
+          case "$1" in
+            "production")
+              echo "${{ inputs.ENV_PROD }}"
+              ;;
+            "staging")
+              echo "${{ inputs.ENV_STAGING }}"
+              ;;
+            "beta")
+              echo "${{ inputs.ENV_BETA }}"
+              ;;
+            "development")
+              echo "${{ inputs.ENV_DEV }}"
+              ;;
+            *)
+              echo ""
+              ;;
+          esac
+        }
+
+        # Retrieve the environment variable
+        ENVIRONMENT="${{ inputs.ENVIRONMENT }}"
+
+        # Get the corresponding content
+        ENV_CONTENT=$(get_env_content "$ENVIRONMENT")
+
+        if [ -z "$ENV_CONTENT" ]; then
+          echo "Unknown environment or no content found for: $ENVIRONMENT" >&2
+          exit 1
+        fi
+
+        # Create the configuration directory if it doesn't exist
+        CONFIG_DIR="configuration"
+        mkdir -p "$CONFIG_DIR"
+        echo "Created directory: $CONFIG_DIR"
+
+        # Create the .env file based on the environment
+        ENV_FILE="$CONFIG_DIR/.env"
+        echo "$ENV_CONTENT" > "$ENV_FILE"
+
+        # Set the ENVFILE path in the GitHub environment for future steps
+        echo "ENVFILE=$ENV_FILE" >> $GITHUB_ENV
+
+        echo ".env file created at $ENV_FILE"

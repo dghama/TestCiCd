@@ -83,9 +83,10 @@ android {
         applicationId "com.mobelite.testRNcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 0
         versionName "0.0.1"
         resValue "string", "build_config_package", "com.mobelite.testRNcicd"
+        setProperty("archivesBaseName", project.name + '_V_' + project.versionName + "." + project.versionCode)
 
     }
     signingConfigs {
@@ -95,7 +96,7 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-          release {
+        release {
             storeFile file('release.keystore')
             storePassword System.getenv("KEYSTORE_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")

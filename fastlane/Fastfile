@@ -1,4 +1,4 @@
-require 'pathname'
+require 'json'
 
 default_platform(:android)
 
@@ -6,85 +6,20 @@ before_all do
   @package = load_json(json_path: "package.json")
   @environment = ENV["ENVIRONMENT"] || "staging"
   @app_name = @package['name']
-  @platform = ENV["PLATFORM"]
   @versionName = ENV["VERSION_NAME"]
 
   puts "Loaded package: #{@package}"
   puts "Environment: #{@environment}"
   puts "App Name: #{@app_name}"
-  puts "Platform: #{@platform}"
 
-end
-
-def project_dir
-  Pathname.new(File.expand_path('..', Dir.pwd))
-end
-
-def android_dir
-  project_dir.join('android')
-end
-
-def ios_dir
-  project_dir.join('ios')
-end
-
-def gradle_file
-  android_dir.join('app', 'build.gradle')
-end
-
-def increment_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
-  gradle_file_content = File.read(gradle_file_path)
-
-  current_version_code = gradle_file_content.match(/versionCode\s+(\d+)/)[1].to_i
-  new_version_code = current_version_code + 1
-  updated_gradle_file_content = gradle_file_content.gsub(/versionCode\s+\d+/, "versionCode #{new_version_code}")
-
-  if @versionName
-    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{@versionName}.#{new_version_code}\"")
-  else
-    current_version_name = gradle_file_content.match(/versionName\s+"([^"]*)"/)[1]
-    new_version_name = "#{current_version_name}.#{new_version_code}"
-    updated_gradle_file_content = updated_gradle_file_content.gsub(/versionName\s+"[^"]*"/, "versionName \"#{new_version_name}\"")
-  end
-
-  File.write(gradle_file_path, updated_gradle_file_content)
-
-  package_json_path = project_dir.join('package.json')
-  package_json = JSON.parse(File.read(package_json_path))
-  package_json['version'] = @versionName || new_version_name
-  File.write(package_json_path, JSON.pretty_generate(package_json))
-  
-  new_version_code
-end
-
-def get_android_version_code
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
-  gradle_file = File.read(gradle_file_path)
-  gradle_file.match(/versionCode\s+(\d+)/)[1]
-end
-
-def get_android_version_name
-  gradle_file_path = android_dir.join('app', 'build.gradle').to_s
-  gradle_file = File.read(gradle_file_path)
-  version_name_match = gradle_file.match(/versionName\s+"(.+)"/)
-  if version_name_match
-    version_name_match[1]
-  else
-    UI.error("Could not find versionName in #{gradle_file_path}")
-    nil
-  end
 end
 
 platform :ios do
-  desc 'iOS: Increment build number'
-  private_lane :inc_ver_ios do
-    increment_build_number(
-      xcodeproj: "./ios/#{@package['name']}.xcodeproj"
-    )
-  end
-
-  lane :import_certs do
+  lane :setup_certs_and_profile do
+    # Access the runner temp directory and file paths
+    runner_temp = ENV['RUNNER_TEMP']
+    distribution_cert_path = File.join(runner_temp, 'distribution.p12')
+    provisioning_profile_path = File.join(runner_temp, 'profile.mobileprovision')
     create_keychain(
       name: "build.keychain",
       password: "temporary_password",
@@ -95,36 +30,31 @@ platform :ios do
     )
 
     import_certificate(
-      certificate_path: "distribution.p12",
+      certificate_path: distribution_cert_path,
       certificate_password: ENV["P12_PASSWORD"],
       keychain_name: "build.keychain",
       keychain_password: "temporary_password"
     )
 
     install_provisioning_profile(
-      path: "profile.mobileprovision"
+      path: provisioning_profile_path
     )
   end
 
-  desc 'Build the iOS app'
+  
   lane :build do
-    inc_ver_ios
 
-      import_certs
-  
-  
-      cocoapods(
-        clean_install: true,
-        podfile: "./ios/Podfile"
-      )
-  
-      gym(
+    setup_certs_and_profile
+    cocoapods(
+      clean_install: true,
+      podfile: "./ios/Podfile"
+    )
+    gym(
         configuration: ENV["ENVIRONMENT"],
         workspace: "./ios/#{@package['name']}.xcworkspace",
         scheme: @package['name'],
         output_name: @package['name'],
         output_directory: "./ios/build",
-        export_method: "ad-hoc",
         export_options: {
           method: "ad-hoc",
           provisioningProfiles: {
@@ -134,26 +64,15 @@ platform :ios do
         },
         xcargs: "-allowProvisioningUpdates",
         export_xcargs: "-allowProvisioningUpdates"
-  )
-  
-   
+    )
+    
     end
   end
 
 
+
 platform :android do
-  desc 'Increment versionCode and set versionName to package.json version.'
-  private_lane :inc_ver_and do
-    increment_version_code
-  end
-
-  version_code = get_android_version_code
-  version_name = get_android_version_name
-
-  desc 'Build the Android app'
   lane :build do
-
-    inc_ver_and
     gradle(
       task: "clean assembleRelease",
       project_dir: "android/",
@@ -168,18 +87,143 @@ platform :android do
      
       print_command: true
     )
-    sh "ls -R #{project_dir}/android/app/build/outputs/apk"
-   
   end
 end
-desc 'Upload the app to the MStore'
+
+# Upload the app to MStore
 lane :upload_app_to_mstore do
 
-    # Upload the app to MStore
     result = mstore_upload_app(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
       info_file: ENV['INFO_FILE'],
-      build_file: ENV['BUILD_FILE']
+      build_file: ENV['BUILD_FILE'],
+      platform: ENV['PLATFORM']
     )
 end
+
+def commit_version_changes(version_data,message)
+  current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
+  ensure_git_branch(branch: current_branch)
+
+  # Stage all changes
+  git_add(path: ".")
+
+  # Create the commit message
+  git_commit(path: ".", message: message)
+
+  UI.success("Successfully committed version changes for but not pushed")
+end
+
+lane :push_version_changes do
+  current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
+
+  # Push to the same branch
+  add_git_tag(tag: "v#{ENV['VERSION_NAME']}-#{ENV['VERSION_CODE']}-#{@environment}")
+
+  # Note: i need to change the remoteurl with a dynamic variable
+  push_to_git_remote(
+    remote: "https://x-access-token:#{ENV['GIT_TOKEN']}@github.com/mobelitelabs/RNCICDTemplate-",
+    local_branch: "HEAD",
+    remote_branch: current_branch,
+    tags: true
+  )
+  
+  UI.success("Successfully pushed version changes")
+end
+
+
+############## start from here #################
+
+
+def load_version_data
+  load_json(json_path: "#{ENV['GITHUB_WORKSPACE']}/versions.json")
+end
+
+def save_version_data(data)
+  File.write("#{ENV['GITHUB_WORKSPACE']}/versions.json", JSON.pretty_generate(data))
+end
+
+def increment_version
+  data = load_version_data
+  env = ENV["ENVIRONMENT"]
+  
+  data[env]['version_code'] += 1
+  
+  save_version_data(data)
+  data[env]
+end
+
+def update_package_json(version_data)
+  package_json_path = "#{ENV['GITHUB_WORKSPACE']}/package.json"
+  package_data = load_json(json_path: package_json_path)
+  
+  package_data['version'] = version_data['version_name']
+  
+  File.write(package_json_path, JSON.pretty_generate(package_data))
+end
+
+lane :increment_version_pre_build do
+  version_data = increment_version()
+  
+  # Update package.json
+  update_package_json(version_data)
+  message = "'Bump version to #{version_data['version_name']} (#{version_data['version_code']})'"
+  # Commit changes
+  commit_version_changes(version_data,message)
+  
+  # Output new version info
+  puts "New version: #{version_data['version_name']} (#{version_data['version_code']})"
+  
+  # Set output for GitHub Actions
+  sh "echo \"VERSION_NAME=#{version_data['version_name']}\" >> $GITHUB_OUTPUT"
+  sh "echo \"VERSION_CODE=#{version_data['version_code']}\" >> $GITHUB_OUTPUT"
+end
+
+lane :update_ios_version do
+  version_data = load_version_data[ENV["ENVIRONMENT"]]
+  update_ios_files(version_data)
+  message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
+  commit_version_changes(version_data, message)
+end
+
+lane :update_android_version do
+  version_data = load_version_data[ENV["ENVIRONMENT"]]
+  update_android_files(version_data)
+  message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
+  commit_version_changes(version_data,message)
+end
+
+
+def update_ios_files(version_data)
+  set_info_plist_value(
+    path: "./ios/#{@package['name']}/Info.plist",
+    key: "CFBundleShortVersionString",
+    value: version_data['version_name']
+  )
+  set_info_plist_value(
+    path: "./ios/#{@package['name']}/Info.plist",
+    key: "CFBundleVersion",
+    value: version_data['version_code'].to_s
+  )
+  increment_build_number(
+    build_number: version_data['version_code'],
+    xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+  )
+end
+
+def update_android_files(version_data)
+  gradle_file = "#{ENV['GITHUB_WORKSPACE']}/android/app/build.gradle"
+  sh "sed -i '' 's/versionCode .*/versionCode #{version_data['version_code']}/' #{gradle_file}"
+  sh "sed -i '' 's/versionName .*/versionName \"#{version_data['version_name']}\"/' #{gradle_file}"
+end
+
+lane :get_current_version do
+  data = load_version_data
+  env = ENV["ENVIRONMENT"]
+  version_data = data[env]
+  puts "Current version for #{env}: #{version_data['version_name']} (#{version_data['version_code']})"
+  
+  version_data
+end
+

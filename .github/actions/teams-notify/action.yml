@@ -1,5 +1,6 @@
-name: 'Teams Notification'
-description: 'Send build status notification to Microsoft Teams'
+name: 'Enhanced Teams Notification'
+description: 'Send a beautifully formatted build status notification to Microsoft Teams'
+
 inputs:
   status:
     description: 'Job status'
@@ -17,11 +18,23 @@ inputs:
   ios_version_url:
     description: 'URL for the iOS version'
     required: false
+  commit_sha:
+    description: 'SHA of the commit that triggered the workflow'
+    required: true
+  repo_name:
+    description: 'Name of the repository'
+    required: true
+  branch_name:
+    description: 'Name of the branch'
+    required: true
+  workflow_name:
+    description: 'Name of the workflow'
+    required: true
 
 runs:
   using: 'composite'
   steps:
-    - name: Send Teams Notification
+    - name: Send Enhanced Teams Notification
       shell: bash
       env:
         STATUS: ${{ inputs.status }}
@@ -29,21 +42,33 @@ runs:
         CUSTOM_MESSAGE: ${{ inputs.custom_message }}
         ANDROID_VERSION_URL: ${{ inputs.android_version_url }}
         IOS_VERSION_URL: ${{ inputs.ios_version_url }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
+        REPO_NAME: ${{ inputs.repo_name }}
+        BRANCH_NAME: ${{ inputs.branch_name }}
+        WORKFLOW_NAME: ${{ inputs.workflow_name }}
       run: |
         if [ "$STATUS" = "success" ]; then
           COLOR="00FF00"
-          TITLE="Build Succeeded"
+          TITLE="✅ Build Succeeded"
+          STATUS_ICON="&#x2705;"
+          MESSAGE_TEXT="$CUSTOM_MESSAGE"
         else
           COLOR="FF0000"
-          TITLE="Build Failed"
+          TITLE="❌ Build Failed"
+          STATUS_ICON="&#x274C;"
+          MESSAGE_TEXT=""
         fi
 
-        VERSION_URLS=""
+        # Truncate commit SHA
+        SHORT_SHA="${COMMIT_SHA:0:7}"
+
+        # Create version links section
+        VERSION_LINKS=""
         if [ -n "$ANDROID_VERSION_URL" ]; then
-          VERSION_URLS="${VERSION_URLS}\n- **Android Version**: [$ANDROID_VERSION_URL]($ANDROID_VERSION_URL)"
+           VERSION_LINKS="${VERSION_LINKS}\n- **Android Version**: [$ANDROID_VERSION_URL]($ANDROID_VERSION_URL)"
         fi
         if [ -n "$IOS_VERSION_URL" ]; then
-          VERSION_URLS="${VERSION_URLS}\n- **iOS Version**: [$IOS_VERSION_URL]($IOS_VERSION_URL)"
+          VERSION_LINKS="${VERSION_LINKS}\n- **iOS Version**: [$IOS_VERSION_URL]($IOS_VERSION_URL)"
         fi
 
         PAYLOAD=$(cat << EOF
@@ -55,14 +80,40 @@ runs:
           "sections": [
             {
               "activityTitle": "$TITLE",
-              "activitySubtitle": "GitHub Actions",
+              "activitySubtitle": "GitHub Actions Workflow: $WORKFLOW_NAME",
+              "activityImage": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "facts": [
                 {
                   "name": "Status",
-                  "value": "$STATUS"
+                  "value": "$STATUS_ICON $STATUS"
+                },
+                {
+                  "name": "Repository",
+                  "value": "$REPO_NAME"
+                },
+                {
+                  "name": "Branch",
+                  "value": "$BRANCH_NAME"
+                },
+                {
+                  "name": "Commit",
+                  "value": "(https://github.com/$REPO_NAME/commit/$COMMIT_SHA)"
                 }
               ],
-              "text": "$CUSTOM_MESSAGE$VERSION_URLS"
+              "text": "$MESSAGE_TEXT$VERSION_LINKS",
+              "markdown": true
+            }
+          ],
+          "potentialAction": [
+            {
+              "@type": "OpenUri",
+              "name": "View Workflow",
+              "targets": [
+                {
+                  "os": "default",
+                  "uri": "https://github.com/$REPO_NAME/actions/runs/${{ github.run_id }}"
+                }
+              ]
             }
           ]
         }

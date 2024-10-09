@@ -6,49 +6,64 @@ module Fastlane
 
         command = []
         command << "curl"
-        command << "-X POST"
+        command << "-X" << "POST"
         command << "https://store.mobelite.fr/console/api_dev.php/api/upload_version"
         command << "-H \"Authorization: #{params[:authorization]}\""
         command << "-F \"applicationToken=#{params[:app_dev_token]}\""
         command << "-F \"fileInfo=@#{params[:info_file]}\""
         command << "-F \"file=@#{params[:build_file]}\""
-        command << "-v"  # Verbose output for debugging
-
+        command << "-s"  # Silent mode
+        command << "-S"  # Show error message if it fails
+        command << "-o" << "-"  # Output to stdout
         begin
-          UI.message("Executing command: #{command.join(" ")}")
-          result = Actions.sh(command.join(" "), log: true)
-          UI.message("Raw response from Mstore: #{result}")
-
-          # Parse the JSON response
-          response = JSON.parse(result)
-
-          if response["success"]
-            version_token = response["versionToken"]
-            version_url = "https://store.mobelite.fr/console/version/#{version_token}/download"
-            
-            if ENV["PLATFORM"] == "ios"
-              ENV["IOS_VERSION_TOKEN"] = version_url
-            else
-              ENV["ANDROID_VERSION_TOKEN"] = version_url
-            end
+       UI.message("Executing command: #{command.join(" ")}")
+          result = Actions.sh(command.join(" "), log: false)
           
-            UI.success("Successfully uploaded app to Mstore")
-            return {
-              success: true,
-              version_url: version_url
-            }
-          else
-            UI.error("Failed to upload app to Mstore: #{response['msg']}")
-            return { success: false, error: response['msg'] }
-          end
-        rescue FastlaneCore::Interface::FastlaneShellError => e
-          UI.error("Shell command failed with exit status #{e.status}")
-          UI.error("Error output: #{e.message}")
-          return { success: false, error: e.message }
-        rescue JSON::ParserError => e
-          UI.error("Failed to parse JSON response: #{e.message}")
           UI.message("Raw response: #{result}")
-          return { success: false, error: e.message }
+          
+          # Check if the response contains "success":true without parsing JSON
+          if result.include?('"success":true')
+            # Extract version token using regex
+            version_token_match = result.match(/"versionToken":"([^"]+)"/)
+            version_token = version_token_match ? version_token_match[1] : nil
+            
+            if version_token
+              UI.message("version_token: #{version_token}")
+              # Create download URL
+              download_url = "https://store.mobelite.fr/console/version/#{version_token}/download"
+              UI.message("Download amira URL is  #{download_url}")
+
+              # Set environment variable based on platform
+              env_var_name = case params[:platform].to_sym
+              when :ios
+                "IOS_VERSION_TOKEN"
+              when :android
+                "ANDROID_VERSION_TOKEN"
+              else
+                raise "Unsupported platform: #{params[:platform]}"
+              end
+
+              ENV[env_var_name] = download_url
+              UI.message("Set environment variable #{env_var_name}=#{download_url}")
+
+              # For GitHub Actions compatibility
+              if ENV['GITHUB_OUTPUT']
+                File.open(ENV['GITHUB_OUTPUT'], 'a') do |f|
+                  f.puts "#{env_var_name}=#{download_url}"
+                end
+                UI.message("Added #{env_var_name} to GITHUB_OUTPUT")
+              end
+
+              UI.success("Successfully uploaded app to Mstore")
+              return { success: true, download_url: download_url, version_token: version_token, raw_response: result }
+            else
+              UI.error("Failed to extract version token from response")
+              return { success: false, error: "Failed to extract version token", raw_response: result }
+            end
+          else
+            UI.error("Failed to upload app to Mstore")
+            return { success: false, error: "Upload failed", raw_response: result }
+          end
         rescue => e
           UI.error("An unexpected error occurred: #{e.message}")
           UI.error(e.backtrace.join("\n"))
@@ -76,6 +91,10 @@ module Fastlane
                                        type: String),
           FastlaneCore::ConfigItem.new(key: :build_file,
                                        description: "The build file to upload (.ipa for iOS or .apk for Android)",
+                                       optional: false,
+                                       type: String),
+          FastlaneCore::ConfigItem.new(key: :platform,
+                                       description: "The platform of the app (ios or android)",
                                        optional: false,
                                        type: String)
         ]

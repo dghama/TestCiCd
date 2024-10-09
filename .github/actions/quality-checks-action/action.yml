@@ -1,0 +1,48 @@
+name: Quality Checks
+description: this action dedicates to run quality checks by running the Unit tests and type checking and linting and sonarqube scanning
+inputs:
+  SONARQUBE_HOST:
+    required: true
+    description: 'sonarqube host url'
+  SONARQUBE_TOKEN:
+    required: true
+    description: 'sonarqube token'
+
+runs:
+  using: composite
+  steps:
+    # SO IMPORTANT !!!! : i'm trying to add the node js setup step here for now because we need to run the yarn cmd else we face yarn cmd not found unfortunately
+    # with macos latest runner i don't need to setup this in every job
+    # but i'll do it in the future and see what is the reason for that
+    - name: cache node modules
+      uses: ./.github/actions/cache-action
+
+    - name: Run type check
+      run: yarn typecheck
+      shell: bash
+
+    - name: Run lint
+      run: yarn lint
+      shell: bash
+
+    - name: Run tests with coverage
+      run: yarn jest --coverage --runInBand --detectOpenHandles --forceExit
+      shell: bash
+
+    # Note: Hatem has changed the sonar server so we need to get the new token and host and change it in our github secrets
+    # - name: Perform SonarQube scan
+    #   run: |
+    #     sonar-scanner \
+    #       -Dsonar.sources=. \
+    #       -Dsonar.host.url=${{ inputs.SONARQUBE_HOST }} \
+    #       -Dsonar.token=${{ inputs.SONARQUBE_TOKEN }} \
+    #       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+    #       -Dsonar.typescript.tsconfigPath=tsconfig.json \
+    #       -X
+    #   shell: bash
+
+    # - name: SonarQube quality gate check
+    #   uses: sonarsource/sonarqube-quality-gate-action@master
+    #   env:
+    #     SONAR_TOKEN: ${{ inputs.SONARQUBE_TOKEN }}
+    #     SONAR_HOST_URL: ${{ inputs.SONARQUBE_HOST }}

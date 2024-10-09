@@ -1,0 +1,14 @@
+{
+  "development": {
+    "version_name": "0.0.1",
+    "version_code": 0
+  },
+  "staging": {
+    "version_name": "0.0.1",
+    "version_code": 0
+  },
+  "production": {
+    "version_name": "0.0.1",
+    "version_code": 0
+  }
+}

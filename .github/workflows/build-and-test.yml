@@ -1,0 +1,134 @@
+# CI/CD Pipeline configuration
+name: Build and Test
+
+on:
+  # Triggers the workflow on pull request events to specified branches
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened]
+
+# Concurrency settings to prevent simultaneous runs of the same workflow
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}' # Unique group name
+  cancel-in-progress: true # Cancel any in-progress runs of the same group
+
+# Global environment variables
+env:
+  CI: true # Set CI environment variable
+  LANG: en_US.UTF-8 # Set language
+  LC_ALL: en_US.UTF-8 # Set locale
+
+jobs:
+  # Job for checking out the repository
+  checkout:
+    runs-on: engagement-runner
+    outputs:
+      checkout_dir: ${{ github.workspace }} # Output the checkout directory
+    steps:
+      - name: Checkout repository # Step to check out the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+  # Job for adding label and assign reviewers
+  label-and-assign:
+    runs-on: engagement-runner
+    needs: [checkout]
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assign Reviewers
+        if: github.event.action == 'opened'
+        uses: kentaro-m/auto-assign-action@v2.0.0
+        with:
+          configuration-path: .github/auto_assign.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+          configuration-path: .github/labeler.yml
+
+  # Job for preparing the build environment
+  prepare-environment:
+    runs-on: engagement-runner # Specify the runner
+    needs: [checkout] # Depends on the checkout job
+    steps:
+      - name: Prepare Build Environment # Step to prepare the build environment
+        uses: ./.github/actions/prepare-env-action # Custom action for preparing the environment
+
+  # Job for installing dependencies
+  install-dependencies:
+    runs-on: engagement-runner # Specify the runner
+    needs: [checkout, prepare-environment] # Depends on checkout and prepare jobs
+    steps:
+      - name: Install dependencies # Step to install dependencies
+        uses: ./.github/actions/install-dependencies-action # Custom action for installing dependencies
+
+  # Job for running quality checks
+  quality-checks:
+    needs: [checkout, install-dependencies] # Depends on checkout and install jobs
+    runs-on: engagement-runner # Specify the runner
+    steps:
+      - name: Quality Checks # Step to run quality checks
+        uses: ./.github/actions/quality-checks-action # Custom action for quality checks
+        with:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }} # SonarQube token from secrets
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }} # SonarQube host from secrets
+
+  # Job for building the application
+  build:
+    needs: [checkout, quality-checks] # Depends on checkout and quality-checks jobs
+    runs-on: engagement-runner # Specify the runner
+    strategy:
+      matrix:
+        platform: [ios, android] # Matrix for building both iOS and Android
+    permissions:
+      contents: write # Allow write permissions for repository contents
+    steps:
+      - name: Restore cache
+        uses: ./.github/actions/cache-action # Custom action to restore cache
+      - name: Setup build environment configuration and Keys # Step to set up environment keys
+        uses: ./.github/actions/build-action/setup-environment-action # Custom action to set up environment
+        with:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Pass the environment
+          PLATFORM: ${{ matrix.platform }} # Pass the platform (iOS or Android)
+          # Pass secrets for Android and iOS build configurations
+          ANDROID_KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          ENV_PROD: ${{ secrets.ENV_PROD }} # Pass environment secrets
+          ENV_STAGING: ${{ secrets.ENV_STAGING }}
+          ENV_BETA: ${{ secrets.ENV_BETA }}
+          ENV_DEV: ${{ secrets.ENV_DEV }}
+
+      - name: Build Application # Step to build the application
+        uses: ./.github/actions/build-action # Custom action for building the application
+        with:
+          PLATFORM: ${{ matrix.platform }} # Pass the platform (iOS or Android)
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Pass the environment
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token from secrets
+
+  # Job for notifying teams
+  notify-teams:
+    needs: [build]
+    runs-on: engagement-runner # Specify the runner
+    if: always()
+    steps:
+      - name: Notify teams # Step to notify teams about the new version
+        uses: ./.github/actions/teams-notify # Custom action to notify teams
+        with:
+          status: ${{ job.status }} # Pass the job status (success or failure)
+          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }} # Teams webhook URL from secrets
+          branch_name: ${{ github.event.inputs.branch_name }}
+          commit_sha: ${{ github.event.inputs.commit_sha }}
+          repo_name: ${{ github.event.repository.name }}
+          workflow_name: ${{ github.workflow }}

@@ -1168,7 +1168,7 @@ PODS:
     - React-logger (= 0.74.3)
     - React-perflogger (= 0.74.3)
     - React-utils (= 0.74.3)
-  - RNGestureHandler (2.18.1):
+  - RNGestureHandler (2.19.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1191,7 +1191,7 @@ PODS:
     - Yoga
   - RNLocalize (3.2.1):
     - React-Core
-  - RNReanimated (3.15.0):
+  - RNReanimated (3.15.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1211,10 +1211,10 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.15.0)
-    - RNReanimated/worklets (= 3.15.0)
+    - RNReanimated/reanimated (= 3.15.2)
+    - RNReanimated/worklets (= 3.15.2)
     - Yoga
-  - RNReanimated/reanimated (3.15.0):
+  - RNReanimated/reanimated (3.15.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1235,7 +1235,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.15.0):
+  - RNReanimated/worklets (3.15.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1499,12 +1499,12 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 0c80752bceb80924cb8a4babc2a8e3ed70d41e87
   React-utils: a06061b3887c702235d2dac92dacbd93e1ea079e
   ReactCommon: f00e436b3925a7ae44dfa294b43ef360fbd8ccc4
-  RNGestureHandler: efed690b8493a00b99654043daeb1335276ac4a2
+  RNGestureHandler: 67e78f16895947f7e57ab91e75e914d3e9ef7239
   RNLocalize: 4f22418187ecd5ca693231093ff1d912d1b3c9bc
-  RNReanimated: 45553a3ae29a75a76269595f8554d07d4090e392
+  RNReanimated: 70454122c0c5cf9b661d5a505c3408f29c85b180
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 88480008ccacea6301ff7bf58726e27a72931c8d
 
-PODFILE CHECKSUM: ede63eca8cc03d816ce821f5d47c181d6fb84e3f
+PODFILE CHECKSUM: 5a14833c2b50c8d2c0931330c8dbf6b37ecd95b3
 
 COCOAPODS: 1.15.2
