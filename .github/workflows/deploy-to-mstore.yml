@@ -25,6 +25,7 @@ on:
         description: 'version name (e.g., 0.0.1)'
         required: false
         type: string
+        
 # Concurrency settings to prevent simultaneous runs of the same workflow
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}' # Unique group name
