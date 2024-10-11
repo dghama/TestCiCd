@@ -17,9 +17,9 @@ runs:
       id: cache-gems
       with:
         path: vendor/bundle # Directory to cache for Ruby gems
-        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}-v1
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
         restore-keys: |
-          ${{ runner.os }}-gems- # Fallback key for restoring cache if the exact match is not found
+          ${{ runner.os }}-gems-
 
     # Step 7: Install Ruby dependencies
     - name: Install Ruby dependencies

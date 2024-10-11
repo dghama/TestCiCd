@@ -101,6 +101,15 @@ jobs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
     steps:
+      - name: Restore Ruby gems cache
+        uses: actions/cache@v4
+        id: cache-gems
+        with:
+          path: vendor/bundle # Directory to cache for Ruby gems
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
       - name: Increment Version Pre-Build
         id: increment
         run: bundle exec fastlane increment_version_pre_build
