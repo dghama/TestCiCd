@@ -191,7 +191,7 @@ jobs:
   deploy:
     needs: [build]
     runs-on: macos-latest
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     strategy:
       matrix:
         platform: [ios, android] # Matrix for deploying both iOS and Android
@@ -230,7 +230,7 @@ jobs:
   # Job for bumping the version
   bump-version:
     needs: [deploy, build]
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     runs-on: macos-latest
     env:
       VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
