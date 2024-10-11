@@ -84,6 +84,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Quality Checks
         uses: ./.github/actions/quality-checks-action
         with:
@@ -101,6 +102,11 @@ jobs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
     steps:
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6.10 # Adjust Ruby version if needed
+          bundler-cache: true
       - name: Restore Ruby gems cache
         uses: actions/cache@v4
         id: cache-gems
