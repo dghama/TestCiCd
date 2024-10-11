@@ -196,6 +196,23 @@ jobs:
       matrix:
         platform: [ios, android] # Matrix for deploying both iOS and Android
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.0'
+
+      # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
+      - name: Restore cache
+        uses: ./.github/actions/cache-action # Custom action to restore cache
       - name: deploy to MStore
         uses: ./.github/actions/deploy-action
         id: deploy
@@ -219,6 +236,23 @@ jobs:
       VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version:
+            '3.3.0'
+            # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
+      - name: Restore cache
+        uses: ./.github/actions/cache-action # Custom action to restore cache
       - name: push new version
         run: |
           bundle exec fastlane push_version_changes
@@ -226,40 +260,40 @@ jobs:
       ANDROID_VERSION_TOKEN: ${{ needs.deploy.outputs.ANDROID_VERSION_TOKEN }}
       IOS_VERSION_TOKEN: ${{ needs.deploy.outputs.IOS_VERSION_TOKEN }}
 
-  # Job for notifying teams about the new version or failure
-  notify-teams:
-    needs: [bump-version, deploy, build]
-    runs-on: macos-latest
-    if: always()
-    steps:
-      - name: Check job status
-        id: check
-        run: |
-          if [[ ${{ needs.bump-version.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
+  # # Job for notifying teams about the new version or failure
+  # notify-teams:
+  #   needs: [bump-version, deploy, build]
+  #   runs-on: macos-latest
+  #   if: always()
+  #   steps:
+  #     - name: Check job status
+  #       id: check
+  #       run: |
+  #         if [[ ${{ needs.bump-version.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
+  #           echo "status=success" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "status=failure" >> $GITHUB_OUTPUT
+  #         fi
 
-      - name: Notify teams
-        uses: ./.github/actions/teams-notify
-        with:
-          status: ${{ steps.check.outputs.status }}
-          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          custom_message: |
-            New version is available on MStore :
-          android_version_url: ${{ needs.bump-version.outputs.ANDROID_VERSION_TOKEN }}
-          ios_version_url: ${{ needs.bump-version.outputs.IOS_VERSION_TOKEN }}
-          branch_name: ${{ github.ref_name }}
-          commit_sha: ${{ github.sha }}
-          repo_name: ${{ github.event.repository.name }}
-          workflow_name: ${{ github.workflow }}
-          pusher: ${{ github.actor }}
+  #     - name: Notify teams
+  #       uses: ./.github/actions/teams-notify
+  #       with:
+  #         status: ${{ steps.check.outputs.status }}
+  #         webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+  #         custom_message: |
+  #           New version is available on MStore :
+  #         android_version_url: ${{ needs.bump-version.outputs.ANDROID_VERSION_TOKEN }}
+  #         ios_version_url: ${{ needs.bump-version.outputs.IOS_VERSION_TOKEN }}
+  #         branch_name: ${{ github.ref_name }}
+  #         commit_sha: ${{ github.sha }}
+  #         repo_name: ${{ github.event.repository.name }}
+  #         workflow_name: ${{ github.workflow }}
+  #         pusher: ${{ github.actor }}
 
-  # Job for cleaning artifacts from the repository
-  clean-artifacts:
-    runs-on: macos-latest
-    needs: [notify-teams]
-    steps:
-      - name: Clean Artifacts
-        run: bundle exec fastlane delete_github_artifacts
+  # # Job for cleaning artifacts from the repository
+  # clean-artifacts:
+  #   runs-on: macos-latest
+  #   needs: [notify-teams]
+  #   steps:
+  #     - name: Clean Artifacts
+  #       run: bundle exec fastlane delete_github_artifacts
