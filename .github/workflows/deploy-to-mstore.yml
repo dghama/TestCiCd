@@ -109,7 +109,11 @@ jobs:
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-gems-
-
+      # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
       - name: Increment Version Pre-Build
         id: increment
         run: bundle exec fastlane increment_version_pre_build
