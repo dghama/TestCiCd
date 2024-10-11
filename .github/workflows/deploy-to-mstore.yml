@@ -140,6 +140,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version:
+            '3.3.0'
+            # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
       - name: Restore cache
         uses: ./.github/actions/cache-action # Custom action to restore cache
 
