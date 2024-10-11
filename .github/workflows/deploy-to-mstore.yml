@@ -182,7 +182,7 @@ jobs:
       ANDROID_VERSION_TOKEN: ${{ needs.deploy.outputs.ANDROID_VERSION_TOKEN }}
       IOS_VERSION_TOKEN: ${{ needs.deploy.outputs.IOS_VERSION_TOKEN }}
 
-  # Job for notifying teams
+  # Job for notifying teams about the new version or failure
   notify-teams:
     needs: [bump-version, deploy, build]
     runs-on: macos-latest
