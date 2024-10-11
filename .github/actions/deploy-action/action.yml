@@ -2,7 +2,7 @@
 
 name: 'Deploy to MStore'
 description: 'Deploys iOS and Android apps to MStore'
-
+#amira addition
 inputs:
   PLATFORM:
     description: 'The platform to deploy (ios or android)'
@@ -22,7 +22,12 @@ inputs:
   IOS_DEV_TOKEN:
     description: 'Developer token for iOS deployments'
     required: false
-
+  VERSION_NAME:
+    description: 'Version name of the build'
+    required: true
+  VERSION_CODE:
+    description: 'Version code of the build'
+    required: true
 outputs:
   ANDROID_VERSION_TOKEN:
     description: 'Version token for Android deployment'
@@ -45,16 +50,16 @@ runs:
         # Run the shell script to extract app name
         chmod +x .github/scripts/extract-app-name.sh
         APP_NAME=$(.github/scripts/extract-app-name.sh)
-
+        BUILD_NAME=${APP_NAME}_V_${{ inputs.VERSION_NAME }}.${{ inputs.VERSION_CODE }}_${{ inputs.ENVIRONMENT }}
         if [ "${{ inputs.PLATFORM }}" == "android" ]; then
           # Set up the file paths for Android
           INFO_FILE="${{ github.workspace }}/release/output-metadata.json"
-          BUILD_FILE="${{ github.workspace }}/release/${APP_NAME}*.apk"
+          BUILD_FILE="${{ github.workspace }}/release/${BUILD_NAME}.apk"
           echo "APP_DEV_TOKEN=${{ inputs.ANDROID_DEV_TOKEN }}" >> $GITHUB_ENV
         elif [ "${{ inputs.PLATFORM }}" == "ios" ]; then
           # Set up the file paths for iOS
           INFO_FILE="${{ github.workspace }}/info.plist"
-          BUILD_FILE="${{ github.workspace }}/${APP_NAME}*.ipa"
+          BUILD_FILE="${{ github.workspace }}/${BUILD_NAME}.ipa"
           echo "APP_DEV_TOKEN=${{ inputs.IOS_DEV_TOKEN }}" >> $GITHUB_ENV
         else
           echo "Error: Unknown platform ${{ inputs.PLATFORM }}"

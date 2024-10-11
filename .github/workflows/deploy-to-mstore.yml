@@ -223,6 +223,9 @@ jobs:
           ANDROID_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
           IOS_DEV_TOKEN: ${{ secrets.IOS_APP_DEV_TOKEN }}
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          #Amira addition
+          VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
+          VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     outputs:
       ANDROID_VERSION_TOKEN: ${{ steps.deploy.outputs.ANDROID_VERSION_TOKEN }}
       IOS_VERSION_TOKEN: ${{ steps.deploy.outputs.IOS_VERSION_TOKEN }}
