@@ -194,7 +194,7 @@ end
 # Upload the app to MStore
 lane :upload_app_to_mstore do
 
-    result = u_mstore.mstore_upload_app(
+    result = u_mstore.upload_app_to_mstore(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
       info_file: ENV['INFO_FILE'],
