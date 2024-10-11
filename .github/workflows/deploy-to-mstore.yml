@@ -56,6 +56,10 @@ jobs:
     runs-on: macos-latest
     needs: [checkout]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Prepare Build Environment
         uses: ./.github/actions/prepare-env-action
 
@@ -64,6 +68,10 @@ jobs:
     runs-on: macos-latest
     needs: [prepare-environment]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies-action
 
@@ -72,6 +80,10 @@ jobs:
     needs: [install-dependencies]
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Quality Checks
         uses: ./.github/actions/quality-checks-action
         with:
@@ -107,6 +119,10 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Restore cache
         uses: ./.github/actions/cache-action # Custom action to restore cache
 
