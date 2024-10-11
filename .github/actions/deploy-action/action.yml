@@ -49,12 +49,12 @@ runs:
         if [ "${{ inputs.PLATFORM }}" == "android" ]; then
           # Set up the file paths for Android
           INFO_FILE="${{ github.workspace }}/release/output-metadata.json"
-          BUILD_FILE="${{ github.workspace }}/release/${APP_NAME}-${{ inputs.ENVIRONMENT }}.apk"
+          BUILD_FILE="${{ github.workspace }}/release/${APP_NAME}*.apk"
           echo "APP_DEV_TOKEN=${{ inputs.ANDROID_DEV_TOKEN }}" >> $GITHUB_ENV
         elif [ "${{ inputs.PLATFORM }}" == "ios" ]; then
           # Set up the file paths for iOS
           INFO_FILE="${{ github.workspace }}/info.plist"
-          BUILD_FILE="${{ github.workspace }}/${APP_NAME}.ipa"
+          BUILD_FILE="${{ github.workspace }}/${APP_NAME}*.ipa"
           echo "APP_DEV_TOKEN=${{ inputs.IOS_DEV_TOKEN }}" >> $GITHUB_ENV
         else
           echo "Error: Unknown platform ${{ inputs.PLATFORM }}"

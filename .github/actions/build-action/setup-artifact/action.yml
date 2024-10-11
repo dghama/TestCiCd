@@ -9,7 +9,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-
     - name: Set build directory
       id: set_build_dir
       shell: bash
@@ -22,7 +21,7 @@ runs:
           # Extract the app name from the package.json file
           chmod +x .github/scripts/extract-app-name.sh
           APP_NAME=$(.github/scripts/extract-app-name.sh)
-          echo "BUILD_DIR=ios/build/" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=ios/build/*.ipa" >> $GITHUB_OUTPUT
           # Copy Info.plist to the BUILD_DIR
           cp "ios/${APP_NAME}/Info.plist" "ios/build/"
         else
