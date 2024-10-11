@@ -102,6 +102,11 @@ jobs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Install Ruby
         uses: ruby/setup-ruby@v1
         with:
