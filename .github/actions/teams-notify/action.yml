@@ -30,7 +30,9 @@ inputs:
   workflow_name:
     description: 'Name of the workflow'
     required: true
-
+  pusher:
+    description: 'Name of the pusher'
+    required: true
 runs:
   using: 'composite'
   steps:
@@ -46,6 +48,7 @@ runs:
         REPO_NAME: ${{ inputs.repo_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         WORKFLOW_NAME: ${{ inputs.workflow_name }}
+        PUSHER: ${{ inputs.pusher }}
       run: |
         if [ "$STATUS" = "success" ]; then
           COLOR="00FF00"
@@ -98,6 +101,10 @@ runs:
                 {
                   "name": "Commit",
                   "value": "(https://github.com/$REPO_NAME/commit/$COMMIT_SHA)"
+                },
+                 {
+                  "name": "Triggered By",
+                  "value": "$PUSHER"
                 }
               ],
               "text": "$MESSAGE_TEXT$VERSION_LINKS",

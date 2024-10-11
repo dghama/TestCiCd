@@ -17,18 +17,12 @@ runs:
       id: cache-gems
       with:
         path: vendor/bundle # Directory to cache for Ruby gems
-        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }} # Cache key based on OS and Gemfile.lock hash
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}-v1
         restore-keys: |
           ${{ runner.os }}-gems- # Fallback key for restoring cache if the exact match is not found
 
     # Step 7: Install Ruby dependencies
     - name: Install Ruby dependencies
       run: |
-        if [ "${{ steps.cache-gems.outputs.cache-hit }}" != 'true' ]; then # Check if gems cache was hit
-          echo "Cache miss. Installing gems..." # Log message for cache miss
-          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
-        else
-          echo "Using cached gems" # Log message for cache hit
-          bundle install --local # Install gems from cache
-        fi
+        bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
       shell: bash

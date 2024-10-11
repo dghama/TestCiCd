@@ -1,0 +1,130 @@
+# frozen_string_literal: true
+
+# Danger version: 8.6.1
+require 'set'
+
+# Helper function to check if a file is a TypeScript file
+def typescript_file?(file)
+  file.end_with?(".ts", ".tsx")
+end
+
+# Helper function to check if a file is a test file
+def test_file?(file)
+  file.end_with?(".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")
+end
+
+# Helper function to add an inline comment
+def inline_comment(file, line, message)
+  markdown = "```suggestion\n#{line}\n```\n\n#{message}"
+  message(markdown, file: file, line: line)
+end
+
+# Check for a CHANGELOG entry
+if !git.modified_files.include?("CHANGELOG.md") && !github.pr_title.include?("WIP")
+  warn("Please add a CHANGELOG entry for your changes.")
+end
+
+# Collect all modified and added TypeScript files
+ts_files = (git.modified_files + git.added_files).select { |file| typescript_file?(file) }
+
+# Check for console.log statements in TypeScript files
+ts_files.each do |file|
+  git.diff_for_file(file).patch.lines.grep(/^\+.*console\.(log|debug|info|warn|error)/).each do |line|
+    inline_comment(file, line, "Consider removing this console statement before merging.")
+  end
+end
+
+# Check for TODO comments
+ts_files.each do |file|
+  git.diff_for_file(file).patch.lines.grep(/^\+.*TODO/).each do |line|
+    inline_comment(file, line, "There's a TODO in this line. Consider resolving it before merging.")
+  end
+end
+
+# Check for large files
+big_file_threshold = 500
+ts_files.each do |file|
+  lines = File.readlines(file).size
+  if lines > big_file_threshold
+    warn("The file `#{file}` has #{lines} lines. Consider refactoring.")
+  end
+end
+
+# Check for large PRs
+big_pr_threshold = 500
+if git.lines_of_code > big_pr_threshold
+  warn("This PR is changing #{git.lines_of_code} lines. Consider splitting it into smaller PRs if possible.")
+end
+
+# Check for updated dependencies
+if git.modified_files.include?("package.json")
+  package_diff = git.diff_for_file("package.json")
+  if package_diff && package_diff.patch.include?('"dependencies"')
+    message("Dependencies have been updated. Make sure to test thoroughly.")
+    markdown("### Dependency changes:\n```diff\n#{package_diff.patch}\n```")
+  end
+end
+
+# Check for changes in native code (Android or iOS)
+native_code_changed = git.modified_files.any? { |file| file.include?("/android/") || file.include?("/ios/") }
+if native_code_changed
+  warn("Native code has been modified. Ensure that the changes are compatible with both platforms.")
+end
+
+# Check for proper typing in React components
+ts_files.each do |file|
+  content = File.read(file)
+  if content.match?(/React\.Component|extends Component/) && !content.match?(/interface Props|type Props/)
+    warn("The React component in `#{file}` doesn't seem to have a Props interface or type. Consider adding one for better type safety.")
+  end
+end
+
+# Check for test coverage
+test_files_changed = git.modified_files.any? { |file| test_file?(file) }
+if test_files_changed
+  message("Test files were changed. Did you remember to update the test coverage if necessary?")
+end
+
+# Check for new files without tests
+new_ts_files = git.added_files.select { |file| typescript_file?(file) && !test_file?(file) }
+new_ts_files.each do |file|
+  warn("New file `#{file}` added without a corresponding test file.")
+end
+
+# Check for accessibility in React Native components
+ts_files.each do |file|
+  git.diff_for_file(file).patch.lines.grep(/^\+.*<Text/).each do |line|
+    if !line.include?("accessibilityLabel")
+      inline_comment(file, line, "Consider adding an accessibilityLabel prop to this Text component for better accessibility.")
+    end
+  end
+end
+
+# Check for proper usage of React hooks
+ts_files.each do |file|
+  content = File.read(file)
+  if (content.include?("useState") || content.include?("useEffect")) && !content.match?(/React\.FC|React\.FunctionComponent/)
+    warn("The file `#{file}` uses React hooks but doesn't declare the component as React.FC or React.FunctionComponent. Consider adding proper typing.")
+  end
+end
+
+# Check for export default in TypeScript files
+ts_files.each do |file|
+  content = File.read(file)
+  if !content.match?(/export\s+default/)
+    warn("The file `#{file}` doesn't have a default export. Consider adding one for consistency.")
+  end
+end
+
+# Check for unused imports
+ts_files.each do |file|
+  content = File.read(file)
+  imports = content.scan(/import.*from/).map(&:strip)
+  imports.each do |import_statement|
+    import_name = import_statement.split(/\s+/)[1]
+    if !content.match?(/[^a-zA-Z]#{import_name}[^a-zA-Z]/)
+      warn("Unused import `#{import_name}` in file `#{file}`.")
+    end
+  end
+end
+

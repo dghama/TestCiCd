@@ -13,18 +13,10 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 # Available Actions
 
-### upload_app_to_mstore
+### increment_version_pre_build
 
 ```sh
-[bundle exec] fastlane upload_app_to_mstore
-```
-
-
-
-### commit_version_changes
-
-```sh
-[bundle exec] fastlane commit_version_changes
+[bundle exec] fastlane increment_version_pre_build
 ```
 
 
@@ -37,10 +29,26 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 
 
+### upload_app_to_mstore
+
+```sh
+[bundle exec] fastlane upload_app_to_mstore
+```
+
+
+
 ----
 
 
 ## iOS
+
+### ios update_ios_version
+
+```sh
+[bundle exec] fastlane ios update_ios_version
+```
+
+
 
 ### ios setup_certs_and_profile
 
@@ -62,6 +70,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 
 ## Android
+
+### android update_android_version
+
+```sh
+[bundle exec] fastlane android update_android_version
+```
+
+
 
 ### android build
 

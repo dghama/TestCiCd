@@ -1,7 +1,6 @@
 Documentation:
   - changed-files:
       - any-glob-to-any-file: '**/*.md'
-  color: 'fbca04'  # Yellow
 
 source:
   - all:
@@ -11,11 +10,9 @@ source:
 
 feature:
   - head-branch: ['^feature', 'feature']
-  color: '1d76db'  # Blue
 
 release:
   - base-branch: 'main'
-  color: '2cbe4e'  # Green
 
 api:
   - changed-files:
@@ -25,7 +22,10 @@ bug:
   - head-branch: ['^bugfix/', '^bug/', '^fix/']
 
 config:
-  - head-branch: ['^misc/', '^config/', '^others/']
+  - head-branch: ['src/^misc/', 'src/^config/']
+  - all:
+      - changed-files:
+          - any-glob-to-any-file: 'configuration/**/*'
 
 enhancement:
   - head-branch: ['^enhancement/', '^enhance/', '^improvement/', '^improve/']
@@ -39,10 +39,22 @@ refactor:
 
 ui-component:
   - changed-files:
-      - any-glob-to-any-file: 'ui/*'
-  color: 'cc6699'  # Pink
+      - any-glob-to-any-file:
+          [
+            'src/ui/**/*',
+            'src/screens/**/*',
+            'src/components/**/*',
+            'src/themes/**/*'
+          ]
+
+utility:
+  - changed-files:
+      - any-glob-to-any-file: ['src/utils/*']
 
 ci-cd:
   - changed-files:
-      - any-glob-to-any-file: '.github/**/*'
-  color: '7057ff'  # Bright purple
+      - any-glob-to-any-file: ['.github/**/*', 'fastlane/**/*', 'scripts/**/*']
+
+unit-test:
+  - changed-files:
+      - any-glob-to-any-file: '__tests__/*'

@@ -35,6 +35,7 @@ module.exports = {
     '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/consistent-type-definitions': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/indent': 'off',
     'multiline-ternary': 'off',
     'react-hooks/exhaustive-deps': 'off',

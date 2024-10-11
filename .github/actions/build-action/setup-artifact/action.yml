@@ -1,17 +1,6 @@
 name: Build Application
 description: Build application for iOS and Android
 
-inputs:
-  PLATFORM:
-    description: 'The platform to build for (ios or android)'
-    required: true
-  ENVIRONMENT:
-    description: 'The build environment (e.g., staging, production)'
-    required: true
-  GIT_TOKEN:
-    description: 'GitHub token for repository access'
-    required: true
-
 outputs:
   artifact_name:
     description: 'Name of the uploaded artifact'
@@ -20,24 +9,16 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Build ${{ inputs.PLATFORM }}
-      id: fastlane-build
-      run: bundle exec fastlane ${{ inputs.PLATFORM }} build --verbose
-      env:
-        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-        GIT_TOKEN: ${{ inputs.GIT_TOKEN }}
-        PLATFORM: ${{ inputs.PLATFORM }}
-      shell: bash
 
     - name: Set build directory
       id: set_build_dir
       shell: bash
       run: |
-        ARTIFACT_NAME="${{ inputs.ENVIRONMENT }}-build-${{ github.sha }}"
+        ARTIFACT_NAME="${{ env.ENVIRONMENT }}-build-${{ github.sha }}"
         echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
-        if [[ "${{ inputs.PLATFORM }}" == "android" ]]; then
+        if [[ "${{ env.PLATFORM }}" == "android" ]]; then
           echo "BUILD_DIR=android/app/build/outputs/apk" >> $GITHUB_OUTPUT
-        elif [[ "${{ inputs.PLATFORM }}" == "ios" ]]; then
+        elif [[ "${{ env.PLATFORM }}" == "ios" ]]; then
           # Extract the app name from the package.json file
           chmod +x .github/scripts/extract-app-name.sh
           APP_NAME=$(.github/scripts/extract-app-name.sh)
@@ -45,14 +26,14 @@ runs:
           # Copy Info.plist to the BUILD_DIR
           cp "ios/${APP_NAME}/Info.plist" "ios/build/"
         else
-          echo "Unsupported platform: ${{ inputs.PLATFORM }}" >&2
+          echo "Unsupported platform: ${{ env.PLATFORM }}" >&2
           exit 1
         fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.PLATFORM }}-${{ steps.set_build_dir.outputs.ARTIFACT_NAME }}
+        name: ${{ env.PLATFORM }}-${{ steps.set_build_dir.outputs.ARTIFACT_NAME }}
         path: |
           ${{ steps.set_build_dir.outputs.BUILD_DIR }}/*
         compression-level: 6

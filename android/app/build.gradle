@@ -83,10 +83,9 @@ android {
         applicationId "com.mobelite.testRNcicd"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 0
+        versionCode 1
         versionName "0.0.1"
         resValue "string", "build_config_package", "com.mobelite.testRNcicd"
-        setProperty("archivesBaseName", project.name + '_V_' + project.versionName + "." + project.versionCode)
 
     }
     signingConfigs {

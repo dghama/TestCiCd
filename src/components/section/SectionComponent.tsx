@@ -2,11 +2,11 @@ import { View, Text, useColorScheme, StyleSheet } from 'react-native';
 import React, { PropsWithChildren } from 'react';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Config from 'react-native-config';
+import { Image } from 'react-native';
 
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
-
 function SectionComponent({
   children,
   title
@@ -35,6 +35,7 @@ function SectionComponent({
     </View>
   );
 }
+// TODO - remove unused form eslint config file
 
 const styles = StyleSheet.create({
   sectionContainer: {

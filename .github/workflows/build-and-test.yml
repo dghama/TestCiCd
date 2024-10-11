@@ -4,7 +4,7 @@ name: Build and Test
 on:
   # Triggers the workflow on pull request events to specified branches
   pull_request:
-    branches: [develop]
+    branches: [develop, master]
     types: [opened, synchronize, reopened]
 
 # Concurrency settings to prevent simultaneous runs of the same workflow
@@ -14,38 +14,35 @@ concurrency:
 
 # Global environment variables
 env:
-  CI: true # Set CI environment variable
-  LANG: en_US.UTF-8 # Set language
-  LC_ALL: en_US.UTF-8 # Set locale
+  CI: true
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+  DANGER_GITHUB_BEARER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-jobs:
-  # Job for checking out the repository
+jobs: # Job for checking out the repository
   checkout:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     outputs:
-      checkout_dir: ${{ github.workspace }} # Output the checkout directory
+      checkout_dir: ${{ github.workspace }}
     steps:
-      - name: Checkout repository # Step to check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for all branches
+          fetch-depth: 0
+
   # Job for adding label and assign reviewers
   label-and-assign:
-    runs-on: engagement-runner
+    runs-on: macos-latest
     needs: [checkout]
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-
       - name: Assign Reviewers
-        if: github.event.action == 'opened'
         uses: kentaro-m/auto-assign-action@v2.0.0
+        if: github.event.action == 'opened'
         with:
           configuration-path: .github/auto_assign.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Label PR
         uses: actions/labeler@v5
@@ -53,50 +50,58 @@ jobs:
           repo-token: '${{ secrets.GITHUB_TOKEN }}'
           configuration-path: .github/labeler.yml
 
+      - name: Auto-assign PR to creator
+        uses: toshimaru/auto-author-assign@v1.6.2
+        with:
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+
   # Job for preparing the build environment
   prepare-environment:
-    runs-on: engagement-runner # Specify the runner
-    needs: [checkout] # Depends on the checkout job
+    runs-on: macos-latest
+    needs: [checkout]
     steps:
-      - name: Prepare Build Environment # Step to prepare the build environment
-        uses: ./.github/actions/prepare-env-action # Custom action for preparing the environment
+      - name: Prepare Build Environment
+        uses: ./.github/actions/prepare-env-action
 
   # Job for installing dependencies
   install-dependencies:
-    runs-on: engagement-runner # Specify the runner
-    needs: [checkout, prepare-environment] # Depends on checkout and prepare jobs
+    runs-on: macos-latest
+    needs: [prepare-environment]
     steps:
-      - name: Install dependencies # Step to install dependencies
-        uses: ./.github/actions/install-dependencies-action # Custom action for installing dependencies
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies-action
 
   # Job for running quality checks
   quality-checks:
-    needs: [checkout, install-dependencies] # Depends on checkout and install jobs
-    runs-on: engagement-runner # Specify the runner
+    needs: [install-dependencies]
+    runs-on: macos-latest
     steps:
-      - name: Quality Checks # Step to run quality checks
-        uses: ./.github/actions/quality-checks-action # Custom action for quality checks
+      - name: Quality Checks
+        uses: ./.github/actions/quality-checks-action
         with:
-          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }} # SonarQube token from secrets
-          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }} # SonarQube host from secrets
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
   # Job for building the application
   build:
-    needs: [checkout, quality-checks] # Depends on checkout and quality-checks jobs
-    runs-on: engagement-runner # Specify the runner
+    needs: [quality-checks]
+    runs-on: macos-latest
     strategy:
       matrix:
         platform: [ios, android] # Matrix for building both iOS and Android
     permissions:
       contents: write # Allow write permissions for repository contents
+    env:
+      ENVIRONMENT: 'staging'
+      PLATFORM: ${{ matrix.platform }}
+
     steps:
       - name: Restore cache
         uses: ./.github/actions/cache-action # Custom action to restore cache
-      - name: Setup build environment configuration and Keys # Step to set up environment keys
-        uses: ./.github/actions/build-action/setup-environment-action # Custom action to set up environment
+
+      - name: Setup build environment configuration and Keys
+        uses: ./.github/actions/build-action/setup-environment-action
         with:
-          ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Pass the environment
-          PLATFORM: ${{ matrix.platform }} # Pass the platform (iOS or Android)
           # Pass secrets for Android and iOS build configurations
           ANDROID_KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -105,30 +110,38 @@ jobs:
           DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
           PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          ENV_PROD: ${{ secrets.ENV_PROD }} # Pass environment secrets
+          ENV_PROD: ${{ secrets.ENV_PROD }}
           ENV_STAGING: ${{ secrets.ENV_STAGING }}
           ENV_BETA: ${{ secrets.ENV_BETA }}
           ENV_DEV: ${{ secrets.ENV_DEV }}
 
-      - name: Build Application # Step to build the application
-        uses: ./.github/actions/build-action # Custom action for building the application
-        with:
-          PLATFORM: ${{ matrix.platform }} # Pass the platform (iOS or Android)
-          ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }} # Pass the environment
-          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub token from secrets
+      - name: Build ${{ matrix.PLATFORM }}
+        id: fastlane-build
+        run: bundle exec fastlane ${{ matrix.PLATFORM }} build --verbose
+        shell: bash
 
   # Job for notifying teams
   notify-teams:
-    needs: [build]
-    runs-on: engagement-runner # Specify the runner
-    if: always()
+    needs: [quality-checks, build]
+    runs-on: macos-latest
+    # if: always()
     steps:
-      - name: Notify teams # Step to notify teams about the new version
-        uses: ./.github/actions/teams-notify # Custom action to notify teams
+      - name: Check job status
+        id: check
+        run: |
+          if [[ ${{ needs.quality-checks.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify teams
+        uses: ./.github/actions/teams-notify
         with:
-          status: ${{ job.status }} # Pass the job status (success or failure)
-          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }} # Teams webhook URL from secrets
-          branch_name: ${{ github.event.inputs.branch_name }}
-          commit_sha: ${{ github.event.inputs.commit_sha }}
-          repo_name: ${{ github.event.repository.name }}
+          status: ${{ steps.check.outputs.status }}
+          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          branch_name: ${{ github.head_ref }} # Use head_ref for the branch name
+          commit_sha: ${{ github.event.pull_request.head.sha }} # Correctly referencing the commit SHA
+          repo_name: ${{ github.repository }}
           workflow_name: ${{ github.workflow }}
+          pusher: ${{ github.actor }}

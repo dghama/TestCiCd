@@ -33,7 +33,6 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter
   };
 
-  console.log(Config.ENV);
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
