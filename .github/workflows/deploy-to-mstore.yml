@@ -102,25 +102,10 @@ jobs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
     steps:
-      - name: Set up Ruby
+      - name: Install Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6.10 # Adjust Ruby version if needed
-          bundler-cache: true
-      - name: Restore Ruby gems cache
-        uses: actions/cache@v4
-        id: cache-gems
-        with:
-          path: vendor/bundle # Directory to cache for Ruby gems
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gems-
-      # Step 7: Install Ruby dependencies
-      - name: Install Ruby dependencies
-        run: |
-          gem update --system 3.2.3
-          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
-        shell: bash
+          ruby-version: '3.3.0'
       - name: Increment Version Pre-Build
         id: increment
         run: bundle exec fastlane increment_version_pre_build
