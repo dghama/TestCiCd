@@ -59,6 +59,7 @@ platform :ios do
         configuration: ENV["ENVIRONMENT"],
         workspace: "./ios/#{appName}.xcworkspace",
         scheme: appName,
+        clean: true
         output_name: "#{appName}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         output_directory: "./ios/build",
         export_options: {
@@ -80,15 +81,12 @@ platform :android do
   appName = load_json(json_path: "package.json")['name']
 
   lane :update_android_version do
-    version_management.update_android_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
+    # version_management.update_android_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
     message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
     commit_version_changes(message)
   end
 
   lane :build do
-    if ENV["GITHUB_EVENT_NAME"] == "push"
-      update_android_version
-    end
 
     gradle(
       task: "clean assembleRelease",
@@ -99,12 +97,16 @@ platform :android do
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "archivesBaseName" => "#{appName}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
+        "android.injected.version.code" => ENV['VERSION_CODE'],
+        "android.injected.version.name" => ENV['VERSION_NAME'],    
         "env.file" => ENV["ENVFILE"],
       },
      
       print_command: true
     )
+    if ENV["GITHUB_EVENT_NAME"] == "push"
+      update_android_version
+    end
   end
 end
 
