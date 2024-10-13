@@ -60,7 +60,7 @@ platform :ios do
         workspace: "./ios/#{appName}.xcworkspace",
         scheme: appName,
         clean: true,
-        output_name: "#{appName}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
+        output_name: "#{appName}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         output_directory: "./ios/build",
         export_options: {
           method: "ad-hoc",
@@ -92,7 +92,7 @@ platform :android do
       task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
-        "output.name" => "#{appName}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
+        "output.name" => "#{appName}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
