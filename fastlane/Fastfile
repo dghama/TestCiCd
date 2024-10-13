@@ -142,7 +142,7 @@ lane :push_version_changes do
   push_to_git_remote(
     remote: dynamic_url,
     local_branch: "HEAD",
-    remote_branch: current_branch,
+    remote_branch: "refs/heads/#{current_branch}",
     tags: true
   )
   
