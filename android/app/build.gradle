@@ -116,19 +116,19 @@ android {
     }
    
     
-    android.applicationVariants.all { variant ->        
+    // android.applicationVariants.all { variant ->        
    
-        variant.outputs.all { output ->
-            // Get the base name from the project property or fallback to the default
-            def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
+    //     // variant.outputs.all { output ->
+    //     //     // Get the base name from the project property or fallback to the default
+    //     //     def baseName = project.hasProperty('output.name') ? project.property('output.name') : variant.baseName
 
-            // Create the new file name by appending the version code
-            def newFileName = "${baseName}.apk"
+    //     //     // Create the new file name by appending the version code
+    //     //     def newFileName = "${baseName}.apk"
 
-            // Set the new file name
-            output.outputFileName = newFileName
-        }
-    }
+    //     //     // Set the new file name
+    //     //     output.outputFileName = newFileName
+    //     // }
+    // }
 
 }
 
