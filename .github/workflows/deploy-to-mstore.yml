@@ -240,6 +240,7 @@ jobs:
     permissions:
       contents: write # Give write permissions to push commits
     env:
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     steps:
