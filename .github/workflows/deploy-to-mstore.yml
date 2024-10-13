@@ -238,6 +238,9 @@ jobs:
     needs: [deploy, build]
     # if: github.event_name == 'push'
     runs-on: macos-latest
+    #amira update
+    permissions:
+      contents: write # Give write permissions to push commits
     env:
       VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
