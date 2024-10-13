@@ -98,6 +98,8 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       GITHUB_WORKSPACE: ${{ github.workspace }}
+      MANUAL_VERSION: ${{ github.event.inputs.version_name }}
+
     outputs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
@@ -134,6 +136,7 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       PLATFORM: ${{ matrix.platform }}
+      MANUAL_VERSION: ${{ github.event.inputs.version_name }}
 
     steps:
       - name: Checkout repository
@@ -174,7 +177,7 @@ jobs:
         id: fastlane-build
         run: bundle exec fastlane ${{ matrix.PLATFORM }} build --verbose
         env:
-          VERSION_NAME: ${{ needs.increment-version.outputs.VERSION_NAME }}
+          VERSION_NAME: ${{ github.event.inputs.version_name != '' && github.event.inputs.version_name || needs.increment-version.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ needs.increment-version.outputs.VERSION_CODE }}
         shell: bash
 
@@ -224,7 +227,7 @@ jobs:
           IOS_DEV_TOKEN: ${{ secrets.IOS_APP_DEV_TOKEN }}
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
           #Amira addition
-          VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
+          VERSION_NAME: ${{ github.event.inputs.version_name != '' && github.event.inputs.version_name || needs.build.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     outputs:
       ANDROID_VERSION_TOKEN: ${{ steps.deploy.outputs.ANDROID_VERSION_TOKEN }}

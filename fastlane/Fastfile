@@ -23,9 +23,8 @@ end
 platform :ios do
 
   lane :update_ios_version do
-    version_data = version_management.load_version_data[ENV["ENVIRONMENT"]]
-    update_ios_files(version_data)
-    message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
+    update_ios_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
+    message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
     commit_version_changes(version_data, message)
   end
 
@@ -89,9 +88,8 @@ end
 platform :android do
 
   lane :update_android_version do
-    version_data = version_management.load_version_data[ENV["ENVIRONMENT"]]
-    version_management.update_android_files(version_data)
-    message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
+    version_management.update_android_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
+    message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
     commit_version_changes(version_data,message)
   end
 
@@ -121,9 +119,11 @@ end
 # Increment the version for the package json and versions.json file
 lane :increment_version_pre_build do
   version_data = version_management.increment_version()
-  
+  #amira update
+  if ENV['MANUAL_VERSION']
   # Update package.json
   version_management.update_package_json(version_data)
+  end
   message = "'Bump version to #{version_data['version_name']} (#{version_data['version_code']})'"
   # Commit changes
   commit_version_changes(version_data,message)
@@ -219,19 +219,19 @@ def commit_version_changes(version_data, message)
 end
 
 
-def update_ios_files(version_data)
+def update_ios_files(version_code, version_name)
   set_info_plist_value(
     path: "./ios/#{@package['name']}/Info.plist",
     key: "CFBundleShortVersionString",
-    value: version_data['version_name']
+    value: version_name
   )
   set_info_plist_value(
     path: "./ios/#{@package['name']}/Info.plist",
     key: "CFBundleVersion",
-    value: version_data['version_code'].to_s
+    value: version_code.to_s
   )
   increment_build_number(
-    build_number: version_data['version_code'],
+    build_number: version_code,
     xcodeproj: "./ios/#{@package['name']}.xcodeproj"
   )
 end
