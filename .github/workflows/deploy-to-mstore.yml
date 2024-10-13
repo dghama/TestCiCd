@@ -56,6 +56,10 @@ jobs:
     runs-on: macos-latest
     needs: [checkout]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Prepare Build Environment
         uses: ./.github/actions/prepare-env-action
 
@@ -64,6 +68,10 @@ jobs:
     runs-on: macos-latest
     needs: [prepare-environment]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies-action
 
@@ -72,6 +80,11 @@ jobs:
     needs: [install-dependencies]
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Quality Checks
         uses: ./.github/actions/quality-checks-action
         with:
@@ -85,10 +98,28 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       GITHUB_WORKSPACE: ${{ github.workspace }}
+      MANUAL_VERSION: ${{ github.event.inputs.version_name }}
+
     outputs:
       VERSION_NAME: ${{ steps.increment.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ steps.increment.outputs.VERSION_CODE }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version:
+            '3.3.0'
+            # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
+
       - name: Increment Version Pre-Build
         id: increment
         run: bundle exec fastlane increment_version_pre_build
@@ -105,8 +136,22 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       PLATFORM: ${{ matrix.platform }}
-
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version:
+            '3.3.0'
+            # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
       - name: Restore cache
         uses: ./.github/actions/cache-action # Custom action to restore cache
 
@@ -147,11 +192,28 @@ jobs:
   deploy:
     needs: [build]
     runs-on: macos-latest
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     strategy:
       matrix:
         platform: [ios, android] # Matrix for deploying both iOS and Android
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.0'
+
+      # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
+      - name: Restore cache
+        uses: ./.github/actions/cache-action # Custom action to restore cache
       - name: deploy to MStore
         uses: ./.github/actions/deploy-action
         id: deploy
@@ -162,6 +224,9 @@ jobs:
           ANDROID_DEV_TOKEN: ${{ secrets.APP_DEV_TOKEN }}
           IOS_DEV_TOKEN: ${{ secrets.IOS_APP_DEV_TOKEN }}
           AUTHORIZATION: ${{ secrets.AUTHORIZATION }}
+          #Amira addition
+          VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
+          VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     outputs:
       ANDROID_VERSION_TOKEN: ${{ steps.deploy.outputs.ANDROID_VERSION_TOKEN }}
       IOS_VERSION_TOKEN: ${{ steps.deploy.outputs.IOS_VERSION_TOKEN }}
@@ -169,12 +234,32 @@ jobs:
   # Job for bumping the version
   bump-version:
     needs: [deploy, build]
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     runs-on: macos-latest
+    #amira update
+    permissions:
+      contents: write # Give write permissions to push commits
     env:
       VERSION_NAME: ${{ needs.build.outputs.VERSION_NAME }}
       VERSION_CODE: ${{ needs.build.outputs.VERSION_CODE }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version:
+            '3.3.0'
+            # Step 7: Install Ruby dependencies
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --jobs 4 --retry 3 # Install gems with parallel jobs and retry on failure
+        shell: bash
+      - name: Restore cache
+        uses: ./.github/actions/cache-action # Custom action to restore cache
       - name: push new version
         run: |
           bundle exec fastlane push_version_changes
@@ -182,40 +267,40 @@ jobs:
       ANDROID_VERSION_TOKEN: ${{ needs.deploy.outputs.ANDROID_VERSION_TOKEN }}
       IOS_VERSION_TOKEN: ${{ needs.deploy.outputs.IOS_VERSION_TOKEN }}
 
-  # Job for notifying teams
-  notify-teams:
-    needs: [bump-version, deploy, build]
-    runs-on: macos-latest
-    if: always()
-    steps:
-      - name: Check job status
-        id: check
-        run: |
-          if [[ ${{ needs.bump-version.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
+  # # Job for notifying teams about the new version or failure
+  # notify-teams:
+  #   needs: [bump-version, deploy, build]
+  #   runs-on: macos-latest
+  #   if: always()
+  #   steps:
+  #     - name: Check job status
+  #       id: check
+  #       run: |
+  #         if [[ ${{ needs.bump-version.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
+  #           echo "status=success" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "status=failure" >> $GITHUB_OUTPUT
+  #         fi
 
-      - name: Notify teams
-        uses: ./.github/actions/teams-notify
-        with:
-          status: ${{ steps.check.outputs.status }}
-          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          custom_message: |
-            New version is available on MStore :
-          android_version_url: ${{ needs.bump-version.outputs.ANDROID_VERSION_TOKEN }}
-          ios_version_url: ${{ needs.bump-version.outputs.IOS_VERSION_TOKEN }}
-          branch_name: ${{ github.ref_name }}
-          commit_sha: ${{ github.sha }}
-          repo_name: ${{ github.event.repository.name }}
-          workflow_name: ${{ github.workflow }}
-          pusher: ${{ github.actor }}
+  #     - name: Notify teams
+  #       uses: ./.github/actions/teams-notify
+  #       with:
+  #         status: ${{ steps.check.outputs.status }}
+  #         webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+  #         custom_message: |
+  #           New version is available on MStore :
+  #         android_version_url: ${{ needs.bump-version.outputs.ANDROID_VERSION_TOKEN }}
+  #         ios_version_url: ${{ needs.bump-version.outputs.IOS_VERSION_TOKEN }}
+  #         branch_name: ${{ github.ref_name }}
+  #         commit_sha: ${{ github.sha }}
+  #         repo_name: ${{ github.event.repository.name }}
+  #         workflow_name: ${{ github.workflow }}
+  #         pusher: ${{ github.actor }}
 
-  # Job for cleaning artifacts from the repository
-  clean-artifacts:
-    runs-on: macos-latest
-    needs: [notify-teams]
-    steps:
-      - name: Clean Artifacts
-        run: bundle exec fastlane delete_github_artifacts
+  # # Job for cleaning artifacts from the repository
+  # clean-artifacts:
+  #   runs-on: macos-latest
+  #   needs: [notify-teams]
+  #   steps:
+  #     - name: Clean Artifacts
+  #       run: bundle exec fastlane delete_github_artifacts

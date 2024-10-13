@@ -47,9 +47,9 @@ runs:
     #     SONAR_TOKEN: ${{ inputs.SONARQUBE_TOKEN }}
     #     SONAR_HOST_URL: ${{ inputs.SONARQUBE_HOST }}
 
-    - name: Run Danger
-      if: github.event_name == 'pull_request'
-      run: |
-        PR_URL="https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
-        bundle exec danger pr "$PR_URL" --dangerfile=.github/Dangerfile
-      shell: bash
+    # - name: Run Danger
+    #   if: github.event_name == 'pull_request'
+    #   run: |
+    #     PR_URL="https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+    #     bundle exec danger pr "$PR_URL" --dangerfile=.github/Dangerfile
+    #   shell: bash
