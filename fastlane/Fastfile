@@ -112,7 +112,7 @@ end
 lane :increment_version_pre_build do
   version_data = version_management.increment_version()
   #amira update
-  if ENV['MANUAL_VERSION']
+  if ENV['MANUAL_VERSION'] != ''
   # Update package.json
   version_management.update_package_json(version_data)
   end

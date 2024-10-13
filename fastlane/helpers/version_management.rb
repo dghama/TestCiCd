@@ -49,7 +49,7 @@ module Fastlane
         env = ENV["ENVIRONMENT"]
         data[env]['version_code'] += 1
         #amira update
-        if ENV['MANUAL_VERSION']
+        if ENV['MANUAL_VERSION'] != ''
         data[env]['version_name'] = ENV['MANUAL_VERSION'] 
         end
         save_version_data(data)

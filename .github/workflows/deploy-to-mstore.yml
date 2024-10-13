@@ -136,8 +136,6 @@ jobs:
     env:
       ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
       PLATFORM: ${{ matrix.platform }}
-      MANUAL_VERSION: ${{ github.event.inputs.version_name }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
