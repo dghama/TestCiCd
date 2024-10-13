@@ -7,26 +7,15 @@ default_platform(:android)
 version_management = Fastlane::Helper::VersionManagement
 u_mstore = Fastlane::Helper::UploadToMstore
 
-before_all do
-  @package = load_json(json_path: "package.json")
-  @environment = ENV["ENVIRONMENT"]
-  @versionName = ENV["VERSION_NAME"]
-  @eventName = ENV["GITHUB_EVENT_NAME"]
-
-  puts "Loaded package: #{@package}"
-  puts "Environment: #{@environment}"
-end
-
-
-
 # Manage certs and provisioning profiles and build IOS 
 platform :ios do
 
+  appName = load_json(json_path: "package.json")['name']
+
   lane :update_ios_version do
-    version_data = version_management.load_version_data[ENV["ENVIRONMENT"]]
-    update_ios_files(version_data)
-    message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
-    commit_version_changes(version_data, message)
+    update_ios_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"],appName)
+    message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
+    commit_version_changes(message)
   end
 
   lane :setup_certs_and_profile do
@@ -62,15 +51,16 @@ platform :ios do
       podfile: "./ios/Podfile"
     )
 
-    if @eventName == "push"
+    if ENV["GITHUB_EVENT_NAME"] == "push"
       update_ios_version
     end
 
     gym(
         configuration: ENV["ENVIRONMENT"],
-        workspace: "./ios/#{@package['name']}.xcworkspace",
-        scheme: @package['name'],
-        output_name: "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        workspace: "./ios/#{appName}.xcworkspace",
+        scheme: appName,
+        clean: true,
+        output_name: "#{appName}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         output_directory: "./ios/build",
         export_options: {
           method: "ad-hoc",
@@ -88,45 +78,49 @@ end
 # Build for Android
 platform :android do
 
+  appName = load_json(json_path: "package.json")['name']
+
   lane :update_android_version do
-    version_data = version_management.load_version_data[ENV["ENVIRONMENT"]]
-    version_management.update_android_files(version_data)
-    message= "'Update #{ENV['PLATFORM']} files to version #{version_data['version_name']} (#{version_data['version_code']})'"
-    commit_version_changes(version_data,message)
+    # version_management.update_android_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
+    message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
+    commit_version_changes(message)
   end
 
   lane :build do
-    if @eventName == "push"
-      update_android_version
-    end
 
     gradle(
       task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
-        "output.name" => "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        "output.name" => "#{appName}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "archivesBaseName" => "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        "android.injected.version.code" => ENV['VERSION_CODE'],
+        "android.injected.version.name" => ENV['VERSION_NAME'],    
         "env.file" => ENV["ENVFILE"],
       },
      
       print_command: true
     )
+    if ENV["GITHUB_EVENT_NAME"] == "push"
+      update_android_version
+    end
   end
 end
 
 # Increment the version for the package json and versions.json file
 lane :increment_version_pre_build do
   version_data = version_management.increment_version()
-  
+  #amira update
+  if ENV['MANUAL_VERSION'] != ''
   # Update package.json
   version_management.update_package_json(version_data)
+  end
   message = "'Bump version to #{version_data['version_name']} (#{version_data['version_code']})'"
   # Commit changes
-  commit_version_changes(version_data,message)
+  commit_version_changes(message)
   
   # Output new version info
   puts "New version: #{version_data['version_name']} (#{version_data['version_code']})"
@@ -141,14 +135,14 @@ lane :push_version_changes do
   current_branch = sh("git rev-parse --abbrev-ref HEAD").strip
 
   # Push to the same branch
-  add_git_tag(tag: "v#{ENV['VERSION_NAME']}-#{ENV['VERSION_CODE']}-#{@environment}")
+  add_git_tag(tag: "v#{ENV['VERSION_NAME']}-#{ENV['VERSION_CODE']}-#{ ENV["ENVIRONMENT"]}")
   dynamic_url = version_management.get_dynamic_github_url
 
   # Note: i need to change the remoteurl with a dynamic variable
   push_to_git_remote(
     remote: dynamic_url,
     local_branch: "HEAD",
-    remote_branch: current_branch,
+    remote_branch: "#{current_branch}",
     tags: true
   )
   
@@ -194,7 +188,7 @@ end
 # Upload the app to MStore
 lane :upload_app_to_mstore do
 
-    result = u_mstore.mstore_upload_app(
+    result = u_mstore.upload_app_to_mstore(
       authorization: ENV['AUTHORIZATION'],
       app_dev_token: ENV['APP_DEV_TOKEN'],
       info_file: ENV['INFO_FILE'],
@@ -210,7 +204,7 @@ end
   #   The new version data.
   # @param [String] message
   #   The commit message.
-def commit_version_changes(version_data, message)
+def commit_version_changes(message)
   current_branch = `git rev-parse --abbrev-ref HEAD`.strip
   ensure_git_branch(branch: current_branch)
   git_add(path: ".")
@@ -219,19 +213,19 @@ def commit_version_changes(version_data, message)
 end
 
 
-def update_ios_files(version_data)
+def update_ios_files(version_code, version_name,appName)
   set_info_plist_value(
-    path: "./ios/#{@package['name']}/Info.plist",
+    path: "./ios/#{appName}/Info.plist",
     key: "CFBundleShortVersionString",
-    value: version_data['version_name']
+    value: version_name
   )
   set_info_plist_value(
-    path: "./ios/#{@package['name']}/Info.plist",
+    path: "./ios/#{appName}/Info.plist",
     key: "CFBundleVersion",
-    value: version_data['version_code'].to_s
+    value: version_code.to_s
   )
   increment_build_number(
-    build_number: version_data['version_code'],
-    xcodeproj: "./ios/#{@package['name']}.xcodeproj"
+    build_number: version_code,
+    xcodeproj: "./ios/#{appName}.xcodeproj"
   )
 end

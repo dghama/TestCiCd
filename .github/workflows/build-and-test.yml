@@ -30,118 +30,118 @@ jobs: # Job for checking out the repository
         with:
           fetch-depth: 0
 
-  # Job for adding label and assign reviewers
-  label-and-assign:
-    runs-on: macos-latest
-    needs: [checkout]
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Assign Reviewers
-        uses: kentaro-m/auto-assign-action@v2.0.0
-        if: github.event.action == 'opened'
-        with:
-          configuration-path: .github/auto_assign.yml
+  # # Job for adding label and assign reviewers
+  # label-and-assign:
+  #   runs-on: macos-latest
+  #   needs: [checkout]
+  #   permissions:
+  #     contents: read
+  #     pull-requests: write
+  #   steps:
+  #     - name: Assign Reviewers
+  #       uses: kentaro-m/auto-assign-action@v2.0.0
+  #       if: github.event.action == 'opened'
+  #       with:
+  #         configuration-path: .github/auto_assign.yml
 
-      - name: Label PR
-        uses: actions/labeler@v5
-        with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          configuration-path: .github/labeler.yml
+  #     - name: Label PR
+  #       uses: actions/labeler@v5
+  #       with:
+  #         repo-token: '${{ secrets.GITHUB_TOKEN }}'
+  #         configuration-path: .github/labeler.yml
 
-      - name: Auto-assign PR to creator
-        uses: toshimaru/auto-author-assign@v1.6.2
-        with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+  #     - name: Auto-assign PR to creator
+  #       uses: toshimaru/auto-author-assign@v1.6.2
+  #       with:
+  #         repo-token: '${{ secrets.GITHUB_TOKEN }}'
 
-  # Job for preparing the build environment
-  prepare-environment:
-    runs-on: macos-latest
-    needs: [checkout]
-    steps:
-      - name: Prepare Build Environment
-        uses: ./.github/actions/prepare-env-action
+  # # Job for preparing the build environment
+  # prepare-environment:
+  #   runs-on: macos-latest
+  #   needs: [checkout]
+  #   steps:
+  #     - name: Prepare Build Environment
+  #       uses: ./.github/actions/prepare-env-action
 
-  # Job for installing dependencies
-  install-dependencies:
-    runs-on: macos-latest
-    needs: [prepare-environment]
-    steps:
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies-action
+  # # Job for installing dependencies
+  # install-dependencies:
+  #   runs-on: macos-latest
+  #   needs: [prepare-environment]
+  #   steps:
+  #     - name: Install dependencies
+  #       uses: ./.github/actions/install-dependencies-action
 
-  # Job for running quality checks
-  quality-checks:
-    needs: [install-dependencies]
-    runs-on: macos-latest
-    steps:
-      - name: Quality Checks
-        uses: ./.github/actions/quality-checks-action
-        with:
-          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-          SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
+  # # Job for running quality checks
+  # quality-checks:
+  #   needs: [install-dependencies]
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Quality Checks
+  #       uses: ./.github/actions/quality-checks-action
+  #       with:
+  #         SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  #         SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}
 
-  # Job for building the application
-  build:
-    needs: [quality-checks]
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        platform: [ios, android] # Matrix for building both iOS and Android
-    permissions:
-      contents: write # Allow write permissions for repository contents
-    env:
-      ENVIRONMENT: 'staging'
-      PLATFORM: ${{ matrix.platform }}
+  # # Job for building the application
+  # build:
+  #   needs: [quality-checks]
+  #   runs-on: macos-latest
+  #   strategy:
+  #     matrix:
+  #       platform: [ios, android] # Matrix for building both iOS and Android
+  #   permissions:
+  #     contents: write # Allow write permissions for repository contents
+  #   env:
+  #     ENVIRONMENT: 'staging'
+  #     PLATFORM: ${{ matrix.platform }}
 
-    steps:
-      - name: Restore cache
-        uses: ./.github/actions/cache-action # Custom action to restore cache
+  #   steps:
+  #     - name: Restore cache
+  #       uses: ./.github/actions/cache-action # Custom action to restore cache
 
-      - name: Setup build environment configuration and Keys
-        uses: ./.github/actions/build-action/setup-environment-action
-        with:
-          # Pass secrets for Android and iOS build configurations
-          ANDROID_KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
-          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          ENV_PROD: ${{ secrets.ENV_PROD }}
-          ENV_STAGING: ${{ secrets.ENV_STAGING }}
-          ENV_BETA: ${{ secrets.ENV_BETA }}
-          ENV_DEV: ${{ secrets.ENV_DEV }}
+  #     - name: Setup build environment configuration and Keys
+  #       uses: ./.github/actions/build-action/setup-environment-action
+  #       with:
+  #         # Pass secrets for Android and iOS build configurations
+  #         ANDROID_KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+  #         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+  #         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+  #         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+  #         DISTRIBUTION_CERTIFICATE: ${{ secrets.DISTRIBUTION_CERTIFICATE }}
+  #         PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+  #         P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+  #         ENV_PROD: ${{ secrets.ENV_PROD }}
+  #         ENV_STAGING: ${{ secrets.ENV_STAGING }}
+  #         ENV_BETA: ${{ secrets.ENV_BETA }}
+  #         ENV_DEV: ${{ secrets.ENV_DEV }}
 
-      - name: Build ${{ matrix.PLATFORM }}
-        id: fastlane-build
-        run: bundle exec fastlane ${{ matrix.PLATFORM }} build --verbose
-        shell: bash
+  #     - name: Build ${{ matrix.PLATFORM }}
+  #       id: fastlane-build
+  #       run: bundle exec fastlane ${{ matrix.PLATFORM }} build --verbose
+  #       shell: bash
 
-  # Job for notifying teams
-  notify-teams:
-    needs: [quality-checks, build]
-    runs-on: macos-latest
-    # if: always()
-    steps:
-      - name: Check job status
-        id: check
-        run: |
-          if [[ ${{ needs.quality-checks.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
+  # # Job for notifying teams
+  # notify-teams:
+  #   needs: [quality-checks, build]
+  #   runs-on: macos-latest
+  #   # if: always()
+  #   steps:
+  #     - name: Check job status
+  #       id: check
+  #       run: |
+  #         if [[ ${{ needs.quality-checks.result }} == 'success' && ${{ needs.build.result }} == 'success' ]]; then
+  #           echo "status=success" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "status=failure" >> $GITHUB_OUTPUT
+  #         fi
 
-      - name: Notify teams
-        uses: ./.github/actions/teams-notify
-        with:
-          status: ${{ steps.check.outputs.status }}
-          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          branch_name: ${{ github.head_ref }} # Use head_ref for the branch name
-          commit_sha: ${{ github.event.pull_request.head.sha }} # Correctly referencing the commit SHA
-          repo_name: ${{ github.repository }}
-          workflow_name: ${{ github.workflow }}
-          pusher: ${{ github.actor }}
+  #     - name: Notify teams
+  #       uses: ./.github/actions/teams-notify
+  #       with:
+  #         status: ${{ steps.check.outputs.status }}
+  #         webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+  #         branch_name: ${{ github.head_ref }} # Use head_ref for the branch name
+  #         commit_sha: ${{ github.event.pull_request.head.sha }} # Correctly referencing the commit SHA
+  #         repo_name: ${{ github.repository }}
+  #         workflow_name: ${{ github.workflow }}
+  #         pusher: ${{ github.actor }}

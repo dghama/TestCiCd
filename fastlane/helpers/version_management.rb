@@ -48,6 +48,10 @@ module Fastlane
         data = load_version_data
         env = ENV["ENVIRONMENT"]
         data[env]['version_code'] += 1
+        #amira update
+        if ENV['MANUAL_VERSION'] != ''
+        data[env]['version_name'] = ENV['MANUAL_VERSION'] 
+        end
         save_version_data(data)
         data[env]
       end
@@ -59,10 +63,10 @@ module Fastlane
         File.write(package_json_path, JSON.pretty_generate(package_data))
       end
 
-      def self.update_android_files(version_data)
+      def self.update_android_files(version_code, version_name)
         gradle_file = "#{ENV['GITHUB_WORKSPACE']}/android/app/build.gradle"
-        system("sed -i '' 's/versionCode .*/versionCode #{version_data['version_code']}/' #{gradle_file}")
-        system("sed -i '' 's/versionName .*/versionName \"#{version_data['version_name']}\"/' #{gradle_file}")
+        system("sed -i '' 's/versionCode .*/versionCode #{version_code}/' #{gradle_file}")
+        system("sed -i '' 's/versionName .*/versionName \"#{version_name}\"/' #{gradle_file}")
       end
     end
   end
