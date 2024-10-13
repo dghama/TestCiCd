@@ -25,7 +25,7 @@ platform :ios do
   lane :update_ios_version do
     update_ios_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
     message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
-    commit_version_changes(version_data, message)
+    commit_version_changes(message)
   end
 
   lane :setup_certs_and_profile do
@@ -69,7 +69,7 @@ platform :ios do
         configuration: ENV["ENVIRONMENT"],
         workspace: "./ios/#{@package['name']}.xcworkspace",
         scheme: @package['name'],
-        output_name: "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        output_name: "#{@package['name']}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
         output_directory: "./ios/build",
         export_options: {
           method: "ad-hoc",
@@ -90,7 +90,7 @@ platform :android do
   lane :update_android_version do
     version_management.update_android_files(ENV["VERSION_CODE"], ENV["VERSION_NAME"])
     message= "'Update #{ENV['PLATFORM']} files to version #{ENV["VERSION_NAME"]} (#{ENV["VERSION_CODE"]})'"
-    commit_version_changes(version_data,message)
+    commit_version_changes(message)
   end
 
   lane :build do
@@ -102,12 +102,12 @@ platform :android do
       task: "clean assembleRelease",
       project_dir: "android/",
       properties: {
-        "output.name" => "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        "output.name" => "#{@package['name']}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_FILE"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
         "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password" => ENV["KEY_PASSWORD"],
-        "archivesBaseName" => "#{@package['name']}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
+        "archivesBaseName" => "#{@package['name']}_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{@environment}",
         "env.file" => ENV["ENVFILE"],
       },
      
@@ -210,7 +210,7 @@ end
   #   The new version data.
   # @param [String] message
   #   The commit message.
-def commit_version_changes(version_data, message)
+def commit_version_changes(message)
   current_branch = `git rev-parse --abbrev-ref HEAD`.strip
   ensure_git_branch(branch: current_branch)
   git_add(path: ".")

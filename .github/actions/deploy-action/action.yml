@@ -50,7 +50,7 @@ runs:
         # Run the shell script to extract app name
         chmod +x .github/scripts/extract-app-name.sh
         APP_NAME=$(.github/scripts/extract-app-name.sh)
-        BUILD_NAME=${APP_NAME}_V_${{ inputs.VERSION_NAME }}.${{ inputs.VERSION_CODE }}_${{ inputs.ENVIRONMENT }}
+        BUILD_NAME=${APP_NAME}_${{ inputs.VERSION_NAME }}.${{ inputs.VERSION_CODE }}_${{ inputs.ENVIRONMENT }}
         if [ "${{ inputs.PLATFORM }}" == "android" ]; then
           # Set up the file paths for Android
           INFO_FILE="${{ github.workspace }}/release/output-metadata.json"
