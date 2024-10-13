@@ -59,7 +59,7 @@ platform :ios do
         configuration: ENV["ENVIRONMENT"],
         workspace: "./ios/#{appName}.xcworkspace",
         scheme: appName,
-        clean: true
+        clean: true,
         output_name: "#{appName}_V_#{ENV['VERSION_NAME']}.#{ENV['VERSION_CODE']}_#{ ENV["ENVIRONMENT"]}",
         output_directory: "./ios/build",
         export_options: {
