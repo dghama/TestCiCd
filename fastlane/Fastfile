@@ -9,7 +9,7 @@ u_mstore = Fastlane::Helper::UploadToMstore
 
 # Manage certs and provisioning profiles and build IOS 
 platform :ios do
-  
+
   appName = load_json(json_path: "package.json")['name']
 
   lane :update_ios_version do
@@ -118,7 +118,7 @@ lane :increment_version_pre_build do
   end
   message = "'Bump version to #{version_data['version_name']} (#{version_data['version_code']})'"
   # Commit changes
-  commit_version_changes(version_data,message)
+  commit_version_changes(message)
   
   # Output new version info
   puts "New version: #{version_data['version_name']} (#{version_data['version_code']})"
